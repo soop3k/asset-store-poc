@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.11.xsd">
+
+    <changeSet id="1-create-tables" author="junie">
+        <createTable tableName="assets">
+            <column name="id" type="varchar(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="type" type="varchar(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="timestamp"/>
+            <column name="deleted" type="int" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="asset_attribute">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="asset_id" type="varchar(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value" type="varchar(1024)"/>
+            <column name="value_type" type="varchar(32)"/>
+            <column name="updated_at" type="timestamp"/>
+        </createTable>
+        <addUniqueConstraint tableName="asset_attribute" columnNames="asset_id,name" constraintName="uk_asset_attr_unique"/>
+
+        <createTable tableName="asset_attribute_history">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="asset_id" type="varchar(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value" type="varchar(1024)"/>
+            <column name="value_type" type="varchar(32)"/>
+            <column name="changed_at" type="timestamp"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="asset_attribute" baseColumnNames="asset_id"
+                                  referencedTableName="assets" referencedColumnNames="id"
+                                  constraintName="fk_attr_asset"/>
+        <addForeignKeyConstraint baseTableName="asset_attribute_history" baseColumnNames="asset_id"
+                                  referencedTableName="assets" referencedColumnNames="id"
+                                  constraintName="fk_attr_hist_asset"/>
+    </changeSet>
+
+    <changeSet id="2-attr-definitions" author="junie">
+        <createTable tableName="asset_attribute_def">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="type" type="varchar(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value_type" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="required" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="asset_attribute_def" columnNames="type,name" constraintName="uk_attr_def_type_name"/>
+    </changeSet>
+
+    <changeSet id="3-attr-history-fk" author="junie">
+        <addColumn tableName="asset_attribute_history">
+            <column name="attribute_id" type="bigint"/>
+        </addColumn>
+        <addForeignKeyConstraint baseTableName="asset_attribute_history" baseColumnNames="attribute_id"
+                                  referencedTableName="asset_attribute" referencedColumnNames="id"
+                                  constraintName="fk_attr_hist_attribute"/>
+    </changeSet>
+
+    <changeSet id="4-asset-extra-columns" author="junie">
+        <addColumn tableName="assets">
+            <column name="version" type="bigint"/>
+            <column name="status" type="varchar(64)"/>
+            <column name="subtype" type="varchar(64)"/>
+            <column name="status_effective_time" type="timestamp"/>
+            <column name="created_by" type="varchar(64)"/>
+            <column name="modified_at" type="timestamp"/>
+            <column name="modified_by" type="varchar(64)"/>
+            <column name="notional_amount" type="decimal(19,4)"/>
+            <column name="year" type="int"/>
+            <column name="wh" type="varchar(64)"/>
+            <column name="source_system_name" type="varchar(64)"/>
+            <column name="external_reference" type="varchar(128)"/>
+            <column name="description" type="varchar(1024)"/>
+            <column name="currency" type="varchar(8)"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

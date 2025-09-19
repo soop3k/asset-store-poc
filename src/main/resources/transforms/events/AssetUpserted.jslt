@@ -1,0 +1,23 @@
+{
+  "eventName": .eventName,
+  "occurredAt": .occurredAt,
+  "id": .asset.id,
+  "type": .asset.type,
+  "createdAt": .asset.createdAt,
+  "version": .asset.version,
+  "status": .asset.status,
+  "subtype": .asset.subtype,
+  "statusEffectiveTime": .asset.statusEffectiveTime,
+  "modifiedAt": .asset.modifiedAt,
+  "modifiedBy": .asset.modifiedBy,
+  "createdBy": .asset.createdBy,
+  "softDelete": .asset.softDelete,
+  "notionalAmount": .asset.notionalAmount,
+  "year": .asset.year,
+  "wh": .asset.wh,
+  "sourceSystemName": .asset.sourceSystemName,
+  "externalReference": .asset.externalReference,
+  "description": .asset.description,
+  "currency": .asset.currency,
+  "attributes": .asset.attributes
+}

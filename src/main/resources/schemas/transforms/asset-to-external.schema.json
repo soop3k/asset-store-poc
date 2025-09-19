@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Asset to External payload",
+  "type": "object",
+  "properties": {
+    "assetId": { "type": "string" },
+    "kind": { "type": "string" },
+    "payload": { "type": "object" }
+  },
+  "required": ["assetId", "kind", "payload"]
+}
