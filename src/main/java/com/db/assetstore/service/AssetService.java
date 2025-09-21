@@ -1,5 +1,6 @@
 package com.db.assetstore.service;
 
+import com.db.assetstore.AssetType;
 import com.db.assetstore.model.AttributeHistory;
 import com.db.assetstore.model.Asset;
 import com.db.assetstore.search.SearchCriteria;
@@ -20,7 +21,12 @@ public interface AssetService {
      * a JSON schema defined per type and then converted to an Asset. All top-level fields except 'id'
      * become attributes.
      */
-    String addAssetFromJson(com.db.assetstore.AssetType type, String json);
+    String addAssetFromJson(AssetType type, String json);
+
+    /**
+     * Create multiple assets from a JSON array of flat payloads.
+     */
+    List<String> addAssetsFromJsonArray(String jsonArray);
 
     void removeAsset(String assetId);
     Optional<Asset> getAsset(String assetId);

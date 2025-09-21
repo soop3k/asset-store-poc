@@ -57,7 +57,7 @@ public class AssetEntity {
     @Column(name = "notional_amount", precision = 19, scale = 4)
     private BigDecimal notionalAmount;
 
-    @Column(name = "year")
+    @Column(name = "asset_year")
     private Integer year;
 
     @Column(name = "wh", length = 64)

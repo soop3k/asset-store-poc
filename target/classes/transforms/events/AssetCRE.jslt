@@ -1,0 +1,7 @@
+{
+  "type": .asset.type,
+  "currency": .asset.currency,
+  "notional_amount": .asset.notionalAmount,
+  "asset_status": .asset.status,
+  "property_type": .asset.subtype
+}

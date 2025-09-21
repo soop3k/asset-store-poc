@@ -1,0 +1,21 @@
+-------------------------------------------------------------------------------
+Test set: com.db.assetstore.service.JsonSchemaValidatorTest
+-------------------------------------------------------------------------------
+Tests run: 2, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.023 s <<< FAILURE! -- in com.db.assetstore.service.JsonSchemaValidatorTest
+com.db.assetstore.service.JsonSchemaValidatorTest.ignoresUnknownProperties_whenSchemaDisallowsThem -- Time elapsed: 0.003 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Unexpected exception thrown: java.lang.IllegalArgumentException: JSON schema validation failed: $: właściwość „extra” nie jest zdefiniowana w schemacie i schemat nie pozwala na dodatkowe właściwości
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+	at org.junit.jupiter.api.AssertDoesNotThrow.createAssertionFailedError(AssertDoesNotThrow.java:84)
+	at org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:53)
+	at org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:36)
+	at org.junit.jupiter.api.Assertions.assertDoesNotThrow(Assertions.java:3199)
+	at com.db.assetstore.service.JsonSchemaValidatorTest.ignoresUnknownProperties_whenSchemaDisallowsThem(JsonSchemaValidatorTest.java:13)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+Caused by: java.lang.IllegalArgumentException: JSON schema validation failed: $: właściwość „extra” nie jest zdefiniowana w schemacie i schemat nie pozwala na dodatkowe właściwości
+	at com.db.assetstore.service.JsonSchemaValidator.validateOrThrow(JsonSchemaValidator.java:50)
+	at com.db.assetstore.service.JsonSchemaValidatorTest.lambda$ignoresUnknownProperties_whenSchemaDisallowsThem$0(JsonSchemaValidatorTest.java:13)
+	at org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:49)
+	... 6 more
+

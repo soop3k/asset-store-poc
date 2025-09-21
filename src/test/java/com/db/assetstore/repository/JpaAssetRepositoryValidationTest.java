@@ -62,8 +62,20 @@ class JpaAssetRepositoryValidationTest {
     private void seedAttributeDefs() {
         // Define attributes for CRE type: city (required), area (optional)
         em.getTransaction().begin();
-        em.persist(new AttributeDefEntity(AssetType.CRE, "city", "String", true));
-        em.persist(new AttributeDefEntity(AssetType.CRE, "area", "Double", false));
+        Long existingCity = em.createQuery("SELECT COUNT(d) FROM AttributeDefEntity d WHERE d.type = :t AND d.name = :n", Long.class)
+                .setParameter("t", AssetType.CRE)
+                .setParameter("n", "city")
+                .getSingleResult();
+        if (existingCity == null || existingCity == 0L) {
+            em.persist(new AttributeDefEntity(AssetType.CRE, "city", "String", true));
+        }
+        Long existingArea = em.createQuery("SELECT COUNT(d) FROM AttributeDefEntity d WHERE d.type = :t AND d.name = :n", Long.class)
+                .setParameter("t", AssetType.CRE)
+                .setParameter("n", "area")
+                .getSingleResult();
+        if (existingArea == null || existingArea == 0L) {
+            em.persist(new AttributeDefEntity(AssetType.CRE, "area", "Double", false));
+        }
         em.getTransaction().commit();
     }
 

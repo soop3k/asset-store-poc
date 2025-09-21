@@ -29,7 +29,7 @@ public class AttributeHistoryEntity {
     @Column(length = 128, nullable = false)
     private String name;
 
-    @Column(length = 1024)
+    @Column(name = "attr_value", length = 1024)
     private String value;
 
     @Column(name = "value_type", length = 32)

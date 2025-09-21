@@ -13,7 +13,13 @@ public final class AttributeValue<T> {
         this.type = Objects.requireNonNull(type);
     }
 
+    // Existing accessor-style methods
     public String name() { return name; }
     public T value() { return value; }
     public Class<T> type() { return type; }
+
+    // JavaBean getters for JSON serialization
+    public String getName() { return name; }
+    public T getValue() { return value; }
+    public Class<T> getType() { return type; }
 }

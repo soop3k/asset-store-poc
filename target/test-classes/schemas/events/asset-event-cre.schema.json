@@ -1,0 +1,113 @@
+{
+  "type": "CRE",
+  "title": "Asset CRE",
+  "properties": {
+    "asset_id": {
+      "$id": "#AssetEvent:asset_id",
+      "title": "Asset Id",
+      "description": "Asset Id",
+      "type": "integer"
+    },
+    "instrument_id": {
+      "$id": "#instrument_id",
+      "title": "Instrument Id",
+      "description": "id from the first AssetEntitlement",
+      "type": "string"
+    },
+    "asset_entitlement": {
+      "$id": "#AssetEvent:asset_entitlement",
+      "title": "Asset Entitlement",
+      "description": "a list of instrument ids from the instrument linkage",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "currency": {
+      "$id": "#AssetEvent:currency",
+      "title": "Currency",
+      "description": "Currency",
+      "type": "string"
+    },
+    "allocation_percent": {
+      "$id": "#AssetEvent:allocation_percent",
+      "title": "Allocation Percent",
+      "description": "Allocation Percent",
+      "type": "number"
+    },
+    "quantity_type": {
+      "$id": "#AssetEvent:quantity_type",
+      "title": "Quantity Type",
+      "description": "Quantity Type",
+      "type": "string"
+    },
+    "notional_amount": {
+      "$id": "#AssetEvent:notional_amount",
+      "title": "Notional Amount",
+      "description": "Notional Amount of Instrument",
+      "type": "number"
+    },
+    "instrument_currency": {
+      "$id": "#AssetEvent:instrument_currency",
+      "title": "Instrument Currency",
+      "description": "Instrument Currency",
+      "type": "string"
+    },
+    "valuation_date": {
+      "$id": "#AssetEvent:valuation_date",
+      "title": "Valuation date",
+      "description": "Valuation date of the Asset Valuation",
+      "type": "string",
+      "format": "date-time"
+    },
+    "calculation_date": {
+      "$id": "#AssetEvent:calculation_date",
+      "title": "Calculation date",
+      "description": "Calculation date of the Collateral Balance change",
+      "type": "string",
+      "format": "date-time"
+    },
+    "liquidation": {
+      "$id": "#AssetEvent:liquidation",
+      "title": "Asset liquidation",
+      "description": "Asset liquidation",
+      "$ref": "re_liquidation.schema.json"
+    },
+    "asset_status_id": {
+      "$id": "#AssetEvent:asset_status_id",
+      "title": "Asset Status Id",
+      "description": "Asset Status Id",
+      "type": "string"
+    },
+    "asset_status" : {
+      "$id": "#AssetEvent:asset_status",
+      "title": "String representation of the Asset status name for specific status id",
+      "description": "Asset Status string representation of the Asset status id, which is mapped from AssetStatus.java enum",
+      "type" : "string"
+    },
+    "subtype_id": {
+      "$id": "#AssetEvent:subtype_id",
+      "title": "Subtype Id",
+      "description": "Subtype Id",
+      "type": "string"
+    },
+    "description": {
+      "$id": "#AssetEvent:description",
+      "title": "description",
+      "description": "description",
+      "type": "string"
+    },
+    "property_type": {
+      "$id": "#AssetEvent:property_type",
+      "title": "Property Type",
+      "description": "Property Type",
+      "type": "string"
+    },
+    "property_subtype": {
+      "$id": "#AssetEvent:property_subtype",
+      "title": "Property subtype",
+      "description": "Property Subtype",
+      "type": "string"
+    }
+  }
+}

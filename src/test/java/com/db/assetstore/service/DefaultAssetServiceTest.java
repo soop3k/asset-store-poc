@@ -4,7 +4,7 @@ import com.db.assetstore.AssetType;
 import com.db.assetstore.model.Asset;
 import com.db.assetstore.model.AttributeHistory;
 import com.db.assetstore.model.AttributeValue;
-import com.db.assetstore.repo.AssetRepository;
+import com.db.assetstore.repository.AssetRepository;
 import com.db.assetstore.search.SearchCriteria;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,7 +39,7 @@ class DefaultAssetServiceTest {
 
     @Test
     void addAssetFromJsonParsesAndSaves() {
-        String json = "{\"type\":\"CRE\",\"id\":\"id2\",\"attributes\":{\"city\":\"Krakow\"}}";
+        String json = "{\"type\":\"CRE\",\"id\":\"id2\",\"city\":\"Krakow\"}";
         when(repository.saveAsset(any())).thenReturn("id2");
         String id = service.addAssetFromJson(json);
         assertEquals("id2", id);

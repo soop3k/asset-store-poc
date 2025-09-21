@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "asset_attribute", uniqueConstraints = {
@@ -30,7 +31,7 @@ public class AttributeEntity {
     @Column(length = 128, nullable = false)
     private String name;
 
-    @Column(length = 1024)
+    @Column(name = "attr_value", length = 1024)
     private String value;
 
     @Column(name = "value_type", length = 32)
@@ -53,8 +54,8 @@ public class AttributeEntity {
 
     public void updateValue(String value, String valueType, Instant when) {
         // Only record history when something actually changed (value or type)
-        boolean sameValue = java.util.Objects.equals(this.value, value);
-        boolean sameType = java.util.Objects.equals(this.valueType, valueType);
+        boolean sameValue = Objects.equals(this.value, value);
+        boolean sameType = Objects.equals(this.valueType, valueType);
         if (sameValue && sameType) {
             return; // no change -> no history entry
         }

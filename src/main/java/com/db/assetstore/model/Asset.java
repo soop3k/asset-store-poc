@@ -1,6 +1,8 @@
 package com.db.assetstore.model;
 
 import com.db.assetstore.AssetType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,6 +13,7 @@ import java.util.*;
 
 @Getter
 @Setter
+@JsonIgnoreProperties(value = {"attributes"}, allowGetters = true)
 public final class Asset {
     private String id; // UUID as string for DB portability
     private AssetType type;
@@ -32,26 +35,25 @@ public final class Asset {
     private String description = null;
     private String currency = null;
     // Keep a mutable map internally to allow in-place updates on a loaded Asset
-    private Map<String, AttributeValue<?>> attributes;
+    private Map<String, AttributeValue<?>> attributes = new LinkedHashMap<>();
 
     @Builder
     public Asset(String id, AssetType type, Instant createdAt, Collection<AttributeValue<?>> attrs) {
         this.id = Objects.requireNonNull(id);
         this.type = Objects.requireNonNull(type);
         this.createdAt = Objects.requireNonNullElseGet(createdAt, Instant::now);
-        Map<String, AttributeValue<?>> map = new LinkedHashMap<>();
         if (attrs != null) {
-            for (AttributeValue<?> a : attrs) map.put(a.name(), a);
+            for (AttributeValue<?> a : attrs) {
+                attributes.put(a.name(), a);
+            }
         }
-        this.attributes = map; // keep mutable for setAttribute(s)
     }
 
     // Expose an unmodifiable view to callers to prevent accidental external mutation
     public Map<String, AttributeValue<?>> attributes() { return Collections.unmodifiableMap(attributes); }
 
-    public static Asset ofNew(AssetType type, AttributeValue<?>... attrs) {
-        return new Asset(UUID.randomUUID().toString(), type, Instant.now(), Arrays.asList(attrs));
-    }
+    // JavaBean getter for JSON serialization (read-only view)
+    public Map<String, AttributeValue<?>> getAttributes() { return Collections.unmodifiableMap(attributes); }
 
     // New: in-place update of a single attribute on this Asset instance
     public void setAttribute(AttributeValue<?> attr) {

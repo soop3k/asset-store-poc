@@ -1,5 +1,7 @@
 package com.db.assetstore.service;
 
+import com.db.assetstore.json.AssetJsonFactory;
+
 import com.db.assetstore.AssetType;
 import com.db.assetstore.model.Asset;
 import com.db.assetstore.model.AttributeValue;
@@ -18,7 +20,7 @@ class AssetJsonFactoryTest {
         String json = "{" +
                 "\"type\":\"CRE\"," +
                 "\"id\":\"id-123\"," +
-                "\"attributes\":{\"city\":\"Warsaw\",\"area\":100.5,\"rooms\":3,\"active\":true}" +
+                "\"city\":\"Warsaw\",\"area\":100.5,\"rooms\":3,\"active\":true" +
                 "}";
         Asset a = factory.fromJson(json);
         assertEquals("id-123", a.getId());
@@ -31,30 +33,30 @@ class AssetJsonFactoryTest {
     }
 
     @Test
-    void generatesIdWhenMissingOrBlank() {
-        String jsonMissing = "{\"type\":\"CRE\",\"attributes\":{}}";
-        Asset a1 = factory.fromJson(jsonMissing);
-        assertNotNull(a1.getId());
-        assertFalse(a1.getId().isBlank());
+    void throwsOnMissingOrBlankId() {
+        String jsonMissing = "{\"type\":\"CRE\",\"city\":\"Warsaw\"}";
+        IllegalArgumentException ex1 = assertThrows(IllegalArgumentException.class, () -> factory.fromJson(jsonMissing));
+        assertTrue(ex1.getMessage().toLowerCase().contains("missing 'id'"));
 
-        String jsonBlank = "{\"type\":\"CRE\",\"id\":\"\",\"attributes\":{}}";
-        Asset a2 = factory.fromJson(jsonBlank);
-        assertNotNull(a2.getId());
-        assertFalse(a2.getId().isBlank());
+        String jsonBlank = "{\"type\":\"CRE\",\"id\":\"\",\"city\":\"Warsaw\"}";
+        IllegalArgumentException ex2 = assertThrows(IllegalArgumentException.class, () -> factory.fromJson(jsonBlank));
+        assertTrue(ex2.getMessage().toLowerCase().contains("missing 'id'"));
     }
 
     @Test
-    void handlesNullAndNonScalarAttributesAsString() {
+    void handlesUnknownAndNonScalarAttributesIgnored_whenNotDefined() {
         String json = "{" +
                 "\"type\":\"CRE\"," +
-                "\"attributes\":{\"note\":null,\"obj\":{\"a\":1},\"arr\":[1,2,3]}" +
+                "\"id\":\"id-456\"," +
+                "\"city\":\"Warsaw\",\"note\":null,\"obj\":{\"a\":1},\"arr\":[1,2,3]" +
                 "}";
         Asset a = factory.fromJson(json);
         Map<String, AttributeValue<?>> attrs = a.attributes();
-        assertNull(attrs.get("note").value());
-        assertNotNull(attrs.get("obj").value());
-        assertTrue(attrs.get("obj").value() instanceof String);
-        assertTrue(attrs.get("arr").value() instanceof String);
+        assertEquals(1, attrs.size());
+        assertEquals("Warsaw", attrs.get("city").value());
+        assertFalse(attrs.containsKey("note"));
+        assertFalse(attrs.containsKey("obj"));
+        assertFalse(attrs.containsKey("arr"));
     }
 
     @Test

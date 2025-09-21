@@ -28,6 +28,8 @@
     </scm>
     <properties>
         <java.version>17</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
     <dependencies>
         <dependency>
@@ -66,7 +68,14 @@
         <dependency>
             <groupId>com.networknt</groupId>
             <artifactId>json-schema-validator</artifactId>
-            <version>1.0.89</version>
+            <version>1.5.1</version>
+        </dependency>
+
+        <!-- JSLT (Schibsted) for JSON transformations -->
+        <dependency>
+            <groupId>com.schibsted.spt.data</groupId>
+            <artifactId>jslt</artifactId>
+            <version>0.1.14</version>
         </dependency>
 
         <dependency>
@@ -80,23 +89,6 @@
             <artifactId>liquibase-core</artifactId>
         </dependency>
     
-        <!-- Apache Camel for JSLT transformations (core + jslt language) -->
-        <dependency>
-            <groupId>org.apache.camel</groupId>
-            <artifactId>camel-core</artifactId>
-            <version>3.21.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.camel</groupId>
-            <artifactId>camel-jslt</artifactId>
-            <version>3.21.0</version>
-        </dependency>
-        <!-- Fallback pure JSLT engine (used only if Camel JSLT is unavailable at runtime) -->
-        <dependency>
-            <groupId>com.schibsted.spt.data</groupId>
-            <artifactId>jslt</artifactId>
-            <version>0.1.14</version>
-        </dependency>
     </dependencies>
 
     <build>
