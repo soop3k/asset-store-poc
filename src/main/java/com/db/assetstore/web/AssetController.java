@@ -1,9 +1,9 @@
 package com.db.assetstore.web;
 
 import com.db.assetstore.AssetType;
-import com.db.assetstore.model.Asset;
-import com.db.assetstore.search.SearchCriteria;
-import com.db.assetstore.service.AssetService;
+import com.db.assetstore.domain.model.Asset;
+import com.db.assetstore.domain.search.SearchCriteria;
+import com.db.assetstore.domain.service.AssetService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -61,5 +61,13 @@ public class AssetController {
         return assetService.getAsset(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    // Unified asset update: updates both common fields and type-specific attributes
+    @PutMapping(path = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> updateAsset(@PathVariable("id") String id, @RequestBody String jsonBody) {
+        log.info("HTTP PUT /assets/{} - updating asset", id);
+        assetService.updateAssetFromJson(id, jsonBody);
+        return ResponseEntity.noContent().build();
     }
 }

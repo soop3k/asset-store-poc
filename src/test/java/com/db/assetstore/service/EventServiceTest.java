@@ -1,11 +1,13 @@
 package com.db.assetstore.service;
 
 import com.db.assetstore.AssetType;
-import com.db.assetstore.model.Asset;
-import com.db.assetstore.model.AttributeValue;
+import com.db.assetstore.domain.model.Asset;
+import com.db.assetstore.domain.model.AttributeValue;
+import com.db.assetstore.domain.service.EventService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import com.db.assetstore.domain.service.transform.JsonTransformer;
 
 import java.time.Instant;
 import java.util.List;

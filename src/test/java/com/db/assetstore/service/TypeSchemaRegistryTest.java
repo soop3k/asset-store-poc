@@ -1,6 +1,6 @@
 package com.db.assetstore.service;
 
-import com.db.assetstore.schema.TypeSchemaRegistry;
+import com.db.assetstore.domain.schema.TypeSchemaRegistry;
 
 import com.db.assetstore.AssetType;
 import org.junit.jupiter.api.Test;

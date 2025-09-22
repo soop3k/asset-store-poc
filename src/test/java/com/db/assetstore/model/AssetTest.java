@@ -1,6 +1,8 @@
 package com.db.assetstore.model;
 
 import com.db.assetstore.AssetType;
+import com.db.assetstore.domain.model.Asset;
+import com.db.assetstore.domain.model.AttributeValue;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;

@@ -1,5 +1,6 @@
 package com.db.assetstore.model;
 
+import com.db.assetstore.domain.model.AttributeValue;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

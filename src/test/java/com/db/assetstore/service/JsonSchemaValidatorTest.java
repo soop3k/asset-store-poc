@@ -1,7 +1,7 @@
 package com.db.assetstore.service;
 
 import org.junit.jupiter.api.Test;
-import com.db.assetstore.service.validation.JsonSchemaValidator;
+import com.db.assetstore.domain.service.validation.JsonSchemaValidator;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;

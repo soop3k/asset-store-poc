@@ -1,12 +1,13 @@
 package com.db.assetstore.mapper;
 
-import com.db.assetstore.jpa.AssetEntity;
-import com.db.assetstore.model.Asset;
+import com.db.assetstore.infra.jpa.AssetEntity;
+import com.db.assetstore.infra.mapper.AssetMapper;
+import com.db.assetstore.domain.model.Asset;
 import javax.annotation.processing.Generated;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-09-20T23:03:04+0200",
+    date = "2025-09-21T16:47:08+0200",
     comments = "version: 1.5.5.Final, compiler: javac, environment: Java 25 (Oracle Corporation)"
 )
 public class AssetMapperImpl implements AssetMapper {

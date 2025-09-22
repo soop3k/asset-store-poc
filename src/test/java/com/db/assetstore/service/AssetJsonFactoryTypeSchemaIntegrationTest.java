@@ -1,14 +1,17 @@
 package com.db.assetstore.service;
 
-import com.db.assetstore.json.AssetJsonFactory;
+import com.db.assetstore.domain.service.AssetService;
+import com.db.assetstore.domain.json.AssetJsonFactory;
 
 import com.db.assetstore.AssetType;
-import com.db.assetstore.model.Asset;
+import com.db.assetstore.infra.repository.AssetRepository;
+import com.db.assetstore.infra.repository.AttributeDefRepository;
+import com.db.assetstore.infra.repository.AttributeHistoryRepository;
+import com.db.assetstore.infra.repository.AttributeRepository;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 
 class AssetJsonFactoryTypeSchemaIntegrationTest {
 
@@ -18,8 +21,11 @@ class AssetJsonFactoryTypeSchemaIntegrationTest {
     void addAssetFromJsonRejectsTypeWithoutSchema_viaService() {
         // SPV is in enum but there is no schemas/SPV.schema.json; should be rejected now
         String json = "{\"type\":\"SPV\",\"id\":\"spv-1\"}";
-        var repo = Mockito.mock(com.db.assetstore.repository.AssetRepository.class);
-        var svc = new DefaultAssetService(repo);
+        var assetRepo = Mockito.mock(AssetRepository.class);
+        var attrRepo = Mockito.mock(AttributeRepository.class);
+        var defRepo = Mockito.mock(AttributeDefRepository.class);
+        var historyRepo = Mockito.mock(AttributeHistoryRepository.class);
+        var svc = new AssetService(assetRepo, attrRepo, defRepo, historyRepo);
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> svc.addAssetFromJson(json));
         assertTrue(ex.getMessage().toLowerCase().contains("schema"));
     }
@@ -31,8 +37,11 @@ class AssetJsonFactoryTypeSchemaIntegrationTest {
                 "\"id\":\"cre-1\"," +
                 "\"rooms\":2" + // missing required city
                 "}";
-        var repo = Mockito.mock(com.db.assetstore.repository.AssetRepository.class);
-        var svc = new DefaultAssetService(repo);
+        var assetRepo = Mockito.mock(AssetRepository.class);
+        var attrRepo = Mockito.mock(AttributeRepository.class);
+        var defRepo = Mockito.mock(AttributeDefRepository.class);
+        var historyRepo = Mockito.mock(AttributeHistoryRepository.class);
+        var svc = new AssetService(assetRepo, attrRepo, defRepo, historyRepo);
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> svc.addAssetFromJson(AssetType.CRE, attrs));
         assertTrue(ex.getMessage().toLowerCase().contains("validation"), ex.getMessage());
@@ -46,11 +55,15 @@ class AssetJsonFactoryTypeSchemaIntegrationTest {
                 "\"city\":\"Gdansk\"," +
                 "\"unknownAttr\":123" +
                 "}";
-        var repo = Mockito.mock(com.db.assetstore.repository.AssetRepository.class);
-        Mockito.when(repo.saveAsset(any(Asset.class))).thenReturn("id-x");
-        var svc = new DefaultAssetService(repo);
+        var assetRepo = Mockito.mock(AssetRepository.class);
+        // Service returns ID from saved entity
+        Mockito.when(assetRepo.save(Mockito.any())).thenAnswer(inv -> inv.getArgument(0));
+        var attrRepo = Mockito.mock(AttributeRepository.class);
+        var defRepo = Mockito.mock(AttributeDefRepository.class);
+        var historyRepo = Mockito.mock(AttributeHistoryRepository.class);
+        var svc = new AssetService(assetRepo, attrRepo, defRepo, historyRepo);
 
         String id = svc.addAssetFromJson(AssetType.CRE, attrs);
-        assertEquals("id-x", id);
+        assertEquals("cre-2", id);
     }
 }

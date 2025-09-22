@@ -1,10 +1,10 @@
 package com.db.assetstore.service;
 
-import com.db.assetstore.json.AssetJsonFactory;
+import com.db.assetstore.domain.json.AssetJsonFactory;
 
 import com.db.assetstore.AssetType;
-import com.db.assetstore.model.Asset;
-import com.db.assetstore.model.AttributeValue;
+import com.db.assetstore.domain.model.Asset;
+import com.db.assetstore.domain.model.AttributeValue;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;

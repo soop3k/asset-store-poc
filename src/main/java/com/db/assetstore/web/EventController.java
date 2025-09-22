@@ -1,8 +1,8 @@
 package com.db.assetstore.web;
 
-import com.db.assetstore.model.Asset;
-import com.db.assetstore.service.AssetService;
-import com.db.assetstore.service.EventService;
+import com.db.assetstore.domain.model.Asset;
+import com.db.assetstore.domain.service.AssetService;
+import com.db.assetstore.domain.service.EventService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;

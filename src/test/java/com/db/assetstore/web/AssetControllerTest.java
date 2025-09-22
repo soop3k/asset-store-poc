@@ -1,8 +1,7 @@
 package com.db.assetstore.web;
 
-import com.db.assetstore.model.Asset;
-import com.db.assetstore.search.SearchCriteria;
-import com.db.assetstore.service.AssetService;
+import com.db.assetstore.domain.search.SearchCriteria;
+import com.db.assetstore.domain.service.AssetService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;

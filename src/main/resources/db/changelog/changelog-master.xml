@@ -105,4 +105,13 @@
             <column name="currency" type="varchar(8)"/>
         </addColumn>
     </changeSet>
+
+    <changeSet id="5-attr-typed-columns" author="junie">
+        <addColumn tableName="asset_attribute">
+            <column name="value_str" type="varchar(1024)"/>
+            <column name="value_bool" type="boolean"/>
+            <column name="value_num" type="decimal(38,10)"/>
+        </addColumn>
+        <dropColumn tableName="asset_attribute" columnName="attr_value"/>
+    </changeSet>
 </databaseChangeLog>

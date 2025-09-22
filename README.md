@@ -88,7 +88,7 @@ Architektura i lista klas/serwisów (PL)
   - Automatycznie rozpoznaje pola modelowe Asset (odbijanie/reflection) i ustawia je, a pozostałe trafiają do mapy atrybutów (AttributeValue).
 - com.db.assetstore.service.AssetAttributeConverter
   - Konwersja obiektów JSON atrybutów do listy AttributeValue<?> (String/Long/Double/Boolean; inne typy serializowane jako String).
-- com.db.assetstore.service.AssetCanonicalizer
+- com.db.assetstore.json.AssetCanonicalizer
   - Buduje kanoniczne JSON aktywa (płaski model + attributes{}) pod transformacje / eventy.
 - com.db.assetstore.service.JsonTransformer
   - Silnik transformacji JSON->JSON oparty o JSLT (Schibsted). Szablony pod transforms/{nazwa}.jslt.
@@ -172,3 +172,14 @@ Uwagi implementacyjne
 - Walidacja schematów jest „best-effort”: brak schematu nie blokuje działania (typy z enum są akceptowane), a nieznane pola są ignorowane przez walidator.
 - AssetJsonFactory dynamicznie wykrywa pola modelowe Asset – nie trzeba uaktualniać listy ręcznie przy zmianach modelu.
 - Repozytorium stanowi ostatnią linię obrony spójności danych, nawet gdy walidacja wyżej została pominięta.
+
+
+
+---
+Chore (2025-09-21): housekeeping commit to confirm VCS/pipeline. No functional changes; documentation note added.
+
+
+## Diagramy przepływów (flows)
+Dla wizualnego przedstawienia etapów działania oraz użytych komponentów przygotowaliśmy zestaw diagramów (Mermaid):
+- Zobacz: docs/flows.md
+

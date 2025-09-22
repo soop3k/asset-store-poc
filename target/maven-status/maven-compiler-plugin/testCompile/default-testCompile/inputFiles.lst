@@ -5,7 +5,6 @@ C:\Users\tzsa\IdeaProjects\asset-store-poc\src\test\java\com\db\assetstore\model
 C:\Users\tzsa\IdeaProjects\asset-store-poc\src\test\java\com\db\assetstore\repository\JpaAssetRepositoryValidationTest.java
 C:\Users\tzsa\IdeaProjects\asset-store-poc\src\test\java\com\db\assetstore\service\AssetJsonFactoryTest.java
 C:\Users\tzsa\IdeaProjects\asset-store-poc\src\test\java\com\db\assetstore\service\AssetJsonFactoryTypeSchemaIntegrationTest.java
-C:\Users\tzsa\IdeaProjects\asset-store-poc\src\test\java\com\db\assetstore\service\AssetJsonFactoryUtf8Test.java
 C:\Users\tzsa\IdeaProjects\asset-store-poc\src\test\java\com\db\assetstore\service\DefaultAssetServiceTest.java
 C:\Users\tzsa\IdeaProjects\asset-store-poc\src\test\java\com\db\assetstore\service\EventServiceAdvancedTest.java
 C:\Users\tzsa\IdeaProjects\asset-store-poc\src\test\java\com\db\assetstore\service\EventServiceTest.java
