@@ -1,6 +1,6 @@
 package com.db.assetstore.infra.jpa;
 
-import com.db.assetstore.domain.model.AttributeType;
+import com.db.assetstore.domain.model.type.AttributeType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,7 +19,7 @@ public class AttributeHistoryEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY) // właściciel historii
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "attribute_id", nullable = false)
     private AttributeEntity attribute;
 
@@ -47,16 +47,14 @@ public class AttributeHistoryEntity {
     @Column(name = "changed_at", nullable = false)
     private Instant changedAt;
 
-    public static AttributeHistoryEntity fromCurrent(AttributeEntity attribute, Instant when) {
-        AttributeHistoryEntity h = new AttributeHistoryEntity();
-        h.attribute = Objects.requireNonNull(attribute);
-        h.asset     = attribute.getAsset();
-        h.name      = attribute.getName();
-        h.valueType = attribute.getValueType();
-        h.valueStr  = attribute.getValueStr();
-        h.valueNum  = attribute.getValueNum();
-        h.valueBool = attribute.getValueBool();
-        h.changedAt = Objects.requireNonNull(when);
-        return h;
+    public AttributeHistoryEntity(AttributeEntity attribute, Instant when) {
+        this.attribute = Objects.requireNonNull(attribute);
+        this.asset     = attribute.getAsset();
+        this.name      = attribute.getName();
+        this.valueType = attribute.getValueType();
+        this.valueStr  = attribute.getValueStr();
+        this.valueNum  = attribute.getValueNum();
+        this.valueBool = attribute.getValueBool();
+        this.changedAt = Objects.requireNonNull(when);
     }
 }

@@ -2,7 +2,6 @@ C:\Users\tzsa\IdeaProjects\asset-store-poc\src\test\java\com\db\assetstore\api\A
 C:\Users\tzsa\IdeaProjects\asset-store-poc\src\test\java\com\db\assetstore\api\AssetControllerTest.java
 C:\Users\tzsa\IdeaProjects\asset-store-poc\src\test\java\com\db\assetstore\model\AssetTest.java
 C:\Users\tzsa\IdeaProjects\asset-store-poc\src\test\java\com\db\assetstore\model\AttributeValueTest.java
-C:\Users\tzsa\IdeaProjects\asset-store-poc\src\test\java\com\db\assetstore\repository\JpaAssetRepositoryValidationTest.java
 C:\Users\tzsa\IdeaProjects\asset-store-poc\src\test\java\com\db\assetstore\service\AssetJsonFactoryTest.java
 C:\Users\tzsa\IdeaProjects\asset-store-poc\src\test\java\com\db\assetstore\service\AssetJsonFactoryTypeSchemaIntegrationTest.java
 C:\Users\tzsa\IdeaProjects\asset-store-poc\src\test\java\com\db\assetstore\service\DefaultAssetServiceTest.java
@@ -15,5 +14,7 @@ C:\Users\tzsa\IdeaProjects\asset-store-poc\src\test\java\com\db\assetstore\servi
 C:\Users\tzsa\IdeaProjects\asset-store-poc\src\test\java\com\db\assetstore\service\TypeSchemaRegistryTest.java
 C:\Users\tzsa\IdeaProjects\asset-store-poc\src\test\java\com\db\assetstore\web\AssetBulkE2ETest.java
 C:\Users\tzsa\IdeaProjects\asset-store-poc\src\test\java\com\db\assetstore\web\AssetControllerErrorTest.java
-C:\Users\tzsa\IdeaProjects\asset-store-poc\src\test\java\com\db\assetstore\web\AssetControllerTest.java
 C:\Users\tzsa\IdeaProjects\asset-store-poc\src\test\java\com\db\assetstore\web\AssetEventE2ETest.java
+C:\Users\tzsa\IdeaProjects\asset-store-poc\src\test\java\integration\IntegrationAssetHistoryTest.java
+C:\Users\tzsa\IdeaProjects\asset-store-poc\src\test\java\integration\IntegrationAssetPersistenceTest.java
+C:\Users\tzsa\IdeaProjects\asset-store-poc\src\test\java\integration\IntegrationMultipleAssetTypesTest.java

@@ -1,0 +1,12 @@
+com\db\assetstore\web\AssetEventE2ETest.class
+com\db\assetstore\service\JsonTransformerTest.class
+com\db\assetstore\service\JsonSchemaValidatorTest.class
+com\db\assetstore\service\TypeSchemaRegistryTest.class
+com\db\assetstore\model\AttributeValueTest.class
+com\db\assetstore\service\AssetJsonFactoryTest.class
+com\db\assetstore\web\AssetControllerErrorTest.class
+com\db\assetstore\service\JsonTransformerRequiresSchemaTest.class
+com\db\assetstore\web\AssetControllerErrorTest$MockConfig.class
+com\db\assetstore\web\AssetBulkE2ETest.class
+com\db\assetstore\model\AssetTest.class
+com\db\assetstore\service\JsonTransformerComplexTest.class

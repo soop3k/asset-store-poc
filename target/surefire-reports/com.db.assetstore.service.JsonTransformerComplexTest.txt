@@ -1,17 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.db.assetstore.service.JsonTransformerComplexTest
 -------------------------------------------------------------------------------
-Tests run: 4, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.117 s <<< FAILURE! -- in com.db.assetstore.service.JsonTransformerComplexTest
-com.db.assetstore.service.JsonTransformerComplexTest.missingFieldsBecomeNullInOutput -- Time elapsed: 0.023 s <<< ERROR!
-java.lang.IllegalArgumentException: Failed to transform JSON: JSON schema validation failed: $: nie znaleziono wymaganej właściwości „kind”.; $: nie znaleziono wymaganej właściwości „payload”.
-	at com.db.assetstore.service.JsonTransformer.transform(JsonTransformer.java:103)
-	at com.db.assetstore.service.JsonTransformerComplexTest.missingFieldsBecomeNullInOutput(JsonTransformerComplexTest.java:64)
-	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
-Caused by: java.lang.IllegalArgumentException: JSON schema validation failed: $: nie znaleziono wymaganej właściwości „kind”.; $: nie znaleziono wymaganej właściwości „payload”.
-	at com.db.assetstore.service.JsonSchemaValidator.validateOrThrow(JsonSchemaValidator.java:50)
-	at com.db.assetstore.service.JsonSchemaValidator.validateIfPresent(JsonSchemaValidator.java:72)
-	at com.db.assetstore.service.JsonTransformer.transform(JsonTransformer.java:86)
-	... 4 more
-
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.070 s -- in com.db.assetstore.service.JsonTransformerComplexTest

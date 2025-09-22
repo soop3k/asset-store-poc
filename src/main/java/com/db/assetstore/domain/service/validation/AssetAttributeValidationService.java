@@ -2,9 +2,9 @@ package com.db.assetstore.domain.service.validation;
 
 import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.model.Asset;
-import com.db.assetstore.domain.model.AttributeValue;
-import lombok.extern.slf4j.Slf4j;
+import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.json.AssetJsonFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -29,7 +29,7 @@ public final class AssetAttributeValidationService {
         Asset asset = factory.fromJson(json);
         AssetType type = asset.getType();
         typeValidator.ensureSupported(type);
-        Collection<AttributeValue<?>> attrs = asset.getAttributesByName().values();
+        Collection<AttributeValue<?>> attrs = asset.getAttributesFlat();
         typeValidator.validateAttributes(type, attrs);
         log.debug("Validated attributes from flat payload for type={}", type);
     }
@@ -42,7 +42,7 @@ public final class AssetAttributeValidationService {
         Asset asset = factory.fromJson(node);
         AssetType type = asset.getType();
         typeValidator.ensureSupported(type);
-        Collection<AttributeValue<?>> attrs = asset.getAttributesByName().values();
+        Collection<AttributeValue<?>> attrs = asset.getAttributesFlat();
         typeValidator.validateAttributes(type, attrs);
         log.debug("Validated attributes from flat payload for type={}", type);
     }
@@ -55,7 +55,7 @@ public final class AssetAttributeValidationService {
         Objects.requireNonNull(json, "json");
         typeValidator.ensureSupported(type);
         Asset asset = factory.fromJsonForType(type, json);
-        Collection<AttributeValue<?>> attrs = asset.getAttributesByName().values();
+        Collection<AttributeValue<?>> attrs = asset.getAttributesFlat();
         typeValidator.validateAttributes(type, attrs);
         log.debug("Validated type-specific attributes for type={}", type);
     }

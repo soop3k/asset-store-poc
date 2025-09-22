@@ -2,7 +2,9 @@ package com.db.assetstore.service;
 
 import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.model.Asset;
-import com.db.assetstore.domain.model.AttributeValue;
+import com.db.assetstore.domain.model.type.AVBoolean;
+import com.db.assetstore.domain.model.type.AVDecimal;
+import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.domain.service.EventService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,15 +30,15 @@ class EventServiceAdvancedTest {
                 .id("E-1")
                 .type(AssetType.CRE)
                 .createdAt(created)
-                .attrs(List.of(
-                        new AttributeValue<>("intAttr", 7, Integer.class),
-                        new AttributeValue<>("longAttr", 1234567890123L, Long.class),
-                        new AttributeValue<>("dblAttr", 3.14159, Double.class),
-                        new AttributeValue<>("boolAttr", true, Boolean.class),
-                        new AttributeValue<>("nullAttr", null, String.class),
-                        new AttributeValue<>("tsAttr", created, Instant.class)
-                ))
                 .build();
+        asset.setAttributes(List.of(
+                AVDecimal.of("intAttr", 7),
+                AVDecimal.of("longAttr", 1234567890123L),
+                AVDecimal.of("dblAttr", 3.14159),
+                new AVBoolean("boolAttr", true),
+                new AVString("nullAttr", null),
+                new AVString("tsAttr", created.toString())
+        ));
         asset.setVersion(42L);
         asset.setStatus("ACTIVE");
         asset.setSubtype("SUB");

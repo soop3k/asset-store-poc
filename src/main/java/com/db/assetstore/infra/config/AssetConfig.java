@@ -12,17 +12,8 @@ import com.db.assetstore.infra.repository.AttributeRepository;
 import com.db.assetstore.infra.repository.AttributeDefRepository;
 
 @Configuration
-@EntityScan(basePackages = "com.db.assetstore.jpa")
+@EntityScan(basePackages = "com.db.assetstore.infra.jpa")
 public class AssetConfig {
-
-    @Bean
-    public AssetService assetService(
-            AssetRepository assetRepo,
-            AttributeRepository attributeRepo,
-            AttributeDefRepository defRepo,
-            AttributeHistoryRepository historyRepo) {
-        return new AssetService(assetRepo, attributeRepo, defRepo, historyRepo);
-    }
 
     @Bean
     public JsonTransformer jsonTransformer() {

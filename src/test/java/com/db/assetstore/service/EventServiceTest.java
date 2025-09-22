@@ -2,7 +2,8 @@ package com.db.assetstore.service;
 
 import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.model.Asset;
-import com.db.assetstore.domain.model.AttributeValue;
+import com.db.assetstore.domain.model.type.AVDecimal;
+import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.domain.service.EventService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,11 +24,11 @@ class EventServiceTest {
                 .id("A-1")
                 .type(AssetType.CRE)
                 .createdAt(Instant.parse("2024-01-01T00:00:00Z"))
-                .attrs(List.of(
-                        new AttributeValue<>("city", "Gdansk", String.class),
-                        new AttributeValue<>("rooms", 2, Integer.class)
-                ))
                 .build();
+        asset.setAttributes(List.of(
+                new AVString("city", "Gdansk"),
+                AVDecimal.of("rooms", 2)
+        ));
 
         EventService svc = new EventService(new JsonTransformer());
         String event = svc.generate("AssetUpserted", asset);

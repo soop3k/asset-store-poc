@@ -11,13 +11,7 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Builds attribute definitions for each supported AssetType based on the JSON Schemas
- * present on the classpath. This registry is intended to support downstream components
- * (e.g., persistence layer) that need a catalog of known attributes and which ones are required.
- *
- * Change: store attribute type as an abstraction (ValueType) instead of plain String names.
- */
+
 public final class AttributeDefinitionRegistry {
     private static final Logger log = LoggerFactory.getLogger(AttributeDefinitionRegistry.class);
     private static final ObjectMapper M = new ObjectMapper();

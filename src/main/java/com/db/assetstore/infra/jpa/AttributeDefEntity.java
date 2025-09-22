@@ -1,6 +1,6 @@
 package com.db.assetstore.infra.jpa;
 
-import com.db.assetstore.domain.model.AttributeType;
+import com.db.assetstore.domain.model.type.AttributeType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -13,10 +13,7 @@ import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
 import com.networknt.schema.ValidationMessage;
 
-/**
- * JSON Schema validation facade using networknt json-schema-validator directly.
- * Validates exactly per schema; any validation error results in IllegalArgumentException.
- */
+
 public final class JsonSchemaValidator {
     private static final Logger log = LoggerFactory.getLogger(JsonSchemaValidator.class);
     private static final ObjectMapper MAPPER = new ObjectMapper();

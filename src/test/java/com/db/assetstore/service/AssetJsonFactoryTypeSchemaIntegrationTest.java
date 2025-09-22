@@ -1,14 +1,17 @@
 package com.db.assetstore.service;
 
-import com.db.assetstore.domain.service.AssetService;
-import com.db.assetstore.domain.json.AssetJsonFactory;
-
 import com.db.assetstore.AssetType;
+import com.db.assetstore.domain.json.AssetJsonFactory;
+import com.db.assetstore.infra.mapper.AssetMapper;
+import com.db.assetstore.infra.mapper.AttributeHistoryMapper;
+import com.db.assetstore.infra.mapper.AttributeMapper;
 import com.db.assetstore.infra.repository.AssetRepository;
 import com.db.assetstore.infra.repository.AttributeDefRepository;
 import com.db.assetstore.infra.repository.AttributeHistoryRepository;
 import com.db.assetstore.infra.repository.AttributeRepository;
+import com.db.assetstore.infra.service.search.AssetSearchSpecificationService;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 import org.mockito.Mockito;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -25,7 +28,12 @@ class AssetJsonFactoryTypeSchemaIntegrationTest {
         var attrRepo = Mockito.mock(AttributeRepository.class);
         var defRepo = Mockito.mock(AttributeDefRepository.class);
         var historyRepo = Mockito.mock(AttributeHistoryRepository.class);
-        var svc = new AssetService(assetRepo, attrRepo, defRepo, historyRepo);
+        var assetMapper = Mappers.getMapper(AssetMapper.class);
+        var attributeMapper = Mockito.mock(AttributeMapper.class,
+                Mockito.withSettings().defaultAnswer(Mockito.CALLS_REAL_METHODS));
+        var specService = new AssetSearchSpecificationService();
+        var historyMapper = Mappers.getMapper(AttributeHistoryMapper.class);
+        var svc = new com.db.assetstore.infra.service.AssetService(assetMapper, attributeMapper, assetRepo, attrRepo, defRepo, historyRepo, specService, historyMapper);
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> svc.addAssetFromJson(json));
         assertTrue(ex.getMessage().toLowerCase().contains("schema"));
     }
@@ -41,7 +49,12 @@ class AssetJsonFactoryTypeSchemaIntegrationTest {
         var attrRepo = Mockito.mock(AttributeRepository.class);
         var defRepo = Mockito.mock(AttributeDefRepository.class);
         var historyRepo = Mockito.mock(AttributeHistoryRepository.class);
-        var svc = new AssetService(assetRepo, attrRepo, defRepo, historyRepo);
+        var assetMapper = Mappers.getMapper(AssetMapper.class);
+        var attributeMapper = Mockito.mock(AttributeMapper.class,
+                Mockito.withSettings().defaultAnswer(Mockito.CALLS_REAL_METHODS));
+        var specService = new AssetSearchSpecificationService();
+        var historyMapper = Mappers.getMapper(AttributeHistoryMapper.class);
+        var svc = new com.db.assetstore.infra.service.AssetService(assetMapper, attributeMapper, assetRepo, attrRepo, defRepo, historyRepo, specService, historyMapper);
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> svc.addAssetFromJson(AssetType.CRE, attrs));
         assertTrue(ex.getMessage().toLowerCase().contains("validation"), ex.getMessage());
@@ -61,7 +74,12 @@ class AssetJsonFactoryTypeSchemaIntegrationTest {
         var attrRepo = Mockito.mock(AttributeRepository.class);
         var defRepo = Mockito.mock(AttributeDefRepository.class);
         var historyRepo = Mockito.mock(AttributeHistoryRepository.class);
-        var svc = new AssetService(assetRepo, attrRepo, defRepo, historyRepo);
+        var assetMapper = Mappers.getMapper(AssetMapper.class);
+        var attributeMapper = Mockito.mock(AttributeMapper.class,
+                Mockito.withSettings().defaultAnswer(Mockito.CALLS_REAL_METHODS));
+        var specService = new AssetSearchSpecificationService();
+        var historyMapper = Mappers.getMapper(AttributeHistoryMapper.class);
+        var svc = new com.db.assetstore.infra.service.AssetService(assetMapper, attributeMapper, assetRepo, attrRepo, defRepo, historyRepo, specService, historyMapper);
 
         String id = svc.addAssetFromJson(AssetType.CRE, attrs);
         assertEquals("cre-2", id);

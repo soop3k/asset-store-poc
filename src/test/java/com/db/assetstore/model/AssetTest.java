@@ -2,13 +2,17 @@ package com.db.assetstore.model;
 
 import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.model.Asset;
-import com.db.assetstore.domain.model.AttributeValue;
+import com.db.assetstore.domain.model.attribute.AttributeValue;
+import com.db.assetstore.domain.model.attribute.AttributesCollection;
+import com.db.assetstore.domain.model.type.AVBoolean;
+import com.db.assetstore.domain.model.type.AVDecimal;
+import com.db.assetstore.domain.model.type.AVString;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -16,65 +20,43 @@ class AssetTest {
 
     @Test
     void setAttributeAndSetAttributesWork() {
-        Asset a = new Asset("id", AssetType.CRE, Instant.now(), List.of(new AttributeValue<>("city", "Warsaw", String.class)));
-        assertEquals("Warsaw", a.attributes().get("city").value());
+        Map<String, List<AttributeValue<?>>> init = Map.of(
+                "city", List.of(new AVString("city", "Warsaw"))
+        );
+        Asset a = new Asset("id", AssetType.CRE, Instant.now(), AttributesCollection.fromMap(init));
+        assertEquals("Warsaw", a.getAttributesByName().get("city").get(0).value());
 
-        a.setAttribute(new AttributeValue<>("city", "Krakow", String.class));
-        assertEquals("Krakow", a.attributes().get("city").value());
+        a.setAttribute(AVString.of("city", "Krakow"));
+        List<AttributeValue<?>> cities = a.getAttributesByName().get("city");
+        assertEquals(2, cities.size());
+        assertEquals("Krakow", cities.get(1).value());
 
-        a.setAttribute("rooms", 3L, Long.class);
-        assertEquals(3L, a.attributes().get("rooms").value());
+        a.setAttribute(AVDecimal.of("rooms", new BigDecimal("3")));
+        assertEquals(new BigDecimal("3"), a.getAttributesByName().get("rooms").get(0).value());
 
-        a.setAttributes(List.of(new AttributeValue<>("active", true, Boolean.class)));
-        Map<String, AttributeValue<?>> attrs = a.attributes();
-        assertEquals(Boolean.TRUE, attrs.get("active").value());
-        assertEquals(3L, attrs.get("rooms").value());
-        assertEquals("Krakow", attrs.get("city").value());
+        a.setAttributes(List.of(new AVBoolean("active", true)));
+        Map<String, List<AttributeValue<?>>> attrs = a.getAttributesByName();
+        assertTrue(attrs.containsKey("active"));
+        assertEquals(Boolean.TRUE, attrs.get("active").get(0).value());
+        assertFalse(attrs.containsKey("rooms"));
+        assertFalse(attrs.containsKey("city"));
     }
 
     @Test
-    void getAttributeGenericWorksAndIsTypeSafe() {
-        Asset a = new Asset("id", AssetType.CRE, Instant.now(), List.of(
-                new AttributeValue<>("city", "Gdansk", String.class),
-                new AttributeValue<>("rooms", 2L, Long.class)
+    void attributesCollectionAccessorsWork() {
+        Asset a = new Asset("id", AssetType.CRE, Instant.now(), AttributesCollection.empty());
+        a.setAttributes(List.of(
+                AVString.of("city", "Gdansk"),
+                AVDecimal.of("rooms", 2),
+                AVBoolean.of("active", true)
         ));
 
-        Optional<String> city = a.getAttribute("city", String.class);
-        assertTrue(city.isPresent());
-        assertEquals("Gdansk", city.get());
+        AttributesCollection attrSet = AttributesCollection.fromFlat(a.getAttributesFlat());
+        assertEquals("Gdansk", attrSet.getFirstByName("city").orElseThrow().value());
+        assertEquals(new java.math.BigDecimal("2"), attrSet.getFirstByName("rooms").orElseThrow().value());
+        assertEquals(Boolean.TRUE, attrSet.getFirstByName("active").orElseThrow().value());
 
-        Optional<Long> rooms = a.getAttribute("rooms", Long.class);
-        assertEquals(2L, rooms.orElseThrow());
-
-        // Missing attribute
-        assertTrue(a.getAttribute("price", Long.class).isEmpty());
-        // Type mismatch should throw
-        assertThrows(ClassCastException.class, () -> a.getAttribute("city", Long.class));
-    }
-
-    @Test
-    void getAttributeRequiresExplicitTypeAndChecksInside() {
-        Asset a = new Asset("id", AssetType.CRE, Instant.now(), List.of(
-                new AttributeValue<>("city", "Gdansk", String.class),
-                new AttributeValue<>("rooms", 2L, Long.class),
-                new AttributeValue<>("active", true, Boolean.class)
-        ));
-
-        Optional<String> city = a.getAttribute("city", String.class);
-        assertTrue(city.isPresent());
-        assertEquals("Gdansk", city.get());
-
-        Optional<Long> roomsAsLong = a.getAttribute("rooms", Long.class);
-        assertTrue(roomsAsLong.isPresent());
-        assertEquals(2L, roomsAsLong.get());
-
-        Optional<Boolean> active = a.getAttribute("active", Boolean.class);
-        assertEquals(Boolean.TRUE, active.orElse(null));
-
-        // Missing attribute still empty
-        assertTrue(a.getAttribute("price", Long.class).isEmpty());
-
-        // Mismatch still throws from inside typed getAttribute
-        assertThrows(ClassCastException.class, () -> a.getAttribute("city", Long.class));
+        // Missing attribute -> empty
+        assertTrue(attrSet.getFirstByName("price").isEmpty());
     }
 }

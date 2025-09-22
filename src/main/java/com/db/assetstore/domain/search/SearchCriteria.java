@@ -1,6 +1,7 @@
 package com.db.assetstore.domain.search;
 
 import com.db.assetstore.AssetType;
+import com.db.assetstore.domain.model.attribute.AttributeValue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +29,7 @@ public final class SearchCriteria {
             return this;
         }
 
-        public Builder where(String name, Operator op, Object value) {
+        public <T> Builder where(String name, Operator op, AttributeValue<T> value) {
             conditions.add(new Condition(name, op, value));
             return this;
         }

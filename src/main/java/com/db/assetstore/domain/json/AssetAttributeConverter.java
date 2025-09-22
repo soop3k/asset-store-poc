@@ -1,122 +1,98 @@
 package com.db.assetstore.domain.json;
 
 import com.db.assetstore.AssetType;
-import com.db.assetstore.domain.model.AttributeValue;
+import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.db.assetstore.domain.model.type.AVBoolean;
+import com.db.assetstore.domain.model.type.AVDecimal;
+import com.db.assetstore.domain.model.type.AVString;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Collections;
 import java.util.Locale;
+import java.math.BigDecimal;
 
-/**
- * Converts JSON attribute objects to typed AttributeValue list.
- * Extracted to reduce complexity of AssetJsonFactory.
- */
 public final class AssetAttributeConverter {
 
-    /**
-     * New: Conversion that leverages attribute definitions (if present for the type) to coerce values.
-     * If no definition for an attribute is found, falls back to the lenient conversion above.
-     */
     public List<AttributeValue<?>> readAttributes(AssetType type, JsonNode attrsNode) {
-        List<AttributeValue<?>> attrs = new ArrayList<>();
-        if (attrsNode == null || !attrsNode.isObject()) {
-            return attrs; // empty list
-        }
-        Map<String, AttributeDefinitionRegistry.Def> defs = type != null
-                ? AttributeDefinitionRegistry.getInstance().getDefinitions(type)
-                : Collections.emptyMap();
+        if (type == null || attrsNode == null || !attrsNode.isObject()) return List.of();
+
+        Map<String, AttributeDefinitionRegistry.Def> defs =
+                AttributeDefinitionRegistry.getInstance().getDefinitions(type);
+
+        List<AttributeValue<?>> out = new ArrayList<>();
         if (defs != null && !defs.isEmpty()) {
-            // Iterate over known definitions only: pick values from JSON if present and coerce per definition
-            for (Map.Entry<String, AttributeDefinitionRegistry.Def> e : defs.entrySet()) {
+            for (var e : defs.entrySet()) {
                 String name = e.getKey();
-                if (attrsNode.has(name)) {
-                    JsonNode valueNode = attrsNode.get(name);
-                    attrs.add(toAttributeValue(name, valueNode, e.getValue().valueType()));
-                }
+                if (!attrsNode.has(name)) continue;
+                out.add(toAttributeValue(name, attrsNode.get(name), e.getValue().valueType()));
             }
-            // Do not include attributes not covered by definitions (no fallbacks)
-            return attrs;
+            return out;
         }
-        // No definitions available -> do not parse any attributes (strict mode, no fallback)
-        return attrs;
+        // Fallback when no definitions are available: infer types from JSON nodes
+        attrsNode.fields().forEachRemaining(entry -> {
+            String name = entry.getKey();
+            JsonNode node = entry.getValue();
+            AttributeDefinitionRegistry.ValueType vt;
+            if (node == null || node.isNull()) {
+                // default to string for nulls
+                vt = AttributeDefinitionRegistry.ValueType.STRING;
+            } else if (node.isBoolean()) {
+                vt = AttributeDefinitionRegistry.ValueType.BOOLEAN;
+            } else if (node.isNumber()) {
+                vt = AttributeDefinitionRegistry.ValueType.DECIMAL;
+            } else {
+                vt = AttributeDefinitionRegistry.ValueType.STRING;
+            }
+            out.add(toAttributeValue(name, node, vt));
+        });
+        return out;
     }
 
-    public AttributeValue<?> toAttributeValue(String name, JsonNode node) {
-        if (node == null || node.isNull()) {
-            return attr(name, null, String.class);
-        }
-        switch (node.getNodeType()) {
-            case STRING:
-                return attr(name, node.asText(), String.class);
-            case NUMBER:
-                return attr(name, node.decimalValue(), java.math.BigDecimal.class);
-            case BOOLEAN:
-                return attr(name, node.asBoolean(), Boolean.class);
-            default:
-                return attr(name, node.asText(), String.class);
-        }
-    }
-
-    /**
-     * Convert using a target type derived from schema definitions.
-     * The conversion is permissive: textual numbers/booleans are parsed when possible.
-     */
-    public AttributeValue<?> toAttributeValue(String name, JsonNode node, AttributeDefinitionRegistry.ValueType target) {
-        if (node == null || node.isNull()) {
-            // keep null with declared target type for downstream typing consistency
-            Class<?> t = toJavaClass(target);
-            return attr(name, null, t == null ? String.class : t);
-        }
+    public AttributeValue<?> toAttributeValue(String name, JsonNode node,
+                                              AttributeDefinitionRegistry.ValueType target) {
         if (target == null) {
-            return attr(name, node.asText(), String.class);
+            target = AttributeDefinitionRegistry.ValueType.STRING;
         }
-        switch (target) {
-            case DECIMAL:
-                if (node.isNumber()) {
-                    return attr(name, node.decimalValue(), java.math.BigDecimal.class);
-                }
-                if (node.isTextual()) {
-                    String s = node.asText().trim();
-                    try {
-                        return attr(name, new java.math.BigDecimal(s), java.math.BigDecimal.class);
-                    } catch (NumberFormatException nfe) {
-                        throw new IllegalArgumentException("Attribute '" + name + "' expected DECIMAL but got '" + s + "'");
-                    }
-                }
-                throw new IllegalArgumentException("Attribute '" + name + "' expected DECIMAL but got non-numeric JSON type");
-            case BOOLEAN:
-                if (node.isBoolean()) {
-                    return attr(name, node.asBoolean(), Boolean.class);
-                }
-                if (node.isTextual()) {
-                    String s = node.asText().trim().toLowerCase(Locale.ROOT);
-                    if ("true".equals(s) || "false".equals(s)) {
-                        return attr(name, Boolean.valueOf(s), Boolean.class);
-                    }
-                    throw new IllegalArgumentException("Attribute '" + name + "' expected BOOLEAN but got '" + s + "'");
-                }
-                throw new IllegalArgumentException("Attribute '" + name + "' expected BOOLEAN but got non-boolean JSON type");
-            case STRING:
-            default:
-                // always stringify
-                return attr(name, node.asText(), String.class);
-        }
+
+        return switch (target) {
+            case STRING  -> new AVString(name, asString(node));
+            case DECIMAL -> new AVDecimal(name, asDecimal(name, node));
+            case BOOLEAN -> new AVBoolean(name, asBoolean(name, node));
+        };
     }
 
-    private static Class<?> toJavaClass(AttributeDefinitionRegistry.ValueType vt) {
-        if (vt == null) {
-            return String.class;
-        }
-        return vt.javaClass();
+    private static String asString(JsonNode n) {
+        return (n == null || n.isNull()) ? null : n.asText();
     }
 
-    private static AttributeValue<?> attr(String name, Object value, Class<?> type) {
-        @SuppressWarnings({"rawtypes", "unchecked"})
-        AttributeValue<?> av = new AttributeValue(name, value, (Class) type);
-        return av;
+    private static BigDecimal asDecimal(String name, JsonNode n) {
+        if (n == null || n.isNull()) return null;
+        if (n.isNumber()) return n.decimalValue();
+        if (n.isTextual()) {
+            String s = n.asText().trim();
+            try { return new BigDecimal(s); }
+            catch (NumberFormatException ex) {
+                throw new IllegalArgumentException(err(name, "DECIMAL", s), ex);
+            }
+        }
+        throw new IllegalArgumentException(err(name, "DECIMAL", n.getNodeType().name()));
+    }
+
+    private static Boolean asBoolean(String name, JsonNode n) {
+        if (n == null || n.isNull()) return null;
+        if (n.isBoolean()) return n.asBoolean();
+        if (n.isTextual()) {
+            String s = n.asText().trim().toLowerCase(Locale.ROOT);
+            if ("true".equals(s) || "false".equals(s)) return Boolean.valueOf(s);
+            throw new IllegalArgumentException(err(name, "BOOLEAN", s));
+        }
+        throw new IllegalArgumentException(err(name, "BOOLEAN", n.getNodeType().name()));
+    }
+
+    private static String err(String name, String expected, String got) {
+        return "Attribute '" + name + "' expected " + expected + " but got '" + got + "'";
     }
 }

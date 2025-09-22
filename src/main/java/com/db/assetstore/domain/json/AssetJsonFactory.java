@@ -3,18 +3,17 @@ package com.db.assetstore.domain.json;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.db.assetstore.infra.config.JsonMapperProvider;
+// Removed infra dependency: use local ObjectMapper
 import lombok.extern.slf4j.Slf4j;
 import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.model.Asset;
-import com.db.assetstore.domain.model.AttributeValue;
+import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Map;
-import java.util.Collections;
 
 /**
  * Responsible for creating Asset model objects from JSON payloads.
@@ -30,7 +29,7 @@ public class AssetJsonFactory {
     private final AssetAttributeConverter attributeConverter = new AssetAttributeConverter();
 
     public AssetJsonFactory() {
-        this.mapper = JsonMapperProvider.get();
+        this.mapper = new ObjectMapper();
     }
 
 
@@ -123,14 +122,24 @@ public class AssetJsonFactory {
         if (root != null && root.isObject() && type != null) {
             Map<String, AttributeDefinitionRegistry.Def> defs =
                     AttributeDefinitionRegistry.getInstance().getDefinitions(type);
-            for (String name : defs.keySet()) {
-                if (FIELD_ID.equals(name)) {
-                    continue; // 'id' is a core field, not an attribute
+            if (defs != null && !defs.isEmpty()) {
+                for (String name : defs.keySet()) {
+                    if (FIELD_ID.equals(name)) {
+                        continue; // 'id' is a core field, not an attribute
+                    }
+                    JsonNode val = root.get(name);
+                    if (val != null) {
+                        attrsNode.set(name, val);
+                    }
                 }
-                JsonNode val = root.get(name);
-                if (val != null) {
-                    attrsNode.set(name, val);
-                }
+            } else {
+                // Fallback: if no schema-defined attributes found, collect all fields except core ones
+                root.fields().forEachRemaining(e -> {
+                    String name = e.getKey();
+                    if (!FIELD_ID.equals(name) && !FIELD_TYPE.equals(name)) {
+                        attrsNode.set(name, e.getValue());
+                    }
+                });
             }
         }
         return attrsNode;
@@ -144,7 +153,6 @@ public class AssetJsonFactory {
                 .id(id)
                 .type(type)
                 .createdAt(Instant.now())
-                .attrs(Collections.emptyList())
                 .build();
         try {
             mapper.readerForUpdating(asset).readValue(root);

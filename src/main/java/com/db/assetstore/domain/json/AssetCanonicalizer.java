@@ -1,7 +1,7 @@
 package com.db.assetstore.domain.json;
 
 import com.db.assetstore.domain.model.Asset;
-import com.db.assetstore.domain.model.AttributeValue;
+import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -37,9 +37,10 @@ public final class AssetCanonicalizer {
         if (asset.getCurrency() != null) root.put("currency", asset.getCurrency());
 
         ObjectNode attrs = M.createObjectNode();
-        for (Map.Entry<String, AttributeValue<?>> e : asset.getAttributesByName().entrySet()) {
+        for (Map.Entry<String, java.util.List<AttributeValue<?>>> e : asset.getAttributesByName().entrySet()) {
             String name = e.getKey();
-            Object val = e.getValue().value();
+            AttributeValue<?> first = (e.getValue() == null || e.getValue().isEmpty()) ? null : e.getValue().get(0);
+            Object val = (first == null) ? null : first.value();
             if (val == null) {
                 attrs.putNull(name);
             } else if (val instanceof Number n) {

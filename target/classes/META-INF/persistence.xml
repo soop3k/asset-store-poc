@@ -3,10 +3,10 @@
     <persistence-unit name="assetPU" transaction-type="RESOURCE_LOCAL">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
         <!-- Explicitly list managed entities so tests using JPA bootstrapping can create schema -->
-        <class>com.db.assetstore.jpa.AssetEntity</class>
-        <class>com.db.assetstore.jpa.AttributeEntity</class>
-        <class>com.db.assetstore.jpa.AttributeHistoryEntity</class>
-        <class>com.db.assetstore.jpa.AttributeDefEntity</class>
+        <class>com.db.assetstore.infra.jpa.AssetEntity</class>
+        <class>com.db.assetstore.infra.jpa.AttributeEntity</class>
+        <class>com.db.assetstore.infra.jpa.AttributeHistoryEntity</class>
+        <class>com.db.assetstore.infra.jpa.AttributeDefEntity</class>
         <properties>
             <!-- JDBC properties can be supplied programmatically in tests -->
             <property name="hibernate.hbm2ddl.auto" value="validate"/>

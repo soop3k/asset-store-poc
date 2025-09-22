@@ -1,6 +1,6 @@
 package com.db.assetstore.infra.jpa;
 
-import com.db.assetstore.domain.model.AttributeType;
+import com.db.assetstore.domain.model.type.AttributeType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -75,12 +75,12 @@ public class AttributeEntity {
         this.valueBool=v;
     }
 
-    private void addHistory(Instant when) {
+    public void addHistory(Instant when) {
         if (log.isDebugEnabled()) {
             String assetId = asset != null ? asset.getId() : null;
             log.debug("Attribute history added: assetId={}, name={}, valueType={}, when={}", assetId, name, valueType, when);
         }
-        this.history.add(AttributeHistoryEntity.fromCurrent(this, when));
+        this.history.add(new AttributeHistoryEntity(this, when));
     }
 
     @PrePersist
@@ -96,6 +96,5 @@ public class AttributeEntity {
         if (this.updatedAt == null) {
             this.updatedAt = Instant.now();
         }
-        addHistory(Instant.now());
     }
 }

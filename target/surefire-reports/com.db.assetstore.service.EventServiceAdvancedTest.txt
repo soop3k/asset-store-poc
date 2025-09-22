@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.db.assetstore.service.EventServiceAdvancedTest
 -------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.052 s -- in com.db.assetstore.service.EventServiceAdvancedTest
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.031 s -- in com.db.assetstore.service.EventServiceAdvancedTest

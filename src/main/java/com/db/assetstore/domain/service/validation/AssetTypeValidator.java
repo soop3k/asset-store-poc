@@ -1,24 +1,18 @@
 package com.db.assetstore.domain.service.validation;
 
 import com.db.assetstore.AssetType;
-import com.db.assetstore.domain.model.AttributeValue;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.db.assetstore.infra.config.JsonMapperProvider;
+import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.schema.TypeSchemaRegistry;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.*;
 
-/**
- * Centralizes validation related to AssetType and its JSON Schema.
- * Wraps TypeSchemaRegistry and JsonSchemaValidator to keep higher-level services slim.
- */
 public final class AssetTypeValidator {
     private final TypeSchemaRegistry registry = TypeSchemaRegistry.getInstance();
-    private static final ObjectMapper MAPPER = JsonMapperProvider.get();
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     public void ensureSupported(AssetType type) {
         Objects.requireNonNull(type, "type");
-        // Require schema presence to treat type as supported
         Optional<String> schema = registry.getSchemaPath(type);
         if (schema.isEmpty()) {
             throw new IllegalArgumentException("Unsupported asset type: " + type + " - schema not found");

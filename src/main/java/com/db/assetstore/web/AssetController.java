@@ -59,7 +59,13 @@ public class AssetController {
     @GetMapping(path = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Asset> getAsset(@PathVariable("id") String id) {
         return assetService.getAsset(id)
-                .map(ResponseEntity::ok)
+                .map(a -> {
+                    try {
+                        String json = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(a);
+                        log.info("[DEBUG_LOG] GET /assets/{} -> {}", id, json);
+                    } catch (Exception ignore) {}
+                    return ResponseEntity.ok(a);
+                })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 

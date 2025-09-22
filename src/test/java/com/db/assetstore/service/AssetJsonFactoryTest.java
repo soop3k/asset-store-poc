@@ -4,9 +4,11 @@ import com.db.assetstore.domain.json.AssetJsonFactory;
 
 import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.model.Asset;
-import com.db.assetstore.domain.model.AttributeValue;
+import com.db.assetstore.domain.model.attribute.AttributeValue;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -25,11 +27,11 @@ class AssetJsonFactoryTest {
         Asset a = factory.fromJson(json);
         assertEquals("id-123", a.getId());
         assertEquals(AssetType.CRE, a.getType());
-        Map<String, AttributeValue<?>> attrs = a.attributes();
-        assertEquals("Warsaw", attrs.get("city").value());
-        assertEquals(100.5d, (Double) attrs.get("area").value(), 0.0001);
-        assertEquals(3L, attrs.get("rooms").value());
-        assertEquals(Boolean.TRUE, attrs.get("active").value());
+        Map<String, List<AttributeValue<?>>> attrs = a.getAttributesByName();
+        assertEquals("Warsaw", attrs.get("city").get(0).value());
+        assertEquals(new BigDecimal("100.5"), attrs.get("area").get(0).value());
+        assertEquals(new BigDecimal("3"), attrs.get("rooms").get(0).value());
+        assertEquals(Boolean.TRUE, attrs.get("active").get(0).value());
     }
 
     @Test
@@ -51,9 +53,9 @@ class AssetJsonFactoryTest {
                 "\"city\":\"Warsaw\",\"note\":null,\"obj\":{\"a\":1},\"arr\":[1,2,3]" +
                 "}";
         Asset a = factory.fromJson(json);
-        Map<String, AttributeValue<?>> attrs = a.attributes();
+        Map<String, List<AttributeValue<?>>> attrs = a.getAttributesByName();
         assertEquals(1, attrs.size());
-        assertEquals("Warsaw", attrs.get("city").value());
+        assertEquals("Warsaw", attrs.get("city").get(0).value());
         assertFalse(attrs.containsKey("note"));
         assertFalse(attrs.containsKey("obj"));
         assertFalse(attrs.containsKey("arr"));
