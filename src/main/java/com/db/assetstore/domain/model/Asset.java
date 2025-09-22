@@ -6,7 +6,6 @@ import com.db.assetstore.domain.model.attribute.AttributesCollection;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,66 +15,82 @@ import java.time.Instant;
 import java.util.*;
 
 @Getter
-@Setter
 @JsonIgnoreProperties(value = {"attributesByName", "attributesFlat"}, allowGetters = true)
 public final class Asset {
 
-    private String id;
-    private AssetType type;
-    private Instant createdAt;
+    private final String id;
+    private final AssetType type;
+    private final Instant createdAt;
 
-    // meta...
-    private Long version;
-    private String status;
-    private String subtype;
-    private Instant statusEffectiveTime;
-    private Instant modifiedAt;
-    private String modifiedBy;
-    private String createdBy;
-    private boolean softDelete;
-    private BigDecimal notionalAmount;
-    private Integer year;
-    private String wh;
-    private String sourceSystemName;
-    private String externalReference;
-    private String description;
-    private String currency;
+    @Setter private Long version;
+    @Setter private String status;
+    @Setter private String subtype;
+    @Setter private Instant statusEffectiveTime;
+    @Setter private Instant modifiedAt;
+    @Setter private String modifiedBy;
+    @Setter private String createdBy;
+    @Setter private boolean softDelete;
+    @Setter private BigDecimal notionalAmount;
+    @Setter private Integer year;
+    @Setter private String wh;
+    @Setter private String sourceSystemName;
+    @Setter private String externalReference;
+    @Setter private String description;
+    @Setter private String currency;
 
     @JsonIgnore
-    @Getter(AccessLevel.NONE)
-    private AttributesCollection attributes = AttributesCollection.empty();
+    private AttributesCollection attributes;
 
     @Builder
-    public Asset(String id,
-                 AssetType type,
-                 Instant createdAt,
-                 AttributesCollection attributes
-    ) {
+    public Asset(String id, AssetType type, Instant createdAt, AttributesCollection attributes) {
         this.id = Objects.requireNonNull(id, "id");
         this.type = Objects.requireNonNull(type, "type");
-        this.createdAt = Objects.requireNonNullElseGet(createdAt, Instant::now);
-        if (attributes != null) {
-            this.attributes = AttributesCollection.fromMap(attributes.asMap());
-        }
+        this.createdAt = createdAt != null ? createdAt : Instant.now();
+        this.attributes = attributes != null ? AttributesCollection.fromMap(attributes.asMapView()) : AttributesCollection.empty();
     }
 
-    public Map<String, List<AttributeValue<?>>> getAttributesByName() { return attributes.asMap(); }
-    public List<AttributeValue<?>> getAttributesFlat() { return attributes.asList(); }
+    public List<AttributeValue<?>> getAttributesFlat() {
+        return attributes.asListView();
+    }
 
     @JsonProperty("attributes")
-    public Map<String, Object> jsonAttributes() {
-        Map<String, List<AttributeValue<?>>> map = attributes.asMap();
-        LinkedHashMap<String, Object> out = new LinkedHashMap<>();
-        for (var e : map.entrySet()) {
-            List<AttributeValue<?>> vs = e.getValue();
-            if (vs == null || vs.isEmpty()) continue;
-            // For API simplicity, expose only the first value for each attribute name
-            out.put(e.getKey(), vs.get(0));
-        }
+    public Map<String, AttributeValue<?>> getAttributesJson() {
+        Map<String, AttributeValue<?>> out = new LinkedHashMap<>();
+        if (attributes == null || attributes.isEmpty()) return out;
+        attributes.asMapView().forEach((name, list) -> {
+            if (list != null && !list.isEmpty()) {
+                out.put(name, list.get(0));
+            }
+        });
         return out;
     }
 
-    public void setAttribute(AttributeValue<?> av) { attributes.add(av); }
-    public void setAttributes(List<AttributeValue<?>> flat) { this.attributes = AttributesCollection.fromFlat(flat); }
+    public Map<String, List<AttributeValue<?>>> getAttributesByName() {
+        return attributes.asMapView();
+    }
 
+    public <T> Optional<T> getAttr(String name, Class<T> type) {
+        return attributes.getOne(name, type);
+    }
+
+    public <T> List<T> getAttrs(String name, Class<T> type) {
+        return attributes.getMany(name, type);
+    }
+
+    /**
+     * Append a single attribute value to the collection (non-destructive for other attributes).
+     */
+    public Asset setAttribute(AttributeValue<?> av) {
+        if (av == null) return this;
+        this.attributes = this.attributes.add(av);
+        return this;
+    }
+
+    /**
+     * Replace all attributes with the provided flat collection.
+     */
+    public Asset setAttributes(Collection<AttributeValue<?>> incoming) {
+        this.attributes = (incoming == null) ? AttributesCollection.empty() : AttributesCollection.fromFlat(incoming);
+        return this;
+    }
 }

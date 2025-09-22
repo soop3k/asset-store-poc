@@ -1,4 +1,4 @@
-package com.db.assetstore.web;
+package integration;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +12,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.hamcrest.Matchers.*;
 
-@SpringBootTest
+@SpringBootTest(classes = com.db.assetstore.AssetStorePocApplication.class)
 @AutoConfigureMockMvc
 class AssetBulkE2ETest {
 

@@ -1,4 +1,4 @@
-package com.db.assetstore.web;
+package com.db.assetstore.infra.api;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 

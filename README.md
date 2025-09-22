@@ -50,15 +50,15 @@ Architektura i lista klas/serwisów (PL)
   - Na starcie wypełnia tabelę definicji atrybutów na podstawie schematów JSON (AttributeDefinitionRegistry -> AttributeDefEntity w DB). Chroni integralność danych na poziomie repozytorium.
 
 3) Warstwa web (HTTP)
-- com.db.assetstore.web.AssetController
+- com.db.assetstore.infra.api.AssetController
   - Endpointy REST:
     - POST /assets – tworzenie aktywa w formacie koperty {type, id?, attributes{...}}.
     - POST /assets/cre – przykład endpointu typu-specyficznego, gdzie JSON zawiera atrybuty bez koperty.
     - GET /assets – lista aktywów (proste wykorzystanie SearchCriteria).
   - Deleguje do AssetService, nie zawiera logiki biznesowej.
-- com.db.assetstore.web.GlobalExceptionHandler
+- com.db.assetstore.infra.api.GlobalExceptionHandler
   - Globalny handler wyjątków (400 dla IllegalArgumentException, 500 dla innych błędów). Zwraca zunifikowany ErrorResponse.
-- com.db.assetstore.web.ErrorResponse
+- com.db.assetstore.infra.api.ErrorResponse
   - Model odpowiedzi błędu: timestamp, status, error, message, path.
 
 4) Warstwa serwisowa (logika domenowa i orkiestracja)

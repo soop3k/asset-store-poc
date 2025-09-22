@@ -1,4 +1,4 @@
-package com.db.assetstore.web;
+package integration;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -6,13 +6,14 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.hamcrest.Matchers.*;
 
-@SpringBootTest
+@SpringBootTest(classes = com.db.assetstore.AssetStorePocApplication.class)
 @AutoConfigureMockMvc
 class AssetEventE2ETest {
 
@@ -23,30 +24,28 @@ class AssetEventE2ETest {
     void createAsset_fetch_it_and_fetch_event() throws Exception {
         String payload = "{" +
                 "\"type\":\"CRE\"," +
-                "\"id\":\"cre-e1\"," +
                 "\"currency\":\"USD\"," +
                 "\"notionalAmount\":123.45," +
                 "\"status\":\"ACTIVE\"," +
                 "\"subtype\":\"OFFICE\"," +
                 "\"description\":\"Test CRE\"," +
-                // attributes per CRE type schema
-                "\"city\":\"Warsaw\"," +
-                "\"rooms\":3" +
+                "\"attributes\": {\"city\":\"Warsaw\", \"rooms\":3}" +
                 "}";
 
         // create
-        mockMvc.perform(post("/assets")
+        MvcResult res = mockMvc.perform(post("/assets")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
                 .andExpect(status().isOk())
-                .andExpect(content().string("cre-e1"));
+                .andReturn();
+        String id = res.getResponse().getContentAsString();
 
         // fetch single asset
-        mockMvc.perform(get("/assets/cre-e1")
+        mockMvc.perform(get("/assets/" + id)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id", is("cre-e1")))
+                .andExpect(jsonPath("$.id", is(id)))
                 .andExpect(jsonPath("$.type", is("CRE")))
                 .andExpect(jsonPath("$.currency", is("USD")))
                 .andExpect(jsonPath("$.notionalAmount", is(closeTo(123.45, 0.0001))))
@@ -57,7 +56,7 @@ class AssetEventE2ETest {
                 .andExpect(jsonPath("$.attributes.rooms.value", is(3)));
 
         // fetch event using new endpoint and verify transformation
-        mockMvc.perform(get("/events/cre-e1/AssetCRE")
+        mockMvc.perform(get("/events/" + id + "/AssetCRE")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))

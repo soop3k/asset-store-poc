@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 // Removed infra dependency: use local ObjectMapper
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.model.Asset;
@@ -21,17 +22,17 @@ import java.util.Map;
  * Does NOT perform type or schema validation (DDD separation) – callers must validate beforehand.
  */
 @Slf4j
+@RequiredArgsConstructor
 public class AssetJsonFactory {
     private static final String FIELD_TYPE = "type";
     private static final String FIELD_ID = "id";
 
     private final ObjectMapper mapper;
-    private final AssetAttributeConverter attributeConverter = new AssetAttributeConverter();
+    private final AttributeJsonReader jsonReader;
 
     public AssetJsonFactory() {
-        this.mapper = new ObjectMapper();
+        this(new ObjectMapper(), new AttributeJsonReader(new ObjectMapper()));
     }
-
 
     /**
      * Parse a type-specific JSON (without generic wrapper) and build Asset.
@@ -59,9 +60,6 @@ public class AssetJsonFactory {
         try {
             JsonNode root = parseJson(json);
             return buildAsset(root, null);
-        } catch (IllegalArgumentException ex) {
-            log.warn("Asset JSON error: {}", ex.getMessage());
-            throw ex;
         } catch (Exception ex) {
             log.error("Failed to parse asset JSON", ex);
             throw new IllegalArgumentException("Invalid JSON payload: " + ex.getMessage(), ex);
@@ -76,12 +74,8 @@ public class AssetJsonFactory {
         if (!root.isObject()) {
             throw new IllegalArgumentException("Expected JSON object for asset, got: " + root.getNodeType());
         }
-        try {
-            return buildAsset(root, null);
-        } catch (IllegalArgumentException ex) {
-            log.warn("Asset JSON error: {}", ex.getMessage());
-            throw ex;
-        }
+
+        return buildAsset(root, null);
     }
 
     // --- small, focused helpers for readability ---
@@ -115,37 +109,29 @@ public class AssetJsonFactory {
         return f != null && !f.isNull() ? f.asText() : null;
     }
 
+    private ObjectNode collectAttributes(JsonNode root, AssetType type) {
+        final ObjectNode attributes = mapper.createObjectNode();
 
+        if (root == null || !root.isObject() || type == null) {
+            return attributes;
+        }
 
-    private ObjectNode collectAttributesFromTypeRoot(JsonNode root, AssetType type) {
-        ObjectNode attrsNode = mapper.createObjectNode();
-        if (root != null && root.isObject() && type != null) {
-            Map<String, AttributeDefinitionRegistry.Def> defs =
-                    AttributeDefinitionRegistry.getInstance().getDefinitions(type);
-            if (defs != null && !defs.isEmpty()) {
-                for (String name : defs.keySet()) {
-                    if (FIELD_ID.equals(name)) {
-                        continue; // 'id' is a core field, not an attribute
-                    }
-                    JsonNode val = root.get(name);
-                    if (val != null) {
-                        attrsNode.set(name, val);
-                    }
-                }
-            } else {
-                // Fallback: if no schema-defined attributes found, collect all fields except core ones
-                root.fields().forEachRemaining(e -> {
-                    String name = e.getKey();
-                    if (!FIELD_ID.equals(name) && !FIELD_TYPE.equals(name)) {
-                        attrsNode.set(name, e.getValue());
-                    }
-                });
+        final var definitions = AttributeDefinitionRegistry.getInstance().getDefinitions(type);
+
+        if (definitions.isEmpty()) {
+            return attributes;
+        }
+
+        for (String attrName : definitions.keySet()) {
+            final JsonNode value = root.get(attrName);
+            if (value != null) {
+                attributes.set(attrName, value);
             }
         }
-        return attrsNode;
+
+        return attributes;
     }
 
-    // Unified builder used by both fromJson and fromJsonForType
     private Asset buildAsset(JsonNode root, AssetType providedType) {
         AssetType type = providedType != null ? providedType : readType(root);
         String id = readId(root);
@@ -156,18 +142,20 @@ public class AssetJsonFactory {
                 .build();
         try {
             mapper.readerForUpdating(asset).readValue(root);
+        } catch (IllegalArgumentException ex) {
+            log.warn("Asset JSON error: {}", ex.getMessage());
         } catch (Exception ex) {
             if (log.isDebugEnabled()) {
-                log.debug("Jackson update of Asset failed: {}", ex.getMessage());
+                log.debug("Update of Asset failed: {}", ex.getMessage());
             }
         }
+
         // Attributes: pick only fields defined for the type from the flat JSON root.
         // Use providedType only as a hint for which definitions to load; prefer the JSON-declared type.
-        AssetType defsType = asset.getType() != null ? asset.getType() : providedType;
-        ObjectNode attrsObject = collectAttributesFromTypeRoot(root, defsType);
-        List<AttributeValue<?>> attrs = attributeConverter.readAttributes(defsType, attrsObject);
-        asset.setAttributes(attrs);
-        log.debug("Created Asset from JSON: type={}, id={}, attrCount={}", asset.getType(), asset.getId(), attrs.size());
+        var attrsObject = collectAttributes(root, type);
+        asset.setAttributes(jsonReader.read(type, attrsObject));
+
+        log.debug("Created Asset from JSON: type={}, id={}", asset.getType(), asset.getId());
         return asset;
     }
 

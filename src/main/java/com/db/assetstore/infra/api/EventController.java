@@ -1,7 +1,8 @@
-package com.db.assetstore.web;
+package com.db.assetstore.infra.api;
 
 import com.db.assetstore.domain.model.Asset;
-import com.db.assetstore.domain.service.AssetService;
+import com.db.assetstore.domain.model.AssetId;
+import com.db.assetstore.domain.service.AssetQueryService;
 import com.db.assetstore.domain.service.EventService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,11 +17,11 @@ import java.util.Optional;
 public class EventController {
     private static final Logger log = LoggerFactory.getLogger(EventController.class);
 
-    private final AssetService assetService;
+    private final AssetQueryService assetQueryService;
     private final EventService eventService;
 
-    public EventController(AssetService assetService, EventService eventService) {
-        this.assetService = assetService;
+    public EventController(AssetQueryService assetQueryService, EventService eventService) {
+        this.assetQueryService = assetQueryService;
         this.eventService = eventService;
     }
 
@@ -28,7 +29,7 @@ public class EventController {
     public ResponseEntity<String> generateEvent(@PathVariable("assetId") String assetId,
                                                 @PathVariable("eventName") String eventName) {
         log.info("HTTP GET /events/{}/{} - generating event", assetId, eventName);
-        Optional<Asset> assetOpt = assetService.getAsset(assetId);
+        Optional<Asset> assetOpt = assetQueryService.get(new AssetId(assetId));
         if (assetOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
