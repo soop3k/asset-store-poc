@@ -62,7 +62,7 @@ class AssetJsonFactoryTypeSchemaIntegrationTest {
 
         validator.validateJson(attrs);
         var command = new AssetCommandServiceImpl(assetMapper, attributeMapper, assetRepo, attrRepo);
-        String id = command.create(factory.fromJson(attrs)).id();
+        String id = command.create(factory.fromJson(attrs));
         assertEquals("cre-2", id);
     }
 }

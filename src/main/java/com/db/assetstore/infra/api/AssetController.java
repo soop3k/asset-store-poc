@@ -1,13 +1,10 @@
 package com.db.assetstore.infra.api;
 
-import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.model.Asset;
-import com.db.assetstore.domain.model.AssetId;
 import com.db.assetstore.domain.search.SearchCriteria;
 import com.db.assetstore.domain.service.AssetCommandService;
 import com.db.assetstore.domain.service.AssetQueryService;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;
-import com.db.assetstore.infra.api.dto.AssetPatchItemRequest;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;
 import com.db.assetstore.infra.mapper.AssetRequestMapper;
 import com.db.assetstore.domain.json.AssetJsonFactory;
@@ -28,19 +25,17 @@ public class AssetController {
     private final AssetQueryService assetQueryService;
     private final AssetCommandService commandService;
     private final AssetRequestMapper requestMapper;
-    private final AssetJsonFactory assetJsonFactory;
 
     public AssetController(AssetQueryService assetQueryService, AssetCommandService commandService, AssetRequestMapper requestMapper, AssetJsonFactory assetJsonFactory) {
         this.assetQueryService = assetQueryService;
         this.commandService = commandService;
         this.requestMapper = requestMapper;
-        this.assetJsonFactory = assetJsonFactory;
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> addAsset(@RequestBody AssetCreateRequest request) {
         log.info("Creating asset");
-        String id = commandService.create(requestMapper.toCreateCommand(request, "api", null)).id();
+        String id = commandService.create(requestMapper.toCreateCommand(request, "api", null));
         log.debug("Created asset id={}", id);
         return ResponseEntity.ok(id);
     }
@@ -53,19 +48,10 @@ public class AssetController {
         }
         List<String> ids = requests.stream()
                 .map(req -> requestMapper.toCreateCommand(req, "api", null))
-                .map(cmd -> commandService.create(cmd).id())
+                .map(commandService::create)
                 .toList();
         log.debug("Created {} assets", ids.size());
         return ResponseEntity.ok(ids);
-    }
-
-    // Type-specific endpoint example: Commercial Real Estate (CRE)
-    @PostMapping(path = "/cre", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> addAssetCre(@RequestBody String jsonBody) {
-        log.info("HTTP POST /assets/cre - creating CRE asset");
-        String id = commandService.create(assetJsonFactory.fromJsonForType(AssetType.CRE, jsonBody)).id();
-        log.debug("Created CRE asset id={}", id);
-        return ResponseEntity.ok(id);
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -79,7 +65,7 @@ public class AssetController {
 
     @GetMapping(path = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Asset> getAsset(@PathVariable("id") String id) {
-        return assetQueryService.get(new AssetId(id))
+        return assetQueryService.get(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -88,7 +74,7 @@ public class AssetController {
     @PutMapping(path = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> updateAsset(@PathVariable("id") String id, @RequestBody AssetPatchRequest request) {
         log.info("HTTP PUT /assets/{} - updating asset", id);
-        var current = assetQueryService.get(new AssetId(id))
+        var current = assetQueryService.get(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Asset %s not found".formatted(id)));
 
         var cmd = requestMapper.toPatchCommand(current.getType(), id, request, "api", null);
@@ -99,7 +85,7 @@ public class AssetController {
     @PatchMapping(path = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> patchAsset(@PathVariable("id") String id, @RequestBody AssetPatchRequest request) {
         log.info("HTTP PATCH /assets/{} - patch asset", id);
-        var current = assetQueryService.get(new AssetId(id))
+        var current = assetQueryService.get(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Asset %s not found".formatted(id)));
         var cmd = requestMapper.toPatchCommand(current.getType(), id, request, "api", null);
         commandService.update(cmd);
@@ -107,13 +93,13 @@ public class AssetController {
     }
 
     @PatchMapping(path = "/bulk", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> patchAssetsBulk(@RequestBody List<AssetPatchItemRequest> requests) {
+    public ResponseEntity<Void> patchAssetsBulk(@RequestBody List<AssetPatchRequest> requests) {
         log.info("HTTP PATCH /assets/bulk - patch {} assets", requests == null ? 0 : requests.size());
         if (requests == null || requests.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
-        for (AssetPatchItemRequest item : requests) {
-            var current = assetQueryService.get(new AssetId(item.getId()))
+        for (AssetPatchRequest item : requests) {
+            var current = assetQueryService.get(item.getId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Asset %s not found".formatted(item.getId())));
             var cmd = requestMapper.toPatchCommand(current.getType(), item, "api", null);
             commandService.update(cmd);

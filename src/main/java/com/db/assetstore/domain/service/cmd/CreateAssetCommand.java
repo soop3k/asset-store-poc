@@ -1,4 +1,4 @@
-package com.db.assetstore.domain.service;
+package com.db.assetstore.domain.service.cmd;
 
 import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.model.attribute.AttributeValue;

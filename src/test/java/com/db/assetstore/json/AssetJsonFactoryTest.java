@@ -28,11 +28,16 @@ class AssetJsonFactoryTest {
 
     @Test
     void parsesValidJsonWithExplicitIdAndAttributes() {
-        String json = "{" +
-                "\"type\":\"CRE\"," +
-                "\"id\":\"id-123\"," +
-                "\"city\":\"Warsaw\",\"area\":100.5,\"rooms\":3,\"active\":true" +
-                "}";
+        String json = """
+        {
+            "type": "CRE",
+            "id": "id-123",
+            "city": "Warsaw",
+            "area": 100.5,
+            "rooms": 3,
+            "active": true
+        }
+        """;
         Asset a = factory.fromJson(json);
         assertEquals("id-123", a.getId());
         assertEquals(AssetType.CRE, a.getType());
@@ -45,25 +50,44 @@ class AssetJsonFactoryTest {
 
     @Test
     void throwsOnMissingOrBlankId() {
-        String jsonMissing = "{\"type\":\"CRE\",\"city\":\"Warsaw\"}";
+        String jsonMissing = """
+        {
+            "type": "CRE",
+            "city": "Warsaw"
+        }
+        """;
         IllegalArgumentException ex1 = assertThrows(IllegalArgumentException.class, () -> factory.fromJson(jsonMissing));
         assertTrue(ex1.getMessage().toLowerCase().contains("missing 'id'"));
 
-        String jsonBlank = "{\"type\":\"CRE\",\"id\":\"\",\"city\":\"Warsaw\"}";
+        String jsonBlank = """
+        {
+            "type": "CRE",
+            "id": "",
+            "city": "Warsaw"
+        }
+        """;
         IllegalArgumentException ex2 = assertThrows(IllegalArgumentException.class, () -> factory.fromJson(jsonBlank));
         assertTrue(ex2.getMessage().toLowerCase().contains("missing 'id'"));
     }
 
     @Test
     void throwsOnMissingType() {
-        String json = "{\"id\":\"x\"}";
+        String json = """
+        {
+            "id": "x"
+        }
+        """;
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> factory.fromJson(json));
         assertTrue(ex.getMessage().toLowerCase().contains("missing 'type'"));
     }
 
     @Test
     void throwsOnUnknownType() {
-        String json = "{\"type\":\"UNKNOWN\"}";
+        String json = """
+        {
+            "type": "UNKNOWN"
+        }
+        """;
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> factory.fromJson(json));
         assertTrue(ex.getMessage().toLowerCase().contains("unknown asset type"));
     }

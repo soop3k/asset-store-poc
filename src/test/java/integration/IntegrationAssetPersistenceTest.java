@@ -3,7 +3,6 @@ package integration;
 import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.json.AssetJsonFactory;
 import com.db.assetstore.domain.model.Asset;
-import com.db.assetstore.domain.model.AssetId;
 import com.db.assetstore.domain.model.type.AVBoolean;
 import com.db.assetstore.domain.model.type.AVDecimal;
 import com.db.assetstore.domain.model.type.AVString;
@@ -35,16 +34,30 @@ class IntegrationAssetPersistenceTest {
 
     @Test
     void persistAndReadCreAsset() {
-        String json = "{\"id\":\"cre-int-1\",\"city\":\"Poznan\",\"rooms\":2,\"active\":true}";
-        String id = commandService.create(factory.fromJsonForType(AssetType.CRE, json)).id();
+        String json = """
+        {
+            "id": "cre-int-1",
+            "type": "CRE",
+            "city": "Poznan",
+            "rooms": 2,
+            "active": true
+        }
+        """;
+        Asset asset = factory.fromJson(json);
+        var createCmd = com.db.assetstore.domain.service.cmd.CreateAssetCommand.builder()
+                .id(asset.getId())
+                .type(asset.getType())
+                .attributes(asset.getAttributesFlat())
+                .build();
+        String id = commandService.create(createCmd);
         assertEquals("cre-int-1", id);
 
-        Asset asset = queryService.get(new AssetId(id)).orElseThrow();
-        assertEquals(AssetType.CRE, asset.getType());
-        assertEquals("cre-int-1", asset.getId());
+        Asset persisted = queryService.get(id).orElseThrow();
+        assertEquals(AssetType.CRE, persisted.getType());
+        assertEquals("cre-int-1", persisted.getId());
 
         // attributes (defensive lookup via flat list)
-        var flat = asset.getAttributesFlat();
+        var flat = persisted.getAttributesFlat();
         var city = flat.stream().filter(av -> av instanceof AVString && "city".equals(av.name()))
                 .map(av -> (AVString) av).findFirst().orElseThrow();
         var rooms = flat.stream().filter(av -> av instanceof AVDecimal && "rooms".equals(av.name()))

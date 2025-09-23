@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AssetPatchRequest {
+    private String id;
     private String status;
     private String subtype;
     private BigDecimal notionalAmount;

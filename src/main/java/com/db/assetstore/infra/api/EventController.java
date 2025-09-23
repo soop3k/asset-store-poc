@@ -1,7 +1,6 @@
 package com.db.assetstore.infra.api;
 
 import com.db.assetstore.domain.model.Asset;
-import com.db.assetstore.domain.model.AssetId;
 import com.db.assetstore.domain.service.AssetQueryService;
 import com.db.assetstore.domain.service.EventService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -30,7 +29,7 @@ public class EventController {
     public ResponseEntity<String> generateEvent(@PathVariable("assetId") String assetId,
                                                 @PathVariable("eventName") String eventName) {
         log.info("HTTP GET /events/{}/{} - generating event", assetId, eventName);
-        Optional<Asset> assetOpt = assetQueryService.get(new AssetId(assetId));
+        Optional<Asset> assetOpt = assetQueryService.get(assetId);
 
         if (assetOpt.isEmpty()) {
             return ResponseEntity.notFound().build();

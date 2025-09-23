@@ -2,21 +2,17 @@ package integration;
 
 import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.json.AssetJsonFactory;
-import com.db.assetstore.domain.json.AttributeJsonReader;
-import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
 import com.db.assetstore.domain.model.Asset;
-import com.db.assetstore.domain.model.AssetId;
 import com.db.assetstore.domain.model.AssetPatch;
 import com.db.assetstore.domain.model.attribute.AttributeHistory;
-import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.model.type.AVBoolean;
 import com.db.assetstore.domain.model.type.AVDecimal;
 import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.domain.service.AssetCommandService;
 import com.db.assetstore.domain.service.AssetHistoryService;
 import com.db.assetstore.domain.service.AssetQueryService;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
+import com.db.assetstore.domain.service.cmd.PatchAssetCommand;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -43,24 +39,43 @@ class IntegrationAssetHistoryTest {
     AssetHistoryService historyService;
     @Autowired
     AssetJsonFactory factory;
-    @Autowired
-    AttributeDefinitionRegistry attributeDefinitionRegistry;
 
     @Test
-    void multipleUpdatesProduceHistoryAndFinalState() throws Exception {
-        // create CRE asset
-        String id = commandService.create(factory.fromJsonForType(AssetType.CRE,
-                "{\"id\":\"cre-int-hist\",\"city\":\"Gdansk\",\"rooms\":1,\"active\":true}")).id();
+    void multipleUpdatesProduceHistoryAndFinalState() {
+        CreateAssetCommand createCmd = CreateAssetCommand.builder()
+                .id("cre-int-hist")
+                .type(AssetType.CRE)
+                .attributes(List.of(
+                        new AVString("city", "Gdansk"),
+                        new AVDecimal("rooms", new BigDecimal("1")),
+                        new AVBoolean("active", true)
+                ))
+                .build();
+        String id = commandService.create(createCmd);
         assertEquals("cre-int-hist", id);
 
         // 1st update: change city
-        applyAttributeUpdate(id, "{\"attributes\":{\"city\":\"Warsaw\"}}\n");
-        // 2nd update: change rooms
-        applyAttributeUpdate(id, "{\"attributes\":{\"rooms\":2}}\n");
-        // 3rd update: change active
-        applyAttributeUpdate(id, "{\"attributes\":{\"active\":false}}\n");
+        PatchAssetCommand patchCity = PatchAssetCommand.builder()
+                .assetId(id)
+                .attributes(List.of(new AVString("city", "Warsaw")))
+                .build();
+        commandService.update(patchCity);
 
-        Asset after = queryService.get(new AssetId(id)).orElseThrow();
+        // 2nd update: change rooms
+        PatchAssetCommand patchRooms = PatchAssetCommand.builder()
+                .assetId(id)
+                .attributes(List.of(new AVDecimal("rooms", new BigDecimal("2"))))
+                .build();
+        commandService.update(patchRooms);
+
+        // 3rd update: change active
+        PatchAssetCommand patchActive = PatchAssetCommand.builder()
+                .assetId(id)
+                .attributes(List.of(new AVBoolean("active", false)))
+                .build();
+        commandService.update(patchActive);
+
+        Asset after = queryService.get(id).orElseThrow();
         var flat = after.getAttributesFlat();
         var city = flat.stream().filter(av -> av instanceof AVString && "city".equals(av.name()))
                 .map(av -> (AVString) av).findFirst().orElseThrow();
@@ -74,7 +89,7 @@ class IntegrationAssetHistoryTest {
         assertEquals(Boolean.FALSE, active.value());
 
         // verify history
-        List<AttributeHistory> history = historyService.history(new AssetId(id));
+        List<AttributeHistory> history = historyService.history(id);
         assertTrue(history.size() >= 3, "Expected at least 3 history entries");
 
         AttributeHistory last = history.get(history.size() - 1);
@@ -92,15 +107,5 @@ class IntegrationAssetHistoryTest {
         assertNotNull(last.changedAt());
         assertNotNull(prev.changedAt());
         assertNotNull(prev2.changedAt());
-    }
-
-    private void applyAttributeUpdate(String id, String json) throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode node = mapper.readTree(json);
-        JsonNode attrs = node.get("attributes");
-        Asset asset = queryService.get(new AssetId(id)).orElseThrow();
-        AttributeJsonReader reader = new AttributeJsonReader(mapper, attributeDefinitionRegistry);
-        List<AttributeValue<?>> avs = reader.read(asset.getType(), attrs);
-        commandService.update(new AssetId(id), AssetPatch.builder().attributes(avs).build());
     }
 }

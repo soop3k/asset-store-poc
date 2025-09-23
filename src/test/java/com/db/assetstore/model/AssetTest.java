@@ -23,7 +23,12 @@ class AssetTest {
         Map<String, List<AttributeValue<?>>> init = Map.of(
                 "city", List.of(new AVString("city", "Warsaw"))
         );
-        Asset a = new Asset("id", AssetType.CRE, Instant.now(), AttributesCollection.fromMap(init));
+        Asset a = Asset.builder()
+                .id("id")
+                .type(AssetType.CRE)
+                .createdAt(Instant.now())
+                .attributes(AttributesCollection.fromMap(init))
+                .build();
         assertEquals("Warsaw", a.getAttributesByName().get("city").get(0).value());
 
         a.setAttribute(AVString.of("city", "Krakow"));
@@ -44,14 +49,19 @@ class AssetTest {
 
     @Test
     void attributesCollectionAccessorsWork() {
-        Asset a = new Asset("id", AssetType.CRE, Instant.now(), AttributesCollection.empty());
-        a.setAttributes(List.of(
+        Asset a2 = Asset.builder()
+                .id("id")
+                .type(AssetType.CRE)
+                .createdAt(Instant.now())
+                .attributes(AttributesCollection.empty())
+                .build();
+        a2.setAttributes(List.of(
                 AVString.of("city", "Gdansk"),
                 AVDecimal.of("rooms", 2),
                 AVBoolean.of("active", true)
         ));
 
-        AttributesCollection attrSet = AttributesCollection.fromFlat(a.getAttributesFlat());
+        AttributesCollection attrSet = AttributesCollection.fromFlat(a2.getAttributesFlat());
         assertEquals("Gdansk", attrSet.getFirstByName("city").orElseThrow().value());
         assertEquals(new java.math.BigDecimal("2"), attrSet.getFirstByName("rooms").orElseThrow().value());
         assertEquals(Boolean.TRUE, attrSet.getFirstByName("active").orElseThrow().value());

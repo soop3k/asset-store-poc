@@ -38,7 +38,7 @@ public interface AttributeMapper {
         @Override
         public AttributeEntity visitString(String v, String name) { return new AttributeEntity(parent, name, v, when); }
         @Override
-        public AttributeEntity visitDecimal(BigDecimal v, String name) { return new AttributeEntity(parent, name, v, when);}        
+        public AttributeEntity visitDecimal(BigDecimal v, String name) { return new AttributeEntity(parent, name, v, when);}
         @Override
         public AttributeEntity visitBoolean(Boolean v, String name) { return new AttributeEntity(parent, name, v, when);}    }
 }

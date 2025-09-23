@@ -1,9 +1,8 @@
 package com.db.assetstore.infra.service;
 
-import com.db.assetstore.domain.service.CreateAssetCommand;
-import com.db.assetstore.domain.service.PatchAssetCommand;
+import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
+import com.db.assetstore.domain.service.cmd.PatchAssetCommand;
 import com.db.assetstore.domain.model.Asset;
-import com.db.assetstore.domain.model.AssetId;
 import com.db.assetstore.domain.model.AssetPatch;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.model.attribute.AttributesCollection;
@@ -38,28 +37,31 @@ public class AssetCommandServiceImpl implements AssetCommandService {
 
     @Override
     @Transactional
-    public AssetId create(CreateAssetCommand command) {
+    public String create(CreateAssetCommand command) {
         Objects.requireNonNull(command, "command");
         String id = (command.id() != null && !command.id().isBlank()) ? command.id() : java.util.UUID.randomUUID().toString();
-        Asset asset = new Asset(
-                id,
-                command.type(),
-                Instant.now(),
-                AttributesCollection.fromFlat(command.attributes() == null ? List.of() : command.attributes())
-        );
-        asset.setStatus(command.status());
-        asset.setSubtype(command.subtype());
-        asset.setNotionalAmount(command.notionalAmount());
-        asset.setYear(command.year());
-        asset.setDescription(command.description());
-        asset.setCurrency(command.currency());
-        asset.setCreatedBy(command.createdBy());
+        Asset asset = Asset.builder()
+                .id(id)
+                .type(command.type())
+                .createdAt(Instant.now())
+                .status(command.status())
+                .subtype(command.subtype())
+                .notionalAmount(command.notionalAmount())
+                .year(command.year())
+                .description(command.description())
+                .currency(command.currency())
+                .createdBy(command.createdBy())
+                .modifiedBy(command.createdBy())
+                .modifiedAt(Instant.now())
+                .build();
+
+        asset.setAttributes(command.attributes());
+
         return create(asset);
     }
 
-    @Override
     @Transactional
-    public AssetId create(Asset asset) {
+    public String create(Asset asset) {
         Objects.requireNonNull(asset, "asset");
         log.info("Adding asset: type={}, id={}", asset.getType(), asset.getId());
         AssetEntity e = assetMapper.toEntity(asset);
@@ -68,7 +70,7 @@ public class AssetCommandServiceImpl implements AssetCommandService {
         } else {
             insertAllOnCreate(e, asset.getAttributesFlat());
         }
-        return AssetId.of(e.getId());
+        return e.getId();
     }
 
     @Override
@@ -87,23 +89,12 @@ public class AssetCommandServiceImpl implements AssetCommandService {
         update(command.assetId(), patch);
     }
 
-    @Override
     @Transactional
-    public void updateAttributes(AssetId id, Collection<AttributeValue<?>> attrs) {
-        Objects.requireNonNull(id, "id");
-        Objects.requireNonNull(attrs, "attrs");
-        AssetEntity e = assetRepo.findByIdAndDeleted(id.id(), 0)
-                .orElseThrow(() -> new IllegalArgumentException("Asset not found: " + id.id()));
-        updateAsset(e, attrs);
-    }
-
-    @Override
-    @Transactional
-    public void update(AssetId id, AssetPatch patch) {
+    public void update(String id, AssetPatch patch) {
         Objects.requireNonNull(id, "id");
         Objects.requireNonNull(patch, "patch");
-        AssetEntity e = assetRepo.findByIdAndDeleted(id.id(), 0)
-                .orElseThrow(() -> new IllegalArgumentException("Asset not found: " + id.id()));
+        AssetEntity e = assetRepo.findByIdAndDeleted(id, 0)
+                .orElseThrow(() -> new IllegalArgumentException("Asset not found: " + id));
 
         // Apply common fields if present
         if (patch.status() != null) e.setStatus(patch.status());
@@ -119,12 +110,11 @@ public class AssetCommandServiceImpl implements AssetCommandService {
         }
     }
 
-    @Override
     @Transactional
-    public void delete(AssetId id) {
+    public void delete(String id) {
         Objects.requireNonNull(id, "id");
-        AssetEntity e = assetRepo.findByIdAndDeleted(id.id(), 0)
-                .orElseThrow(() -> new IllegalArgumentException("Asset not found: " + id.id()));
+        AssetEntity e = assetRepo.findByIdAndDeleted(id, 0)
+                .orElseThrow(() -> new IllegalArgumentException("Asset not found: " + id));
         e.setDeleted(1);
         assetRepo.save(e);
     }

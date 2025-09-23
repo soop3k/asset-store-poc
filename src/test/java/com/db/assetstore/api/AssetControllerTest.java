@@ -9,8 +9,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.math.BigDecimal;
-
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -197,33 +195,6 @@ class AssetControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("null"))
                 .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void createCreAsset_typeSpecificEndpoint_infersCREType() throws Exception {
-        String payload = """
-                {
-                    "id": "cre-specific-1",
-                    "city": "Madrid",
-                    "rooms": 8,
-                    "area": 1200.0
-                }
-                """;
-
-        MvcResult result = mockMvc.perform(post("/assets/cre")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(payload))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        String assetId = result.getResponse().getContentAsString();
-
-        mockMvc.perform(get("/assets/" + assetId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.type", is("CRE")))
-                .andExpect(jsonPath("$.attributes.city.value", is("Madrid")))
-                .andExpect(jsonPath("$.attributes.rooms.value", is(8)))
-                .andExpect(jsonPath("$.attributes.area.value", is(1200)));
     }
 
     @Test

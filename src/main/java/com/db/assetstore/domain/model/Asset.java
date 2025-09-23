@@ -16,8 +16,8 @@ import java.time.Instant;
 import java.util.*;
 
 @Getter
-@JsonIgnoreProperties(value = {"attributesByName", "attributesFlat"}, allowGetters = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Builder(toBuilder = true)
 public final class Asset {
 
     private final String id;
@@ -43,14 +43,7 @@ public final class Asset {
     @JsonIgnore
     private AttributesCollection attributes;
 
-    @Builder
-    public Asset(String id, AssetType type, Instant createdAt, AttributesCollection attributes) {
-        this.id = Objects.requireNonNull(id, "id");
-        this.type = Objects.requireNonNull(type, "type");
-        this.createdAt = createdAt != null ? createdAt : Instant.now();
-        this.attributes = attributes != null ? AttributesCollection.fromMap(attributes.asMapView()) : AttributesCollection.empty();
-    }
-
+    @JsonIgnore
     public List<AttributeValue<?>> getAttributesFlat() {
         return attributes.asListView();
     }
@@ -67,6 +60,7 @@ public final class Asset {
         return out;
     }
 
+    @JsonIgnore
     public Map<String, List<AttributeValue<?>>> getAttributesByName() {
         return attributes.asMapView();
     }

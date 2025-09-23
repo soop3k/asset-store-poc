@@ -1,9 +1,8 @@
 package com.db.assetstore.service;
 
 import com.db.assetstore.AssetType;
-import com.db.assetstore.domain.service.CreateAssetCommand;
-import com.db.assetstore.domain.service.PatchAssetCommand;
-import com.db.assetstore.domain.model.AssetId;
+import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
+import com.db.assetstore.domain.service.cmd.PatchAssetCommand;
 import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.infra.jpa.AssetEntity;
 import com.db.assetstore.infra.jpa.AttributeEntity;
@@ -57,17 +56,18 @@ class AssetCommandServiceImplTest {
                 .requestTime(Instant.now())
                 .build();
 
-        // mapper creates entity with non-empty attributes (direct save branch)
-        AttributeEntity attr = new AttributeEntity();
+        AssetEntity parent = AssetEntity.builder().id("a-1").type(AssetType.CRE).build();
+        AttributeEntity attr = new AttributeEntity(parent, "city", "Warsaw", Instant.now());
         attr.setName("city");
-        AssetEntity entity = AssetEntity.builder().id("a-1").type(AssetType.CRE).attributes(new java.util.ArrayList<>(List.of(attr))).build();
+        attr.setValueStr("Warsaw");
+        AssetEntity entity = AssetEntity.builder().id("a-1").type(AssetType.CRE).attributes(List.of(attr)).build();
         when(assetMapper.toEntity(any())).thenReturn(entity);
 
         // when
-        AssetId id = service.create(cmd);
+        String id = service.create(cmd);
 
         // then
-        assertEquals("a-1", id.id());
+        assertEquals("a-1", id);
         verify(assetRepo, times(1)).save(entity);
         verifyNoInteractions(attributeRepo);
     }
@@ -86,10 +86,10 @@ class AssetCommandServiceImplTest {
 
         // attributeMapper.toEntity will be called and we let real default method build AttributeEntity
         // when
-        AssetId id = service.create(cmd);
+        String id = service.create(cmd);
 
         // then
-        assertEquals("a-2", id.id());
+        assertEquals("a-2", id);
         // One save of parent entity after children have been attached
         verify(assetRepo, times(1)).save(entity);
         // AttributeRepository is not used in insertAllOnCreate path
@@ -105,7 +105,7 @@ class AssetCommandServiceImplTest {
         when(assetRepo.findByIdAndDeleted("a-3", 0)).thenReturn(Optional.of(entity));
 
         PatchAssetCommand cmd = PatchAssetCommand.builder()
-                .assetId(new AssetId("a-3"))
+                .assetId("a-3")
                 .status("INACTIVE")
                 .build();
 
@@ -126,7 +126,7 @@ class AssetCommandServiceImplTest {
 
         // incoming patch with city="Warsaw"
         PatchAssetCommand cmd = PatchAssetCommand.builder()
-                .assetId(new AssetId("a-4"))
+                .assetId("a-4")
                 .attributes(List.of(new AVString("city", "Warsaw")))
                 .build();
 
@@ -145,7 +145,7 @@ class AssetCommandServiceImplTest {
         when(assetRepo.findByIdAndDeleted("a-5", 0)).thenReturn(Optional.of(parent));
 
         PatchAssetCommand cmd = PatchAssetCommand.builder()
-                .assetId(new AssetId("a-5"))
+                .assetId("a-5")
                 .attributes(List.of(new AVString("city", "Warsaw")))
                 .build();
 
@@ -161,7 +161,7 @@ class AssetCommandServiceImplTest {
         AssetEntity entity = AssetEntity.builder().id("a-6").type(AssetType.CRE).deleted(0).build();
         when(assetRepo.findByIdAndDeleted("a-6", 0)).thenReturn(Optional.of(entity));
 
-        service.delete(new AssetId("a-6"));
+        service.delete("a-6");
 
         assertEquals(1, entity.getDeleted());
         verify(assetRepo, times(1)).save(entity);

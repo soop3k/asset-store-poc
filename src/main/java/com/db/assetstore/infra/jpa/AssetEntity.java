@@ -53,7 +53,7 @@ public class AssetEntity {
 
     @Builder.Default
     @Column(nullable = false)
-    private int deleted = 0; // 0/1 for portability
+    private int deleted = 0;
 
     @Column(name = "notional_amount", precision = 19, scale = 4)
     private BigDecimal notionalAmount;

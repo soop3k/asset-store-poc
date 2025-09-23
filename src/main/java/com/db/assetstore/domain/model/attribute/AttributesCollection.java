@@ -6,17 +6,16 @@ import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.domain.model.type.AttributeType;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.util.*;
 
+@RequiredArgsConstructor
 public final class AttributesCollection {
 
     private final LinkedHashMap<String, List<AttributeValue<?>>> data;
-
-    private AttributesCollection(LinkedHashMap<String, List<AttributeValue<?>>> data) {
-        this.data = data;
-    }
 
     public static AttributesCollection empty() {
         return new AttributesCollection(new LinkedHashMap<>());

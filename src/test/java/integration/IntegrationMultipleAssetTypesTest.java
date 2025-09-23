@@ -1,13 +1,11 @@
 package integration;
 
 import com.db.assetstore.AssetType;
-import com.db.assetstore.domain.json.AssetJsonFactory;
-import com.db.assetstore.domain.model.Asset;
-import com.db.assetstore.domain.model.AssetId;
 import com.db.assetstore.domain.model.type.AVDecimal;
 import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.domain.service.AssetCommandService;
 import com.db.assetstore.domain.service.AssetQueryService;
+import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,27 +27,36 @@ class IntegrationMultipleAssetTypesTest {
     AssetCommandService commandService;
     @Autowired
     AssetQueryService queryService;
-    @Autowired
-    AssetJsonFactory factory;
 
     @Test
     void persistTwoDifferentAssetTypes_CRE_and_SHIP() {
-        String creId = commandService.create(factory.fromJsonForType(AssetType.CRE,
-                "{\"id\":\"cre-int-2\",\"city\":\"Lublin\"}")).id();
+        var creCmd = CreateAssetCommand.builder()
+                .id("cre-int-2")
+                .type(AssetType.CRE)
+                .attributes(java.util.List.of(new AVString("city", "Lublin")))
+                .build();
+        String creId = commandService.create(creCmd);
         assertEquals("cre-int-2", creId);
 
-        String shipId = commandService.create(factory.fromJsonForType(AssetType.SHIP,
-                "{\"id\":\"ship-int-1\",\"name\":\"Evergreen\",\"imo\":1234567}")).id();
+        var shipCmd = CreateAssetCommand.builder()
+                .id("ship-int-1")
+                .type(AssetType.SHIP)
+                .attributes(java.util.List.of(
+                        new AVString("name", "Evergreen"),
+                        new AVDecimal("imo", new BigDecimal("1234567"))
+                ))
+                .build();
+        String shipId = commandService.create(shipCmd);
         assertEquals("ship-int-1", shipId);
 
-        Asset cre = queryService.get(new AssetId(creId)).orElseThrow();
+        var cre = queryService.get(creId).orElseThrow();
         assertEquals(AssetType.CRE, cre.getType());
         var creCity = cre.getAttributesFlat().stream()
                 .filter(av -> av instanceof AVString && "city".equals(av.name()))
                 .map(av -> (AVString) av).findFirst().orElseThrow();
         assertEquals("Lublin", creCity.value());
 
-        Asset ship = queryService.get(new AssetId(shipId)).orElseThrow();
+        var ship = queryService.get(shipId).orElseThrow();
         assertEquals(AssetType.SHIP, ship.getType());
         var shipName = ship.getAttributesFlat().stream()
                 .filter(av -> av instanceof AVString && "name".equals(av.name()))

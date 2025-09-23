@@ -1,6 +1,5 @@
 package com.db.assetstore.service;
 
-import com.db.assetstore.domain.model.AssetId;
 import com.db.assetstore.domain.model.attribute.AttributeHistory;
 import com.db.assetstore.domain.model.type.AttributeType;
 import com.db.assetstore.infra.jpa.AssetEntity;
@@ -36,18 +35,14 @@ class AssetHistoryServiceImplTest {
     void history_mapsEntitiesToModels_andPreservesOrder() {
         // given
         AssetEntity asset = AssetEntity.builder().id("h-1").build();
-        AttributeEntity attr = new AttributeEntity();
-        attr.setAsset(asset);
-        attr.setName("city");
-        attr.setValueType(AttributeType.STRING);
-        attr.setValueStr("Gdansk");
+        AttributeEntity attr = new AttributeEntity(asset, "city", "Gdansk", Instant.now());
 
         AttributeHistoryEntity h1 = new AttributeHistoryEntity(attr, Instant.now().minusSeconds(10));
         AttributeHistoryEntity h2 = new AttributeHistoryEntity(attr, Instant.now());
         when(historyRepo.findAllByAsset_IdOrderByChangedAt("h-1")).thenReturn(List.of(h1, h2));
 
         // when
-        List<AttributeHistory> out = service.history(new AssetId("h-1"));
+        List<AttributeHistory> out = service.history("h-1");
 
         // then (default mapper turns entities into domain model)
         assertEquals(2, out.size());
