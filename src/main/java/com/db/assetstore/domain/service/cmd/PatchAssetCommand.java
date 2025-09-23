@@ -1,11 +1,16 @@
 package com.db.assetstore.domain.service.cmd;
+
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import lombok.Builder;
+import lombok.Singular;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
+/**
+ * Command representing a request to patch (partially update) an existing asset.
+ */
 @Builder
 public record PatchAssetCommand(
         String assetId,
@@ -15,7 +20,13 @@ public record PatchAssetCommand(
         Integer year,
         String description,
         String currency,
-        List<AttributeValue<?>> attributes,
+        @Singular("attribute") List<AttributeValue<?>> attributes,
         String modifiedBy,
         Instant requestTime
-) {}
+) implements AssetCommand<Void> {
+
+    @Override
+    public CommandResult<Void> accept(AssetCommandVisitor visitor) {
+        return requireVisitor(visitor).visit(this);
+    }
+}

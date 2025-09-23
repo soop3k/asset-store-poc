@@ -1,25 +1,36 @@
 package com.db.assetstore.infra.service;
 
+import com.db.assetstore.domain.service.cmd.AssetCommand;
+import com.db.assetstore.domain.service.cmd.CommandResult;
 import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
+import com.db.assetstore.domain.service.cmd.DeleteAssetCommand;
 import com.db.assetstore.domain.service.cmd.PatchAssetCommand;
+import com.db.assetstore.domain.service.cmd.AssetCommandVisitor;
 import com.db.assetstore.domain.model.Asset;
 import com.db.assetstore.domain.model.AssetPatch;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
-import com.db.assetstore.domain.model.attribute.AttributesCollection;
 import com.db.assetstore.domain.service.AssetCommandService;
 import com.db.assetstore.infra.jpa.AssetEntity;
 import com.db.assetstore.infra.jpa.AttributeEntity;
+import com.db.assetstore.infra.jpa.CommandLogEntity;
 import com.db.assetstore.infra.mapper.AssetMapper;
 import com.db.assetstore.infra.mapper.AttributeMapper;
 import com.db.assetstore.infra.repository.AssetRepository;
 import com.db.assetstore.infra.repository.AttributeRepository;
+import com.db.assetstore.infra.repository.CommandLogRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Command-side implementation operating on Asset entities.
@@ -28,20 +39,48 @@ import java.util.*;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AssetCommandServiceImpl implements AssetCommandService {
+public class AssetCommandServiceImpl implements AssetCommandService, AssetCommandVisitor {
 
     private final AssetMapper assetMapper;
     private final AttributeMapper attributeMapper;
     private final AssetRepository assetRepo;
     private final AttributeRepository attributeRepo;
+    private final CommandLogRepository commandLogRepository;
+    private final ObjectMapper objectMapper;
 
     @Override
     @Transactional
     public String create(CreateAssetCommand command) {
+        return execute(command).result();
+    }
+
+    @Override
+    @Transactional
+    public void update(PatchAssetCommand command) {
+        execute(command);
+    }
+
+    @Override
+    @Transactional
+    public void delete(DeleteAssetCommand command) {
+        execute(command);
+    }
+
+    @Override
+    @Transactional
+    public <R> CommandResult<R> execute(AssetCommand<R> command) {
         Objects.requireNonNull(command, "command");
-        String id = (command.id() != null && !command.id().isBlank()) ? command.id() : java.util.UUID.randomUUID().toString();
+        CommandResult<R> result = command.accept(this);
+        recordCommand(result.assetId(), command);
+        return result;
+    }
+
+    @Override
+    public CommandResult<String> visit(CreateAssetCommand command) {
+        Objects.requireNonNull(command, "command");
+        String assetId = resolveAssetId(command);
         Asset asset = Asset.builder()
-                .id(id)
+                .id(assetId)
                 .type(command.type())
                 .createdAt(Instant.now())
                 .status(command.status())
@@ -54,29 +93,15 @@ public class AssetCommandServiceImpl implements AssetCommandService {
                 .modifiedBy(command.createdBy())
                 .modifiedAt(Instant.now())
                 .build();
-
         asset.setAttributes(command.attributes());
-
-        return create(asset);
-    }
-
-    @Transactional
-    public String create(Asset asset) {
-        Objects.requireNonNull(asset, "asset");
-        log.info("Adding asset: type={}, id={}", asset.getType(), asset.getId());
-        AssetEntity e = assetMapper.toEntity(asset);
-        if (e.getAttributes() != null && !e.getAttributes().isEmpty()) {
-            assetRepo.save(e);
-        } else {
-            insertAllOnCreate(e, asset.getAttributesFlat());
-        }
-        return e.getId();
+        String persistedId = persistAsset(asset);
+        return new CommandResult<>(persistedId, persistedId);
     }
 
     @Override
-    @Transactional
-    public void update(PatchAssetCommand command) {
+    public CommandResult<Void> visit(PatchAssetCommand command) {
         Objects.requireNonNull(command, "command");
+        String assetId = Objects.requireNonNull(command.assetId(), "assetId");
         AssetPatch patch = AssetPatch.builder()
                 .status(command.status())
                 .subtype(command.subtype())
@@ -86,32 +111,57 @@ public class AssetCommandServiceImpl implements AssetCommandService {
                 .currency(command.currency())
                 .attributes(command.attributes())
                 .build();
-        update(command.assetId(), patch);
+        applyPatch(assetId, patch);
+        return CommandResult.noResult(assetId);
     }
 
-    @Transactional
-    public void update(String id, AssetPatch patch) {
+    @Override
+    public CommandResult<Void> visit(DeleteAssetCommand command) {
+        Objects.requireNonNull(command, "command");
+        String assetId = Objects.requireNonNull(command.assetId(), "assetId");
+        deleteAsset(assetId);
+        return CommandResult.noResult(assetId);
+    }
+
+    private String resolveAssetId(CreateAssetCommand command) {
+        if (command.id() != null && !command.id().isBlank()) {
+            return command.id();
+        }
+        return UUID.randomUUID().toString();
+    }
+
+    private String persistAsset(Asset asset) {
+        Objects.requireNonNull(asset, "asset");
+        log.info("Adding asset: type={}, id={}", asset.getType(), asset.getId());
+        AssetEntity entity = assetMapper.toEntity(asset);
+        if (entity.getAttributes() != null && !entity.getAttributes().isEmpty()) {
+            assetRepo.save(entity);
+        } else {
+            insertAllOnCreate(entity, asset.getAttributesFlat());
+        }
+        return entity.getId();
+    }
+
+    private void applyPatch(String id, AssetPatch patch) {
         Objects.requireNonNull(id, "id");
         Objects.requireNonNull(patch, "patch");
-        AssetEntity e = assetRepo.findByIdAndDeleted(id, 0)
+        AssetEntity entity = assetRepo.findByIdAndDeleted(id, 0)
                 .orElseThrow(() -> new IllegalArgumentException("Asset not found: " + id));
 
-        // Apply common fields if present
-        if (patch.status() != null) e.setStatus(patch.status());
-        if (patch.subtype() != null) e.setSubtype(patch.subtype());
-        if (patch.notionalAmount() != null) e.setNotionalAmount(patch.notionalAmount());
-        if (patch.year() != null) e.setYear(patch.year());
-        if (patch.description() != null) e.setDescription(patch.description());
-        if (patch.currency() != null) e.setCurrency(patch.currency());
-        assetRepo.save(e);
+        if (patch.status() != null) entity.setStatus(patch.status());
+        if (patch.subtype() != null) entity.setSubtype(patch.subtype());
+        if (patch.notionalAmount() != null) entity.setNotionalAmount(patch.notionalAmount());
+        if (patch.year() != null) entity.setYear(patch.year());
+        if (patch.description() != null) entity.setDescription(patch.description());
+        if (patch.currency() != null) entity.setCurrency(patch.currency());
+        assetRepo.save(entity);
 
         if (patch.attributes() != null) {
-            updateAsset(e, patch.attributes());
+            updateAsset(entity, patch.attributes());
         }
     }
 
-    @Transactional
-    public void delete(String id) {
+    void deleteAsset(String id) {
         Objects.requireNonNull(id, "id");
         AssetEntity e = assetRepo.findByIdAndDeleted(id, 0)
                 .orElseThrow(() -> new IllegalArgumentException("Asset not found: " + id));
@@ -158,5 +208,26 @@ public class AssetCommandServiceImpl implements AssetCommandService {
             }
         }
         assetRepo.save(asset);
+    }
+
+    private void recordCommand(String assetId, AssetCommand<?> command) {
+        Objects.requireNonNull(command, "command");
+        String commandType = command.commandType();
+        String payload;
+        try {
+            payload = objectMapper.writeValueAsString(command);
+        } catch (JsonProcessingException e) {
+            log.warn("Failed to serialise {} command for asset {}", commandType, assetId, e);
+            payload = String.valueOf(command);
+        }
+
+        CommandLogEntity entity = CommandLogEntity.builder()
+                .commandType(commandType)
+                .assetId(assetId)
+                .payload(payload)
+                .createdAt(Instant.now())
+                .build();
+
+        commandLogRepository.save(entity);
     }
 }

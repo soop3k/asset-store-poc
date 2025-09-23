@@ -1,19 +1,26 @@
 package com.db.assetstore.service;
 
 import com.db.assetstore.AssetType;
+import com.db.assetstore.domain.service.cmd.CommandResult;
 import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
+import com.db.assetstore.domain.service.cmd.DeleteAssetCommand;
 import com.db.assetstore.domain.service.cmd.PatchAssetCommand;
 import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.infra.jpa.AssetEntity;
 import com.db.assetstore.infra.jpa.AttributeEntity;
+import com.db.assetstore.infra.config.JsonMapperProvider;
+import com.db.assetstore.infra.jpa.CommandLogEntity;
 import com.db.assetstore.infra.mapper.AssetMapper;
 import com.db.assetstore.infra.mapper.AttributeMapper;
 import com.db.assetstore.infra.repository.AssetRepository;
 import com.db.assetstore.infra.repository.AttributeRepository;
+import com.db.assetstore.infra.repository.CommandLogRepository;
 import com.db.assetstore.infra.service.AssetCommandServiceImpl;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.mockito.ArgumentCaptor;
 
 import java.time.Instant;
 import java.util.List;
@@ -29,6 +36,8 @@ class AssetCommandServiceImplTest {
     AttributeMapper attributeMapper;
     AssetRepository assetRepo;
     AttributeRepository attributeRepo;
+    CommandLogRepository commandLogRepository;
+    ObjectMapper objectMapper;
 
     AssetCommandServiceImpl service;
 
@@ -38,7 +47,10 @@ class AssetCommandServiceImplTest {
         attributeMapper = mock(AttributeMapper.class, Mockito.withSettings().defaultAnswer(Mockito.CALLS_REAL_METHODS));
         assetRepo = mock(AssetRepository.class);
         attributeRepo = mock(AttributeRepository.class);
-        service = new AssetCommandServiceImpl(assetMapper, attributeMapper, assetRepo, attributeRepo);
+        commandLogRepository = mock(CommandLogRepository.class);
+        objectMapper = new JsonMapperProvider().objectMapper();
+        when(commandLogRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        service = new AssetCommandServiceImpl(assetMapper, attributeMapper, assetRepo, attributeRepo, commandLogRepository, objectMapper);
 
         // Default behavior for save to echo the entity
         when(assetRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
@@ -70,6 +82,11 @@ class AssetCommandServiceImplTest {
         assertEquals("a-1", id);
         verify(assetRepo, times(1)).save(entity);
         verifyNoInteractions(attributeRepo);
+
+        ArgumentCaptor<CommandLogEntity> logCaptor = ArgumentCaptor.forClass(CommandLogEntity.class);
+        verify(commandLogRepository).save(logCaptor.capture());
+        assertEquals("CreateAssetCommand", logCaptor.getValue().getCommandType());
+        assertEquals("a-1", logCaptor.getValue().getAssetId());
     }
 
     @Test
@@ -97,6 +114,35 @@ class AssetCommandServiceImplTest {
         // The attribute should have been attached to the entity
         assertFalse(entity.getAttributes().isEmpty());
         assertEquals("city", entity.getAttributes().get(0).getName());
+
+        ArgumentCaptor<CommandLogEntity> logCaptor = ArgumentCaptor.forClass(CommandLogEntity.class);
+        verify(commandLogRepository).save(logCaptor.capture());
+        assertEquals("CreateAssetCommand", logCaptor.getValue().getCommandType());
+        assertEquals("a-2", logCaptor.getValue().getAssetId());
+    }
+
+    @Test
+    void execute_withCreateCommand_dispatchesThroughVisitorAndRecordsLog() {
+        CreateAssetCommand cmd = CreateAssetCommand.builder()
+                .id("exec-1")
+                .type(AssetType.CRE)
+                .attribute(new AVString("city", "Poznan"))
+                .createdBy("tester")
+                .build();
+
+        AssetEntity entity = AssetEntity.builder().id("exec-1").type(AssetType.CRE).attributes(new java.util.ArrayList<>()).build();
+        when(assetMapper.toEntity(any())).thenReturn(entity);
+
+        CommandResult<String> result = service.execute(cmd);
+
+        assertEquals("exec-1", result.result());
+        assertEquals("exec-1", result.assetId());
+        verify(assetRepo).save(entity);
+
+        ArgumentCaptor<CommandLogEntity> logCaptor = ArgumentCaptor.forClass(CommandLogEntity.class);
+        verify(commandLogRepository).save(logCaptor.capture());
+        assertEquals("CreateAssetCommand", logCaptor.getValue().getCommandType());
+        assertEquals("exec-1", logCaptor.getValue().getAssetId());
     }
 
     @Test
@@ -114,6 +160,11 @@ class AssetCommandServiceImplTest {
         assertEquals("INACTIVE", entity.getStatus());
         verify(assetRepo, times(1)).save(entity);
         verify(attributeRepo, never()).save(any());
+
+        ArgumentCaptor<CommandLogEntity> logCaptor = ArgumentCaptor.forClass(CommandLogEntity.class);
+        verify(commandLogRepository).save(logCaptor.capture());
+        assertEquals("PatchAssetCommand", logCaptor.getValue().getCommandType());
+        assertEquals("a-3", logCaptor.getValue().getAssetId());
     }
 
     @Test
@@ -135,6 +186,11 @@ class AssetCommandServiceImplTest {
         // verify changed and saved
         assertEquals("Warsaw", parent.getAttributes().get(0).getValueStr());
         verify(attributeRepo, times(1)).save(parent.getAttributes().get(0));
+
+        ArgumentCaptor<CommandLogEntity> logCaptor = ArgumentCaptor.forClass(CommandLogEntity.class);
+        verify(commandLogRepository).save(logCaptor.capture());
+        assertEquals("PatchAssetCommand", logCaptor.getValue().getCommandType());
+        assertEquals("a-4", logCaptor.getValue().getAssetId());
     }
 
     @Test
@@ -154,6 +210,11 @@ class AssetCommandServiceImplTest {
         // value remains and attributeRepo.save not called
         assertEquals("Warsaw", parent.getAttributes().get(0).getValueStr());
         verify(attributeRepo, never()).save(any());
+
+        ArgumentCaptor<CommandLogEntity> logCaptor = ArgumentCaptor.forClass(CommandLogEntity.class);
+        verify(commandLogRepository).save(logCaptor.capture());
+        assertEquals("PatchAssetCommand", logCaptor.getValue().getCommandType());
+        assertEquals("a-5", logCaptor.getValue().getAssetId());
     }
 
     @Test
@@ -161,9 +222,14 @@ class AssetCommandServiceImplTest {
         AssetEntity entity = AssetEntity.builder().id("a-6").type(AssetType.CRE).deleted(0).build();
         when(assetRepo.findByIdAndDeleted("a-6", 0)).thenReturn(Optional.of(entity));
 
-        service.delete("a-6");
+        service.delete(DeleteAssetCommand.builder().assetId("a-6").build());
 
         assertEquals(1, entity.getDeleted());
         verify(assetRepo, times(1)).save(entity);
+
+        ArgumentCaptor<CommandLogEntity> logCaptor = ArgumentCaptor.forClass(CommandLogEntity.class);
+        verify(commandLogRepository).save(logCaptor.capture());
+        assertEquals("DeleteAssetCommand", logCaptor.getValue().getCommandType());
+        assertEquals("a-6", logCaptor.getValue().getAssetId());
     }
 }

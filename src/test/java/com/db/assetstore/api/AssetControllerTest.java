@@ -539,4 +539,33 @@ class AssetControllerTest {
                 .andExpect(jsonPath("$.attributes.active.value", is(true)));
     }
 
+
+    @Test
+    void deleteAsset_marksAssetAsDeleted() throws Exception {
+        String payload = """
+                {
+                    "type": "CRE",
+                    "attributes": {
+                        "city": "Lisbon"
+                    }
+                }
+                """;
+
+        MvcResult result = mockMvc.perform(post("/assets")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String assetId = result.getResponse().getContentAsString();
+
+        mockMvc.perform(delete("/assets/" + assetId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""{"id":"%s","deletedBy":"tester"}""".formatted(assetId)))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/assets/" + assetId))
+                .andExpect(status().isNotFound());
+    }
+
 }
