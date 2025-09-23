@@ -1,4 +1,4 @@
-package com.db.assetstore.service;
+package com.db.assetstore.json;
 
 import org.junit.jupiter.api.Test;
 import com.db.assetstore.domain.service.validation.JsonSchemaValidator;

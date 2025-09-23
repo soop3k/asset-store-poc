@@ -1,4 +1,4 @@
-package com.db.assetstore.service;
+package com.db.assetstore.json;
 
 import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.json.AssetJsonFactory;

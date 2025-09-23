@@ -20,10 +20,10 @@ class AssetBulkE2ETest {
     MockMvc mockMvc;
 
     @Test
-    void bulkCreateAndFetch_creType_flatJsonArray() throws Exception {
+    void bulkCreateAndFetch_creType_requestDtoArray() throws Exception {
         String payload = "[" +
-                "{\"type\":\"CRE\",\"id\":\"cre-1\",\"city\":\"Warsaw\",\"area\":100.5,\"rooms\":3,\"active\":true}," +
-                "{\"type\":\"CRE\",\"id\":\"cre-2\",\"city\":\"Gdansk\",\"rooms\":2}" +
+                "{\"id\":\"cre-1\",\"type\":\"CRE\",\"attributes\":{\"city\":\"Warsaw\",\"area\":100.5,\"rooms\":3,\"active\":true}}," +
+                "{\"id\":\"cre-2\",\"type\":\"CRE\",\"attributes\":{\"city\":\"Gdansk\",\"rooms\":2}}" +
                 "]";
 
         // create in bulk
