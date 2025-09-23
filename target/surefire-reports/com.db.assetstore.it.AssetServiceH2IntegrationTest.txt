@@ -1,0 +1,18 @@
+-------------------------------------------------------------------------------
+Test set: com.db.assetstore.it.AssetServiceH2IntegrationTest
+-------------------------------------------------------------------------------
+Tests run: 3, Failures: 0, Errors: 2, Skipped: 0, Time elapsed: 7.301 s <<< FAILURE! -- in com.db.assetstore.it.AssetServiceH2IntegrationTest
+com.db.assetstore.it.AssetServiceH2IntegrationTest.addAndGetAsset_roundTripsThroughH2 -- Time elapsed: 0.504 s <<< ERROR!
+java.lang.NullPointerException: Cannot invoke "java.util.List.get(int)" because the return value of "java.util.Map.get(Object)" is null
+	at com.db.assetstore.it.AssetServiceH2IntegrationTest.addAndGetAsset_roundTripsThroughH2(AssetServiceH2IntegrationTest.java:48)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+
+com.db.assetstore.it.AssetServiceH2IntegrationTest.updateAssetFromJson_writesHistoryAndChangesValue -- Time elapsed: 0.039 s <<< ERROR!
+java.lang.NullPointerException: Cannot invoke "java.util.List.get(int)" because the return value of "java.util.Map.get(Object)" is null
+	at com.db.assetstore.it.AssetServiceH2IntegrationTest.updateAssetFromJson_writesHistoryAndChangesValue(AssetServiceH2IntegrationTest.java:63)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+

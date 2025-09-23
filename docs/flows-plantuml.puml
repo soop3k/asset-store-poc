@@ -1,0 +1,122 @@
+' PlantUML versions of key system flows
+' Open in any PlantUML-compatible viewer/rendering extension
+
+' 1) Start aplikacji (bootstrap + informacje)
+@startuml StartAplikacji
+skinparam backgroundColor #ffffff
+skinparam activity {
+  BackgroundColor<<svc>> #e7f3ff
+  BorderColor<<svc>> #3b82f6
+  BackgroundColor<<db>> #fef3c7
+  BorderColor<<db>> #f59e0b
+  BackgroundColor<<io>> #ecfccb
+  BorderColor<<io>> #84cc16
+  BackgroundColor<<log>> #f3e8ff
+  BorderColor<<log>> #a855f7
+}
+start
+:Spring Boot start;
+:TypeSchemaRegistry.discover() <<svc>>;
+:AttributeDefinitionRegistry.rebuild() <<svc>>;
+:ApplicationReadyEvent;
+:StartupInfoService.onReady() <<svc>>;
+:AttributeDefinitionsBootstrapService.bootstrap() <<svc>>;
+:DB AttributeDefEntity <<db>>;
+:Skany zasobów transforms/**/*.jslt <<io>>;
+:Log: wspierane typy i transformacje <<log>>;
+stop
+@enduml
+
+' 2) Tworzenie aktywa z koperty {type, id, ...}
+@startuml TworzenieAktywaZKoperty
+skinparam backgroundColor #ffffff
+skinparam activity {
+  BackgroundColor<<http>> #e0f2fe
+  BorderColor<<http>> #0284c7
+  BackgroundColor<<web>> #f1f5f9
+  BorderColor<<web>> #64748b
+  BackgroundColor<<svc>> #e7f3ff
+  BorderColor<<svc>> #3b82f6
+  BackgroundColor<<json>> #ecfeff
+  BorderColor<<json>> #06b6d4
+  BackgroundColor<<val>> #e9ffe7
+  BorderColor<<val>> #16a34a
+  BackgroundColor<<repo>> #fff7ed
+  BorderColor<<repo>> #ea580c
+  BackgroundColor<<db>> #fef3c7
+  BorderColor<<db>> #f59e0b
+}
+start
+:HTTP POST /assets <<http>>;
+:AssetController <<web>>;
+:DefaultAssetService.addAssetFromJson <<svc>>;
+:AssetAttributeValidationService.validateEnvelope <<svc>>;
+:AssetJsonFactory.fromJson <<json>>;
+:AssetTypeValidator.ensureSupported + validateAttributes <<val>>;
+:TypeSchemaRegistry.getSchemaPath <<svc>>;
+:JsonSchemaValidator.validateIfPresent <<val>>;
+:repository.saveAsset <<repo>>;
+:JpaAssetRepository <<repo>>;
+:DB save Asset + AttributeEntity + History <<db>>;
+stop
+@enduml
+
+' 3) Tworzenie aktywa z JSON typu (bez koperty)
+@startuml TworzenieAktywaDlaTypu
+skinparam backgroundColor #ffffff
+skinparam activity {
+  BackgroundColor<<http>> #e0f2fe
+  BorderColor<<http>> #0284c7
+  BackgroundColor<<web>> #f1f5f9
+  BorderColor<<web>> #64748b
+  BackgroundColor<<svc>> #e7f3ff
+  BorderColor<<svc>> #3b82f6
+  BackgroundColor<<json>> #ecfeff
+  BorderColor<<json>> #06b6d4
+  BackgroundColor<<val>> #e9ffe7
+  BorderColor<<val>> #16a34a
+  BackgroundColor<<repo>> #fff7ed
+  BorderColor<<repo>> #ea580c
+  BackgroundColor<<db>> #fef3c7
+  BorderColor<<db>> #f59e0b
+}
+start
+:HTTP POST /assets/{type} <<http>>;
+:AssetController <<web>>;
+:DefaultAssetService.addAssetFromJson(type,json) <<svc>>;
+:AssetAttributeValidationService.validateForType <<svc>>;
+:AssetJsonFactory.fromJsonForType <<json>>;
+:AssetTypeValidator.ensureSupported + validateAttributes <<val>>;
+:TypeSchemaRegistry.getSchemaPath <<svc>>;
+:JsonSchemaValidator.validateIfPresent <<val>>;
+:repository.saveAsset <<repo>>;
+:JpaAssetRepository <<repo>>;
+:DB (persist) <<db>>;
+stop
+@enduml
+
+' 4) Generowanie zdarzenia (EventService + JSLT)
+@startuml GenerowanieZdarzenia
+skinparam backgroundColor #ffffff
+skinparam activity {
+  BackgroundColor<<svc>> #e7f3ff
+  BorderColor<<svc>> #3b82f6
+  BackgroundColor<<json>> #ecfeff
+  BorderColor<<json>> #06b6d4
+  BackgroundColor<<jslt>> #fef9c3
+  BorderColor<<jslt>> #ca8a04
+  BackgroundColor<<io>> #ecfccb
+  BorderColor<<io>> #84cc16
+  BackgroundColor<<val>> #e9ffe7
+  BorderColor<<val>> #16a34a
+}
+start
+:EventService.generate(eventName, asset) <<svc>>;
+:AssetCanonicalizer.toCanonicalJson <<json>>;
+:Zbuduj kontekst {eventName, occurredAt, asset} <<json>>;
+:JsonTransformer.transform("events/"+eventName) <<svc>>;
+:Parser.compile + apply JSLT <<jslt>>;
+:(wynik JSON) <<io>>;
+:Opcj. walidacja: schemas/transforms/*.schema.json lub schemas/events/*.schema.json <<val>>;
+stop
+@enduml
