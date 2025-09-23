@@ -1,82 +1,120 @@
 package com.db.assetstore.infra.service.cmd;
 
 import com.db.assetstore.AssetType;
+import com.db.assetstore.domain.json.AttributeJsonReader;
+import com.db.assetstore.domain.model.attribute.AttributeValue;
+import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
 import com.db.assetstore.domain.service.cmd.PatchAssetCommand;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AssetCommandFactoryRegistryTest {
 
     @Mock
-    CreateAssetCommandFactory createFactory;
+    private AttributeJsonReader attributeJsonReader;
 
-    @Mock
-    PatchAssetCommandFactory patchFactory;
+    private AssetCommandFactoryRegistry registry;
 
-    @InjectMocks
-    AssetCommandFactoryRegistry registry;
+    private AssetCreateRequest createRequest;
 
-    @Mock
-    AssetCreateRequest createRequest;
+    private AssetPatchRequest patchRequest;
 
-    @Mock
-    AssetPatchRequest patchRequest;
+    private ObjectNode createAttributes;
 
-    @Mock
-    CreateAssetCommand createCommand;
+    private ObjectNode patchAttributes;
 
-    @Mock
-    PatchAssetCommand patchCommand;
+    @BeforeEach
+    void setUp() {
+        registry = new AssetCommandFactoryRegistry(
+                new CreateAssetCommandFactory(attributeJsonReader),
+                new PatchAssetCommandFactory(attributeJsonReader)
+        );
+
+        createAttributes = new ObjectMapper().createObjectNode();
+        createAttributes.put("rating", "A");
+        createRequest = new AssetCreateRequest(
+                "asset-1",
+                AssetType.CRE,
+                "ACTIVE",
+                "OFFICE",
+                null,
+                2024,
+                "Created",
+                "USD",
+                createAttributes
+        );
+
+        patchAttributes = new ObjectMapper().createObjectNode();
+        patchAttributes.put("tenant", "ACME");
+        patchRequest = new AssetPatchRequest();
+        patchRequest.setStatus("INACTIVE");
+        patchRequest.setSubtype("SHOPPING");
+        patchRequest.setDescription("Patched");
+        patchRequest.setCurrency("EUR");
+        patchRequest.setAttributes(patchAttributes);
+    }
 
     @Test
     void createCreateCommand_delegatesToCreateFactory() {
-        when(createFactory.createCommand(createRequest)).thenReturn(createCommand);
+        AttributeValue<?> attribute = AVString.of("rating", "A");
+        lenient().when(attributeJsonReader.read(AssetType.CRE, createAttributes)).thenReturn(java.util.List.of(attribute));
 
         CreateAssetCommand result = registry.createCreateCommand(createRequest);
 
-        assertThat(result).isSameAs(createCommand);
-        verify(createFactory).createCommand(createRequest);
+        assertThat(result.id()).isEqualTo("asset-1");
+        assertThat(result.type()).isEqualTo(AssetType.CRE);
+        assertThat(result.status()).isEqualTo("ACTIVE");
+        assertThat(result.subtype()).isEqualTo("OFFICE");
+        assertThat(result.description()).isEqualTo("Created");
+        assertThat(result.currency()).isEqualTo("USD");
+        assertThat(result.attributes()).containsExactly(attribute);
+        verify(attributeJsonReader).read(AssetType.CRE, createAttributes);
     }
 
     @Test
     void createPatchCommand_withExplicitId_delegatesToPatchFactory() {
-        when(patchFactory.createCommand(AssetType.CRE, "id-1", patchRequest)).thenReturn(patchCommand);
+        AttributeValue<?> attribute = AVString.of("tenant", "ACME");
+        lenient().when(attributeJsonReader.read(AssetType.CRE, patchAttributes)).thenReturn(java.util.List.of(attribute));
 
-        PatchAssetCommand result = registry.createPatchCommand(AssetType.CRE, "id-1", patchRequest);
+        PatchAssetCommand result = registry.createPatchCommand(AssetType.CRE, "asset-2", patchRequest);
 
-        assertThat(result).isSameAs(patchCommand);
-        verify(patchFactory).createCommand(AssetType.CRE, "id-1", patchRequest);
+        assertThat(result.assetId()).isEqualTo("asset-2");
+        assertThat(result.status()).isEqualTo("INACTIVE");
+        assertThat(result.subtype()).isEqualTo("SHOPPING");
+        assertThat(result.description()).isEqualTo("Patched");
+        assertThat(result.currency()).isEqualTo("EUR");
+        assertThat(result.attributes()).containsExactly(attribute);
+        verify(attributeJsonReader).read(AssetType.CRE, patchAttributes);
     }
 
     @Test
     void createPatchCommand_usingRequestId_validatesPresence() {
-        when(patchRequest.getId()).thenReturn("id-2");
-        when(patchFactory.createCommand(eq(AssetType.SHIP), eq("id-2"), any())).thenReturn(patchCommand);
+        patchRequest.setId("asset-3");
+        AttributeValue<?> attribute = AVString.of("tenant", "ACME");
+        lenient().when(attributeJsonReader.read(AssetType.SHIP, patchAttributes)).thenReturn(java.util.List.of(attribute));
 
         PatchAssetCommand result = registry.createPatchCommand(AssetType.SHIP, patchRequest);
 
-        assertThat(result).isSameAs(patchCommand);
-        verify(patchFactory).createCommand(AssetType.SHIP, "id-2", patchRequest);
+        assertThat(result.assetId()).isEqualTo("asset-3");
+        assertThat(result.attributes()).containsExactly(attribute);
     }
 
     @Test
     void createPatchCommand_withoutRequestId_throwsException() {
-        when(patchRequest.getId()).thenReturn(null);
-
         assertThatThrownBy(() -> registry.createPatchCommand(AssetType.CRE, patchRequest))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("asset id");
