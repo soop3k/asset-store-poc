@@ -1,4 +1,3 @@
-// domain/policy/AttributeDefinitionsProvider.java
 package com.db.assetstore.domain.service.type;
 
 import com.db.assetstore.AssetType;
@@ -15,14 +14,16 @@ import java.util.*;
 @RequiredArgsConstructor
 public class AttributeDefinitionsProvider {
     private final AttributeDefRepository defRepo;
+    private final AttributeDefinitionRegistry attributeDefinitionRegistry;
+    private final TypeSchemaRegistry typeSchemaRegistry;
 
     public Map<String, AttributeDefEntity> resolve(AssetType type) {
         if (type == null) return Collections.emptyMap();
 
-        boolean hasSchema = TypeSchemaRegistry.getInstance().getSchemaPath(type).isPresent();
+        boolean hasSchema = typeSchemaRegistry.getSchemaPath(type).isPresent();
         if (hasSchema) {
             Map<String, AttributeDefinitionRegistry.Def> regDefs =
-                    AttributeDefinitionRegistry.getInstance().getDefinitions(type);
+                    attributeDefinitionRegistry.getDefinitions(type);
             Map<String, AttributeDefEntity> tmp = new HashMap<>();
             for (var entry : regDefs.entrySet()) {
                 var d = entry.getValue();

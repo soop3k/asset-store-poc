@@ -40,7 +40,6 @@ class AssetEventE2ETest {
                 .andReturn();
         String id = res.getResponse().getContentAsString();
 
-        // fetch single asset
         mockMvc.perform(get("/assets/" + id)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())

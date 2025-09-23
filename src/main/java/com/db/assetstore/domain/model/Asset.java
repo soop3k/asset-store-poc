@@ -5,6 +5,7 @@ import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.model.attribute.AttributesCollection;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,6 +17,7 @@ import java.util.*;
 
 @Getter
 @JsonIgnoreProperties(value = {"attributesByName", "attributesFlat"}, allowGetters = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public final class Asset {
 
     private final String id;

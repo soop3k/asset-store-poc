@@ -1,6 +1,7 @@
 package com.db.assetstore.service;
 
 import com.db.assetstore.AssetType;
+import com.db.assetstore.domain.json.AssetCanonicalizer;
 import com.db.assetstore.domain.model.Asset;
 import com.db.assetstore.domain.model.type.AVDecimal;
 import com.db.assetstore.domain.model.type.AVString;
@@ -17,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class EventServiceTest {
     private static final ObjectMapper M = new ObjectMapper();
+    private static final AssetCanonicalizer assetCanon = new AssetCanonicalizer(M);
 
     @Test
     void generatesAssetUpsertedEvent_usingJslt_and_validatesIfSchemaPresent() throws Exception {
@@ -30,7 +32,7 @@ class EventServiceTest {
                 AVDecimal.of("rooms", 2)
         ));
 
-        EventService svc = new EventService(new JsonTransformer());
+        EventService svc = new EventService(new JsonTransformer(M), assetCanon, M);
         String event = svc.generate("AssetUpserted", asset);
         JsonNode node = M.readTree(event);
 

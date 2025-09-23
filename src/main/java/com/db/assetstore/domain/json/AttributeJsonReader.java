@@ -14,7 +14,6 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static com.db.assetstore.domain.service.type.AttributeDefinitionRegistry.ValueType;
 
@@ -23,11 +22,12 @@ import static com.db.assetstore.domain.service.type.AttributeDefinitionRegistry.
 public final class AttributeJsonReader {
 
     private final ObjectMapper mapper;
+    private final AttributeDefinitionRegistry attributeDefinitionRegistry;
 
     public List<AttributeValue<?>> read(AssetType type, JsonNode obj) {
         if (type == null || obj == null || !obj.isObject()) return List.of();
 
-        var defs = AttributeDefinitionRegistry.getInstance().getDefinitions(type);
+        var defs = attributeDefinitionRegistry.getDefinitions(type);
         if (defs == null || defs.isEmpty()) return List.of();
 
         var converted = new ArrayList<AttributeValue<?>>();

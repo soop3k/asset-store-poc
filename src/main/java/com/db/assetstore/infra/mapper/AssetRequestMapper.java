@@ -9,70 +9,47 @@ import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;
 import com.db.assetstore.infra.api.dto.AssetPatchItemRequest;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import org.mapstruct.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Instant;
 import java.util.List;
 
-@Component
-@RequiredArgsConstructor
-public class AssetRequestMapper {
+@Mapper(componentModel = "spring")
+public abstract class AssetRequestMapper {
 
-    private final AttributeJsonReader attrReader;
+    @Autowired
+    protected AttributeJsonReader attrReader;
 
-    public CreateAssetCommand toCreateCommand(AssetCreateRequest req, String createdBy, Instant requestTime) {
-        List<AttributeValue<?>> avs = (req.attributes() == null)
-                ? List.of()
-                : attrReader.read(req.type(), req.attributes());
-        return CreateAssetCommand.builder()
-                .id(req.id())
-                .type(req.type())
-                .status(req.status())
-                .subtype(req.subtype())
-                .notionalAmount(req.notionalAmount())
-                .year(req.year())
-                .description(req.description())
-                .currency(req.currency())
-                .attributes(avs)
-                .createdBy(createdBy)
-                .requestTime(requestTime == null ? Instant.now() : requestTime)
-                .build();
+    @Mapping(target = "attributes", ignore = true)
+    @Mapping(target = "requestTime", expression = "java(requestTime != null ? requestTime : java.time.Instant.now())")
+    public abstract CreateAssetCommand toCreateCommand(AssetCreateRequest req, String createdBy, Instant requestTime);
+
+    @Mapping(target = "assetId", expression = "java(new com.db.assetstore.domain.model.AssetId(id))")
+    @Mapping(target = "attributes", ignore = true)
+    @Mapping(target = "requestTime", expression = "java(requestTime != null ? requestTime : java.time.Instant.now())")
+    public abstract PatchAssetCommand toPatchCommand(AssetType type, String id, AssetPatchRequest req, String modifiedBy, Instant requestTime);
+
+    @Mapping(target = "assetId", expression = "java(new com.db.assetstore.domain.model.AssetId(item.getId()))")
+    @Mapping(target = "attributes", ignore = true)  
+    @Mapping(target = "requestTime", expression = "java(requestTime != null ? requestTime : java.time.Instant.now())")
+    public abstract PatchAssetCommand toPatchCommand(AssetType type, AssetPatchItemRequest item, String modifiedBy, Instant requestTime);
+
+    @AfterMapping
+    protected void setCreateAttributes(AssetCreateRequest req, @MappingTarget CreateAssetCommand.CreateAssetCommandBuilder command) {
+        List<AttributeValue<?>> avs = (req.attributes() == null) ? List.of() : attrReader.read(req.type(), req.attributes());
+        command.attributes(avs);
     }
 
-    public PatchAssetCommand toPatchCommand(AssetType type, String id, AssetPatchRequest req, String modifiedBy, Instant requestTime) {
-        List<AttributeValue<?>> avs = (req.getAttributes() == null)
-                ? List.of()
-                : attrReader.read(type, req.getAttributes());
-        return PatchAssetCommand.builder()
-                .assetId(new AssetId(id))
-                .status(req.getStatus())
-                .subtype(req.getSubtype())
-                .notionalAmount(req.getNotionalAmount())
-                .year(req.getYear())
-                .description(req.getDescription())
-                .currency(req.getCurrency())
-                .attributes(avs)
-                .modifiedBy(modifiedBy)
-                .requestTime(requestTime == null ? Instant.now() : requestTime)
-                .build();
+    @AfterMapping
+    protected void setPatchAttributes(AssetType type, AssetPatchRequest req, @MappingTarget PatchAssetCommand.PatchAssetCommandBuilder command) {
+        List<AttributeValue<?>> avs = (req.getAttributes() == null) ? List.of() : attrReader.read(type, req.getAttributes());
+        command.attributes(avs);
     }
 
-    public PatchAssetCommand toPatchCommand(AssetType type, AssetPatchItemRequest item, String modifiedBy, Instant requestTime) {
-        List<AttributeValue<?>> avs = (item.getAttributes() == null)
-                ? List.of()
-                : attrReader.read(type, item.getAttributes());
-        return PatchAssetCommand.builder()
-                .assetId(new AssetId(item.getId()))
-                .status(item.getStatus())
-                .subtype(item.getSubtype())
-                .notionalAmount(item.getNotionalAmount())
-                .year(item.getYear())
-                .description(item.getDescription())
-                .currency(item.getCurrency())
-                .attributes(avs)
-                .modifiedBy(modifiedBy)
-                .requestTime(requestTime == null ? Instant.now() : requestTime)
-                .build();
+    @AfterMapping
+    protected void setPatchItemAttributes(AssetType type, AssetPatchItemRequest item, @MappingTarget PatchAssetCommand.PatchAssetCommandBuilder command) {
+        List<AttributeValue<?>> avs = (item.getAttributes() == null) ? List.of() : attrReader.read(type, item.getAttributes());
+        command.attributes(avs);
     }
 }

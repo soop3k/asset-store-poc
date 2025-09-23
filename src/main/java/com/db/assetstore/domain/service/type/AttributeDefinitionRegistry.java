@@ -4,36 +4,34 @@ import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.schema.TypeSchemaRegistry;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-
+@Component
+@RequiredArgsConstructor
 public final class AttributeDefinitionRegistry {
     private static final Logger log = LoggerFactory.getLogger(AttributeDefinitionRegistry.class);
-    private static final ObjectMapper M = new ObjectMapper();
-    private static final AttributeDefinitionRegistry INSTANCE = new AttributeDefinitionRegistry();
 
-    public static AttributeDefinitionRegistry getInstance() { return INSTANCE; }
+    private final ObjectMapper objectMapper;
+    private final TypeSchemaRegistry typeSchemaRegistry;
 
     private final Map<AssetType, Map<String, Def>> defsByType = new ConcurrentHashMap<>();
-
-    private AttributeDefinitionRegistry() {
-        rebuild();
-    }
 
     public Map<String, Def> getDefinitions(AssetType type) {
         return defsByType.getOrDefault(type, Collections.emptyMap());
     }
 
-
-    private void rebuild() {
-        TypeSchemaRegistry reg = TypeSchemaRegistry.getInstance();
-        for (AssetType t : reg.supportedTypes()) {
-            String path = reg.getSchemaPath(t).orElse(null);
+    @PostConstruct
+    public void rebuild() {
+        for (AssetType t : typeSchemaRegistry.supportedTypes()) {
+            String path = typeSchemaRegistry.getSchemaPath(t).orElse(null);
             if (path == null) {
                 continue;
             }
@@ -41,7 +39,7 @@ public final class AttributeDefinitionRegistry {
                 if (is == null) {
                     continue;
                 }
-                JsonNode schema = M.readTree(is);
+                JsonNode schema = objectMapper.readTree(is);
                 Map<String, Def> defs = buildDefsFromSchema(t, schema);
                 defsByType.put(t, defs);
                 long reqCount = defs.values().stream().filter(Def::required).count();

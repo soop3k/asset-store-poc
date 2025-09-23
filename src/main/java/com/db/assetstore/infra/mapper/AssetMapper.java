@@ -33,7 +33,7 @@ public interface AssetMapper {
             dst.getAttributes().clear();
         }
         var flat = src.getAttributesFlat();
-        if (flat == null || flat.isEmpty()){
+        if (flat.isEmpty()){
             return;
         }
         flat.forEach(attr -> {
@@ -46,28 +46,11 @@ public interface AssetMapper {
     default void fillAttributesModel(AssetEntity src, @MappingTarget Asset dst) {
         AttributeMapper attributeMapper = Mappers.getMapper(AttributeMapper.class);
         List<AttributeEntity> attrs = src.getAttributes();
-        if (attrs == null || attrs.isEmpty()) {
-            dst.setAttributes(Collections.emptyList());
-        } else {
+        if (attrs != null && !attrs.isEmpty()) {
             dst.setAttributes(attrs.stream()
                     .map(attributeMapper::toModel)
                     .collect(Collectors.toList()));
         }
-        // copy remaining simple fields not handled by builder
-        dst.setVersion(src.getVersion());
-        dst.setStatus(src.getStatus());
-        dst.setSubtype(src.getSubtype());
-        dst.setStatusEffectiveTime(src.getStatusEffectiveTime());
-        dst.setCreatedBy(src.getCreatedBy());
-        dst.setModifiedAt(src.getModifiedAt());
-        dst.setModifiedBy(src.getModifiedBy());
-        dst.setNotionalAmount(src.getNotionalAmount());
-        dst.setYear(src.getYear());
-        dst.setWh(src.getWh());
-        dst.setSourceSystemName(src.getSourceSystemName());
-        dst.setExternalReference(src.getExternalReference());
-        dst.setDescription(src.getDescription());
-        dst.setCurrency(src.getCurrency());
     }
 }
 

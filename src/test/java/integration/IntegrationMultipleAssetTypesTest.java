@@ -29,8 +29,8 @@ class IntegrationMultipleAssetTypesTest {
     AssetCommandService commandService;
     @Autowired
     AssetQueryService queryService;
-
-    private final AssetJsonFactory factory = new AssetJsonFactory();
+    @Autowired
+    AssetJsonFactory factory;
 
     @Test
     void persistTwoDifferentAssetTypes_CRE_and_SHIP() {

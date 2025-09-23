@@ -3,6 +3,7 @@ package com.db.assetstore.infra.mapper;
 import com.db.assetstore.domain.model.attribute.AttributeHistory;
 import com.db.assetstore.infra.jpa.AttributeHistoryEntity;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mappings;
 
 /**
  * Maps JPA AttributeHistoryEntity to domain AttributeHistory.

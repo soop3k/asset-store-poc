@@ -13,13 +13,14 @@ class TypeSchemaRegistryTest {
 
     @Test
     void discoversSupportedTypesBasedOnSchemas() {
-        TypeSchemaRegistry reg = TypeSchemaRegistry.getInstance();
+        TypeSchemaRegistry reg = new TypeSchemaRegistry();
+        reg.discover();
+
         Set<AssetType> supported = reg.supportedTypes();
 
         assertTrue(supported.contains(AssetType.CRE), "CRE should be supported (schema present)");
         assertTrue(supported.contains(AssetType.SHIP), "SHIP should be supported after adding schema");
 
-        // AV and SPV are in enum but we haven't provided schemas for them
         assertFalse(supported.contains(AssetType.AV), "AV should not be supported without schema");
         assertFalse(supported.contains(AssetType.SPV), "SPV should not be supported without schema");
     }

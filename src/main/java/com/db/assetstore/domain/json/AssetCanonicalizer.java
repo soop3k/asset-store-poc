@@ -3,63 +3,47 @@ package com.db.assetstore.domain.json;
 import com.db.assetstore.domain.model.Asset;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 
-/**
- * Builds canonical JSON representation for Asset entities used as input for transformations/events.
- * Extracted to reduce complexity of EventService and promote reuse.
- */
+@Component
+@RequiredArgsConstructor
 public final class AssetCanonicalizer {
-    private static final ObjectMapper M = new ObjectMapper();
+    private final ObjectMapper om;
 
-    public String toCanonicalJson(Asset asset) {
-        ObjectNode root = M.createObjectNode();
-        if (asset.getId() != null) root.put("id", asset.getId());
-        if (asset.getType() != null) root.put("type", asset.getType().name());
-        if (asset.getCreatedAt() != null) root.put("createdAt", asset.getCreatedAt().toString());
-        if (asset.getVersion() != null) root.put("version", asset.getVersion());
-        if (asset.getStatus() != null) root.put("status", asset.getStatus());
-        if (asset.getSubtype() != null) root.put("subtype", asset.getSubtype());
-        if (asset.getStatusEffectiveTime() != null) root.put("statusEffectiveTime", asset.getStatusEffectiveTime().toString());
-        if (asset.getModifiedAt() != null) root.put("modifiedAt", asset.getModifiedAt().toString());
-        if (asset.getModifiedBy() != null) root.put("modifiedBy", asset.getModifiedBy());
-        if (asset.getCreatedBy() != null) root.put("createdBy", asset.getCreatedBy());
-        root.put("softDelete", asset.isSoftDelete());
-        if (asset.getNotionalAmount() != null) root.put("notionalAmount", asset.getNotionalAmount());
-        if (asset.getYear() != null) root.put("year", asset.getYear());
-        if (asset.getWh() != null) root.put("wh", asset.getWh());
-        if (asset.getSourceSystemName() != null) root.put("sourceSystemName", asset.getSourceSystemName());
-        if (asset.getExternalReference() != null) root.put("externalReference", asset.getExternalReference());
-        if (asset.getDescription() != null) root.put("description", asset.getDescription());
-        if (asset.getCurrency() != null) root.put("currency", asset.getCurrency());
+    public String toCanonicalJson(Asset asset) throws JsonProcessingException {
+        ObjectNode root = om.valueToTree(asset);
+        root.set("attributes", buildAttributes(asset));
+        return om.writeValueAsString(root);
+    }
 
-        ObjectNode attrs = M.createObjectNode();
-        for (Map.Entry<String, java.util.List<AttributeValue<?>>> e : asset.getAttributesByName().entrySet()) {
-            String name = e.getKey();
-            AttributeValue<?> first = (e.getValue() == null || e.getValue().isEmpty()) ? null : e.getValue().get(0);
-            Object val = (first == null) ? null : first.value();
-            if (val == null) {
-                attrs.putNull(name);
-            } else if (val instanceof Number n) {
-                if (n instanceof Integer i) attrs.put(name, i.intValue());
-                else if (n instanceof Long l) attrs.put(name, l);
-                else if (n instanceof Double d) attrs.put(name, d);
-                else attrs.put(name, n.doubleValue());
-            } else if (val instanceof Boolean b) {
-                attrs.put(name, b);
-            } else {
-                attrs.put(name, String.valueOf(val));
-            }
+    private JsonNode buildAttributes(Asset asset) {
+        ObjectNode attrs = om.createObjectNode();
+        asset.getAttributesByName().entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .forEach(e -> attrs.set(e.getKey(), toNode(e.getValue())));
+        return attrs;
+    }
+
+    private JsonNode toNode(List<AttributeValue<?>> values) {
+        if (values == null || values.isEmpty()) {
+            return com.fasterxml.jackson.databind.node.NullNode.getInstance();
         }
-        root.set("attributes", attrs);
-
-        try {
-            return M.writeValueAsString(root);
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException("Failed to serialize canonical asset JSON", e);
+        if (values.size() == 1) {
+            return om.valueToTree(values.get(0).value());
         }
+        ArrayNode arr = om.createArrayNode();
+        values.forEach(
+                av -> arr.add(om.valueToTree(av == null ? null : av.value()))
+        );
+        return arr;
     }
 }

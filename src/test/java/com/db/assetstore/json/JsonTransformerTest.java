@@ -13,7 +13,7 @@ class JsonTransformerTest {
 
     @Test
     void transformsUsingJsltAndValidatesAgainstSchema() throws Exception {
-        JsonTransformer tr = new JsonTransformer();
+        JsonTransformer tr = new JsonTransformer(M);
         String input = "{" +
                 "\"id\":\"id-9\"," +
                 "\"type\":\"CRE\"," +
@@ -28,7 +28,7 @@ class JsonTransformerTest {
 
     @Test
     void missingSchemaDoesNotFailWhenNotProvided() throws Exception {
-        JsonTransformer tr = new JsonTransformer();
+        JsonTransformer tr = new JsonTransformer(M);
         String input = "{\"x\":1}";
         // Provide a template with no schema by name that doesn't exist in schemas/transforms
         // First, create a very simple transform inline resource is not possible here, so we use existing one

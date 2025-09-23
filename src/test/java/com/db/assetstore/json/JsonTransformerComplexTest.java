@@ -23,7 +23,7 @@ class JsonTransformerComplexTest {
 
     @Test
     void preservesNestedArraysAndObjects_inPayload() throws Exception {
-        JsonTransformer tr = new JsonTransformer();
+        JsonTransformer tr = new JsonTransformer(M);
         String input = "{" +
                 "\"id\":\"id-77\"," +
                 "\"type\":\"CRE\"," +
@@ -55,7 +55,7 @@ class JsonTransformerComplexTest {
 
     @Test
     void missingFieldsBecomeNullInOutput() throws Exception {
-        JsonTransformer tr = new JsonTransformer();
+        JsonTransformer tr = new JsonTransformer(M);
         String input = "{" +
                 "\"id\":\"x-1\"," +
                 // intentionally no type
@@ -70,7 +70,7 @@ class JsonTransformerComplexTest {
 
     @Test
     void supportsUnicodeAndEscapedCharacters() throws Exception {
-        JsonTransformer tr = new JsonTransformer();
+        JsonTransformer tr = new JsonTransformer(M);
         String emoji = "🏡";
         String quoteText = "\"quoted\""; // literal quotes inside the string
 
@@ -97,7 +97,7 @@ class JsonTransformerComplexTest {
 
     @Test
     void concurrentTransformations_areThreadSafeAndConsistent() throws Exception {
-        JsonTransformer tr = new JsonTransformer();
+        JsonTransformer tr = new JsonTransformer(M);
         String input = "{" +
                 "\"id\":\"bulk-99\"," +
                 "\"type\":\"CRE\"," +

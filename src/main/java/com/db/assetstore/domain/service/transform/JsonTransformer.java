@@ -23,8 +23,12 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class JsonTransformer {
     private static final Logger log = LoggerFactory.getLogger(JsonTransformer.class);
-    private static final ObjectMapper MAPPER = new ObjectMapper();
     private final ConcurrentHashMap<String, Expression> expressionCache = new ConcurrentHashMap<>();
+    private final ObjectMapper objectMapper;
+
+    public JsonTransformer(ObjectMapper objectMapper) {
+        this.objectMapper = Objects.requireNonNull(objectMapper);
+    }
 
     /**
      * Apply the named transform to the provided JSON string and return the JSON result.
@@ -52,9 +56,9 @@ public final class JsonTransformer {
                 }
             });
 
-            JsonNode inputNode = MAPPER.readTree(inputJson);
+            JsonNode inputNode = objectMapper.readTree(inputJson);
             JsonNode resultNode = expr.apply(inputNode);
-            String result = MAPPER.writeValueAsString(resultNode);
+            String result = objectMapper.writeValueAsString(resultNode);
 
             // Validate result JSON against optional schemas if present
             try {

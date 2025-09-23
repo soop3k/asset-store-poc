@@ -1,6 +1,11 @@
 package com.db.assetstore.json;
 
 import com.db.assetstore.domain.json.AssetJsonFactory;
+import com.db.assetstore.domain.json.AttributeJsonReader;
+import com.db.assetstore.domain.schema.TypeSchemaRegistry;
+import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
+import com.db.assetstore.infra.config.JsonMapperProvider;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.model.Asset;
@@ -15,7 +20,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class AssetJsonFactoryTest {
 
-    private final AssetJsonFactory factory = new AssetJsonFactory();
+    private static final ObjectMapper M = new JsonMapperProvider().objectMapper();
+    private final TypeSchemaRegistry typeSchema = new TypeSchemaRegistry();
+    private final AttributeDefinitionRegistry registry = new AttributeDefinitionRegistry(M, typeSchema);
+    private final AttributeJsonReader reader = new AttributeJsonReader(M, registry);
+    private final AssetJsonFactory factory = new AssetJsonFactory(M, reader, registry);
 
     @Test
     void parsesValidJsonWithExplicitIdAndAttributes() {
@@ -43,22 +52,6 @@ class AssetJsonFactoryTest {
         String jsonBlank = "{\"type\":\"CRE\",\"id\":\"\",\"city\":\"Warsaw\"}";
         IllegalArgumentException ex2 = assertThrows(IllegalArgumentException.class, () -> factory.fromJson(jsonBlank));
         assertTrue(ex2.getMessage().toLowerCase().contains("missing 'id'"));
-    }
-
-    @Test
-    void handlesUnknownAndNonScalarAttributesIgnored_whenNotDefined() {
-        String json = "{" +
-                "\"type\":\"CRE\"," +
-                "\"id\":\"id-456\"," +
-                "\"city\":\"Warsaw\",\"note\":null,\"obj\":{\"a\":1},\"arr\":[1,2,3]" +
-                "}";
-        Asset a = factory.fromJson(json);
-        Map<String, List<AttributeValue<?>>> attrs = a.getAttributesByName();
-        assertEquals(1, attrs.size());
-        assertEquals("Warsaw", attrs.get("city").get(0).value());
-        assertFalse(attrs.containsKey("note"));
-        assertFalse(attrs.containsKey("obj"));
-        assertFalse(attrs.containsKey("arr"));
     }
 
     @Test

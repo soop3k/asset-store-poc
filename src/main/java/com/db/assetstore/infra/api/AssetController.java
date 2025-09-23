@@ -10,6 +10,7 @@ import com.db.assetstore.infra.api.dto.AssetCreateRequest;
 import com.db.assetstore.infra.api.dto.AssetPatchItemRequest;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;
 import com.db.assetstore.infra.mapper.AssetRequestMapper;
+import com.db.assetstore.domain.json.AssetJsonFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -27,11 +28,13 @@ public class AssetController {
     private final AssetQueryService assetQueryService;
     private final AssetCommandService commandService;
     private final AssetRequestMapper requestMapper;
+    private final AssetJsonFactory assetJsonFactory;
 
-    public AssetController(AssetQueryService assetQueryService, AssetCommandService commandService, AssetRequestMapper requestMapper) {
+    public AssetController(AssetQueryService assetQueryService, AssetCommandService commandService, AssetRequestMapper requestMapper, AssetJsonFactory assetJsonFactory) {
         this.assetQueryService = assetQueryService;
         this.commandService = commandService;
         this.requestMapper = requestMapper;
+        this.assetJsonFactory = assetJsonFactory;
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -60,7 +63,7 @@ public class AssetController {
     @PostMapping(path = "/cre", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> addAssetCre(@RequestBody String jsonBody) {
         log.info("HTTP POST /assets/cre - creating CRE asset");
-        String id = commandService.create(new com.db.assetstore.domain.json.AssetJsonFactory().fromJsonForType(AssetType.CRE, jsonBody)).id();
+        String id = commandService.create(assetJsonFactory.fromJsonForType(AssetType.CRE, jsonBody)).id();
         log.debug("Created CRE asset id={}", id);
         return ResponseEntity.ok(id);
     }

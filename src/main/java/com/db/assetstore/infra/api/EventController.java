@@ -4,6 +4,7 @@ import com.db.assetstore.domain.model.Asset;
 import com.db.assetstore.domain.model.AssetId;
 import com.db.assetstore.domain.service.AssetQueryService;
 import com.db.assetstore.domain.service.EventService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -30,10 +31,17 @@ public class EventController {
                                                 @PathVariable("eventName") String eventName) {
         log.info("HTTP GET /events/{}/{} - generating event", assetId, eventName);
         Optional<Asset> assetOpt = assetQueryService.get(new AssetId(assetId));
+
         if (assetOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        String json = eventService.generate(eventName, assetOpt.get());
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(json);
+
+        try {
+            var json = eventService.generate(eventName, assetOpt.get());
+            return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(json);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 }

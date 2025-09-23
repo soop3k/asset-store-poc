@@ -4,56 +4,48 @@ import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.model.type.AttributeType;
 import com.db.assetstore.infra.jpa.AttributeDefEntity;
 import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
-import jakarta.persistence.EntityManager;
+import com.db.assetstore.infra.repository.AttributeDefRepository;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.db.assetstore.domain.schema.TypeSchemaRegistry;
 
-import java.util.Map;
 
-/**
- * Bootstraps attribute definitions into the database at application startup.
- * Converted from CommandLineRunner to a service reacting to ApplicationReadyEvent.
- */
 @Service
+@RequiredArgsConstructor
 public class AttributeDefinitionsBootstrapService {
     private static final Logger log = LoggerFactory.getLogger(AttributeDefinitionsBootstrapService.class);
 
-    private final EntityManager em;
-
-    public AttributeDefinitionsBootstrapService(EntityManager em) {
-        this.em = em;
-    }
-
+    private final AttributeDefRepository repository;
+    private final AttributeDefinitionRegistry attributeDefinitionRegistry;
+    private final TypeSchemaRegistry typeSchemaRegistry;
 
     @Transactional
     public void bootstrap() {
-        var reg = AttributeDefinitionRegistry.getInstance();
-        var types = TypeSchemaRegistry.getInstance().supportedTypes();
+        var types = typeSchemaRegistry.supportedTypes();
+
         for (AssetType t : types) {
-            Map<String, AttributeDefinitionRegistry.Def> defs = reg.getDefinitions(t);
-            for (var entry : defs.entrySet()) {
-                String name = entry.getKey();
-                var def = entry.getValue();
-                Long count = em.createQuery(
-                                "SELECT COUNT(d) FROM AttributeDefEntity d WHERE d.type = :type AND d.name = :name",
-                                Long.class)
-                        .setParameter("type", t)
-                        .setParameter("name", name)
-                        .getSingleResult();
-                if (count == null || count == 0L) {
-                    AttributeDefEntity e = new AttributeDefEntity(t, def.name(), toAttrType(def.valueType()), def.required());
-                    em.persist(e);
+            var defs = attributeDefinitionRegistry.getDefinitions(t);
+
+            for (var def : defs.values()) {
+                if (!repository.existsByTypeAndName(t, def.name())) {
+                    var e = new AttributeDefEntity(
+                            t,
+                            def.name(),
+                            toAttrType(def.valueType()),
+                            def.required()
+                    );
+                    repository.save(e);
                 }
             }
         }
+
         log.info("Bootstrapped attribute definitions from JSON Schemas to DB");
     }
 
-    private static AttributeType toAttrType(
-            AttributeDefinitionRegistry.ValueType vt) {
+    private static AttributeType toAttrType(AttributeDefinitionRegistry.ValueType vt) {
         if (vt == null) return AttributeType.STRING;
         return switch (vt) {
             case STRING -> AttributeType.STRING;
@@ -62,3 +54,4 @@ public class AttributeDefinitionsBootstrapService {
         };
     }
 }
+

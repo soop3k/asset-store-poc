@@ -72,8 +72,8 @@ public class AssetQueryServiceImpl implements AssetQueryService {
     private Asset toModelWithFixup(AssetEntity e) {
         Asset m = assetMapper.toModel(e);
         copySimpleFields(e, m);
-        if ((m.getAttributesFlat() == null || m.getAttributesFlat().isEmpty())
-                && e.getAttributes() != null && !e.getAttributes().isEmpty()) {
+        // Always populate attributes from entity when entity has attributes
+        if (e.getAttributes() != null && !e.getAttributes().isEmpty()) {
             List<AttributeValue<?>> attrs = new ArrayList<>(e.getAttributes().size());
             e.getAttributes().forEach(a -> attrs.add(attributeMapper.toModel(a)));
             m.setAttributes(attrs);

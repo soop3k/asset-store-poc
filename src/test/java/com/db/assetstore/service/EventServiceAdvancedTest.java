@@ -1,6 +1,7 @@
 package com.db.assetstore.service;
 
 import com.db.assetstore.AssetType;
+import com.db.assetstore.domain.json.AssetCanonicalizer;
 import com.db.assetstore.domain.model.Asset;
 import com.db.assetstore.domain.model.type.AVBoolean;
 import com.db.assetstore.domain.model.type.AVDecimal;
@@ -55,7 +56,7 @@ class EventServiceAdvancedTest {
         asset.setDescription("desc");
         asset.setCurrency("PLN");
 
-        EventService svc = new EventService(new JsonTransformer());
+        EventService svc = new EventService(new JsonTransformer(M), new AssetCanonicalizer(M), M);
         String eventJson = svc.generate("AssetUpserted", asset);
         JsonNode e = M.readTree(eventJson);
 

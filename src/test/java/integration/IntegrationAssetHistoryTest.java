@@ -3,6 +3,7 @@ package integration;
 import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.json.AssetJsonFactory;
 import com.db.assetstore.domain.json.AttributeJsonReader;
+import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
 import com.db.assetstore.domain.model.Asset;
 import com.db.assetstore.domain.model.AssetId;
 import com.db.assetstore.domain.model.AssetPatch;
@@ -40,8 +41,10 @@ class IntegrationAssetHistoryTest {
     AssetQueryService queryService;
     @Autowired
     AssetHistoryService historyService;
-
-    private final AssetJsonFactory factory = new AssetJsonFactory();
+    @Autowired
+    AssetJsonFactory factory;
+    @Autowired
+    AttributeDefinitionRegistry attributeDefinitionRegistry;
 
     @Test
     void multipleUpdatesProduceHistoryAndFinalState() throws Exception {
@@ -57,7 +60,6 @@ class IntegrationAssetHistoryTest {
         // 3rd update: change active
         applyAttributeUpdate(id, "{\"attributes\":{\"active\":false}}\n");
 
-        // verify final state (defensive via flat list)
         Asset after = queryService.get(new AssetId(id)).orElseThrow();
         var flat = after.getAttributesFlat();
         var city = flat.stream().filter(av -> av instanceof AVString && "city".equals(av.name()))
@@ -66,6 +68,7 @@ class IntegrationAssetHistoryTest {
                 .map(av -> (AVDecimal) av).findFirst().orElseThrow();
         var active = flat.stream().filter(av -> av instanceof AVBoolean && "active".equals(av.name()))
                 .map(av -> (AVBoolean) av).findFirst().orElseThrow();
+
         assertEquals("Warsaw", city.value());
         assertEquals(new BigDecimal("2"), rooms.value());
         assertEquals(Boolean.FALSE, active.value());
@@ -96,7 +99,7 @@ class IntegrationAssetHistoryTest {
         JsonNode node = mapper.readTree(json);
         JsonNode attrs = node.get("attributes");
         Asset asset = queryService.get(new AssetId(id)).orElseThrow();
-        AttributeJsonReader reader = new AttributeJsonReader(new ObjectMapper());
+        AttributeJsonReader reader = new AttributeJsonReader(mapper, attributeDefinitionRegistry);
         List<AttributeValue<?>> avs = reader.read(asset.getType(), attrs);
         commandService.update(new AssetId(id), AssetPatch.builder().attributes(avs).build());
     }

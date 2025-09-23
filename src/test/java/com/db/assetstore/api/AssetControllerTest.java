@@ -1,613 +1,595 @@
 package com.db.assetstore.api;
 
-import com.db.assetstore.AssetType;
-import com.db.assetstore.domain.service.CreateAssetCommand;
-import com.db.assetstore.domain.service.CreateAssetCommand;
-import com.db.assetstore.domain.model.Asset;
-import com.db.assetstore.domain.model.AssetId;
-import com.db.assetstore.domain.search.SearchCriteria;
-import com.db.assetstore.domain.service.AssetCommandService;
-import com.db.assetstore.domain.service.AssetQueryService;
-import com.db.assetstore.infra.api.AssetController;
-import com.db.assetstore.infra.api.dto.AssetPatchItemRequest;
-import com.db.assetstore.infra.mapper.AssetRequestMapper;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
+import java.math.BigDecimal;
 
-import java.time.Instant;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(AssetController.class)
-@DisplayName("AssetController Data Tests")
+@SpringBootTest(classes = com.db.assetstore.AssetStorePocApplication.class)
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
 class AssetControllerTest {
 
     @Autowired
-    private MockMvc mockMvc;
+    MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockBean
-    private AssetQueryService assetQueryService;
-
-    @MockBean
-    private AssetCommandService commandService;
-
-    @MockBean
-    private AssetRequestMapper requestMapper;
-
-    @BeforeEach
-    void setUp() {
-        // Setup minimal mocks to focus on data testing
-        when(requestMapper.toCreateCommand(any(), any(), any()))
-                .thenReturn(new CreateAssetCommand("test-id", AssetType.CRE, "api", null, null, null));
-        when(requestMapper.toPatchCommand(any(), any(String.class), any(), any(), any()))
-                .thenReturn(new CreateAssetCommand("test-id", AssetType.CRE, "api", null, null, null));
-        when(requestMapper.toPatchCommand(any(), any(AssetPatchItemRequest.class), any(), any()))
-                .thenReturn(new CreateAssetCommand("test-id", AssetType.CRE, "api", null, null, null));
-        when(commandService.create(any())).thenReturn(new AssetId("generated-id"));
-    }
-
-    @Nested
-    @DisplayName("JSON Data Validation Tests")
-    class JsonDataValidationTests {
-
-        @Test
-        @DisplayName("Should accept valid asset creation JSON")
-        void shouldAcceptValidAssetCreationJson() throws Exception {
-            String validJson = """
+    @Test
+    void createSingleAsset_CRE_withAllFields_returnsIdAndVerifyData() throws Exception {
+        String payload = """
                 {
-                    "name": "Test Asset",
-                    "description": "A test asset description",
-                    "type": "GENERIC",
-                    "metadata": {
-                        "category": "electronics",
-                        "value": 1000.50
-                    }
-                }
-                """;
-
-            mockMvc.perform(post("/assets")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(validJson))
-                    .andExpect(status().isOk())
-                    .andExpect(content().string("generated-id"));
-        }
-
-        @Test
-        @DisplayName("Should reject malformed JSON")
-        void shouldRejectMalformedJson() throws Exception {
-            String malformedJson = """
-                {
-                    "name": "Test Asset",
-                    "description": "Missing closing quote
-                    "type": "GENERIC"
-                }
-                """;
-
-            mockMvc.perform(post("/assets")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(malformedJson))
-                    .andExpect(status().isBadRequest());
-        }
-
-        @Test
-        @DisplayName("Should handle complex nested JSON structures")
-        void shouldHandleComplexNestedJson() throws Exception {
-            String complexJson = """
-                {
-                    "name": "Complex Asset",
-                    "type": "GENERIC",
+                    "type": "CRE",
+                    "status": "ACTIVE",
+                    "subtype": "OFFICE",
+                    "notionalAmount": 1500000.75,
+                    "year": 2023,
+                    "description": "Premium office building",
+                    "currency": "USD",
                     "attributes": {
-                        "technical": {
-                            "specifications": {
-                                "cpu": "Intel i7",
-                                "memory": "16GB",
-                                "storage": "512GB SSD"
-                            },
-                            "warranty": {
-                                "years": 3,
-                                "type": "full",
-                                "provider": "manufacturer"
-                            }
-                        },
-                        "financial": {
-                            "purchasePrice": 2499.99,
-                            "currentValue": 1999.99,
-                            "depreciationRate": 0.15
-                        }
-                    },
-                    "tags": ["laptop", "business", "portable"],
-                    "locations": [
-                        {
-                            "building": "HQ",
-                            "floor": 3,
-                            "room": "301A"
-                        }
-                    ]
-                }
-                """;
-
-            mockMvc.perform(post("/assets")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(complexJson))
-                    .andExpect(status().isOk());
-        }
-
-        @Test
-        @DisplayName("Should handle empty JSON objects")
-        void shouldHandleEmptyJson() throws Exception {
-            mockMvc.perform(post("/assets")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{}"))
-                    .andExpect(status().isOk());
-        }
-
-        @Test
-        @DisplayName("Should handle JSON with null values")
-        void shouldHandleJsonWithNullValues() throws Exception {
-            String jsonWithNulls = """
-                {
-                    "name": "Asset with nulls",
-                    "description": null,
-                    "type": "GENERIC",
-                    "metadata": null,
-                    "tags": null
-                }
-                """;
-
-            mockMvc.perform(post("/assets")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(jsonWithNulls))
-                    .andExpect(status().isOk());
-        }
-    }
-
-    @Nested
-    @DisplayName("Response Data Structure Tests")
-    class ResponseDataStructureTests {
-
-        @Test
-        @DisplayName("Should return properly structured asset list")
-        void shouldReturnProperlyStructuredAssetList() throws Exception {
-            List<Asset> mockAssets = createMockAssetList();
-            when(assetQueryService.search(any(SearchCriteria.class))).thenReturn(mockAssets);
-
-            mockMvc.perform(get("/assets")
-                            .accept(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$").isArray())
-                    .andExpect(jsonPath("$.length()").value(2))
-                    .andExpect(jsonPath("$[0].id").value("asset-1"))
-                    .andExpect(jsonPath("$[0].name").value("Laptop Dell"))
-                    .andExpect(jsonPath("$[0].type").value("GENERIC"))
-                    .andExpect(jsonPath("$[0].description").value("Business laptop"))
-                    .andExpect(jsonPath("$[0].metadata.category").value("electronics"))
-                    .andExpect(jsonPath("$[0].metadata.value").value(1500.0))
-                    .andExpect(jsonPath("$[1].id").value("asset-2"))
-                    .andExpect(jsonPath("$[1].name").value("Office Chair"))
-                    .andExpect(jsonPath("$[1].type").value("GENERIC"))
-                    .andExpect(jsonPath("$[1].metadata.category").value("furniture"));
-        }
-
-        @Test
-        @DisplayName("Should return single asset with complete data structure")
-        void shouldReturnSingleAssetWithCompleteDataStructure() throws Exception {
-            Asset mockAsset = createDetailedMockAsset();
-            when(assetQueryService.get(new AssetId("detailed-asset")))
-                    .thenReturn(Optional.of(mockAsset));
-
-            mockMvc.perform(get("/assets/{id}", "detailed-asset")
-                            .accept(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.id").value("detailed-asset"))
-                    .andExpect(jsonPath("$.name").value("Detailed Asset"))
-                    .andExpect(jsonPath("$.type").value("GENERIC"))
-                    .andExpect(jsonPath("$.description").value("A very detailed asset"))
-                    .andExpect(jsonPath("$.createdAt").exists())
-                    .andExpect(jsonPath("$.updatedAt").exists())
-                    .andExpect(jsonPath("$.metadata").exists())
-                    .andExpect(jsonPath("$.metadata.specifications").exists())
-                    .andExpect(jsonPath("$.metadata.specifications.weight").value("2.5kg"))
-                    .andExpect(jsonPath("$.metadata.financial").exists())
-                    .andExpect(jsonPath("$.metadata.financial.purchasePrice").value(2999.99))
-                    .andExpected(jsonPath("$.tags").isArray())
-                    .andExpected(jsonPath("$.tags.length()").value(3))
-                    .andExpected(jsonPath("$.tags[0]").value("premium"))
-                    .andExpected(jsonPath("$.tags[1]").value("business"))
-                    .andExpected(jsonPath("$.tags[2]").value("mobile"));
-        }
-
-        @Test
-        @DisplayName("Should return empty array for no assets")
-        void shouldReturnEmptyArrayForNoAssets() throws Exception {
-            when(assetQueryService.search(any(SearchCriteria.class))).thenReturn(List.of());
-
-            mockMvc.perform(get("/assets")
-                            .accept(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$").isArray())
-                    .andExpect(jsonPath("$.length()").value(0));
-        }
-    }
-
-    @Nested
-    @DisplayName("Bulk Operations Data Tests")
-    class BulkOperationsDataTests {
-
-        @Test
-        @DisplayName("Should handle bulk creation with mixed data types")
-        void shouldHandleBulkCreationWithMixedDataTypes() throws Exception {
-            String bulkJson = """
-                [
-                    {
-                        "name": "Laptop",
-                        "type": "GENERIC",
-                        "metadata": {
-                            "price": 1299.99,
-                            "quantity": 5
-                        }
-                    },
-                    {
-                        "name": "Software License",
-                        "type": "GENERIC",
-                        "metadata": {
-                            "licenseType": "annual",
-                            "users": 100,
-                            "active": true
-                        }
-                    },
-                    {
-                        "name": "Building",
-                        "type": "GENERIC",
-                        "metadata": {
-                            "address": "123 Main St",
-                            "floors": 5,
-                            "yearBuilt": 2020,
-                            "totalArea": 25000.5
-                        }
-                    }
-                ]
-                """;
-
-            when(commandService.create(any()))
-                    .thenReturn(new AssetId("id-1"))
-                    .thenReturn(new AssetId("id-2"))
-                    .thenReturn(new AssetId("id-3"));
-
-            mockMvc.perform(post("/assets/bulk")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(bulkJson))
-                    .andExpect(status().isOk())
-                    .andExpected(jsonPath("$").isArray())
-                    .andExpected(jsonPath("$.length()").value(3))
-                    .andExpected(jsonPath("$[0]").value("id-1"))
-                    .andExpected(jsonPath("$[1]").value("id-2"))
-                    .andExpected(jsonPath("$[2]").value("id-3"));
-        }
-
-        @Test
-        @DisplayName("Should handle bulk patch with different field combinations")
-        void shouldHandleBulkPatchWithDifferentFieldCombinations() throws Exception {
-            Asset mockAsset = createBasicMockAsset();
-            when(assetQueryService.get(any(AssetId.class))).thenReturn(Optional.of(mockAsset));
-
-            String bulkPatchJson = """
-                [
-                    {
-                        "id": "asset-1",
-                        "name": "Updated Laptop",
-                        "metadata": {
-                            "price": 999.99
-                        }
-                    },
-                    {
-                        "id": "asset-2",
-                        "description": "Updated description only"
-                    },
-                    {
-                        "id": "asset-3",
-                        "name": "New Name",
-                        "description": "New Description",
-                        "metadata": {
-                            "category": "updated",
-                            "priority": "high",
-                            "lastMaintenance": "2024-01-15"
-                        }
-                    }
-                ]
-                """;
-
-            mockMvc.perform(patch("/assets/bulk")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(bulkPatchJson))
-                    .andExpect(status().isNoContent());
-        }
-    }
-
-    @Nested
-    @DisplayName("CRE Specific Data Tests")
-    class CreSpecificDataTests {
-
-        @Test
-        @DisplayName("Should handle CRE asset with real estate specific fields")
-        void shouldHandleCreAssetWithRealEstateFields() throws Exception {
-            String creJson = """
-                {
-                    "type": "CRE",
-                    "name": "Downtown Office Building",
-                    "description": "Premium office space in city center",
-                    "location": {
-                        "address": "123 Business Ave",
                         "city": "New York",
-                        "state": "NY",
-                        "zipCode": "10001",
-                        "coordinates": {
-                            "latitude": 40.7589,
-                            "longitude": -73.9851
-                        }
-                    },
-                    "specifications": {
-                        "totalSquareFeet": 50000,
-                        "floors": 10,
-                        "yearBuilt": 2019,
-                        "renovationYear": 2022,
-                        "parkingSpaces": 100,
-                        "elevators": 4
-                    },
-                    "financial": {
-                        "purchasePrice": 25000000.00,
-                        "currentValue": 28000000.00,
-                        "annualRent": 2400000.00,
-                        "operatingExpenses": 800000.00,
-                        "propertyTaxes": 350000.00
-                    },
-                    "tenants": [
-                        {
-                            "name": "Tech Corp Inc",
-                            "floors": [1, 2, 3],
-                            "leaseStart": "2023-01-01",
-                            "leaseEnd": "2028-12-31",
-                            "monthlyRent": 45000.00
-                        },
-                        {
-                            "name": "Law Firm LLC",
-                            "floors": [8, 9],
-                            "leaseStart": "2023-06-01",
-                            "leaseEnd": "2026-05-31",
-                            "monthlyRent": 28000.00
-                        }
-                    ],
-                    "amenities": ["gym", "cafeteria", "conference_rooms", "parking_garage"],
-                    "certifications": ["LEED Gold", "Energy Star"]
+                        "rooms": 25,
+                        "area": 5000.5,
+                        "active": true
+                    }
                 }
                 """;
 
-            mockMvc.perform(post("/assets/cre")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(creJson))
-                    .andExpect(status().isOk())
-                    .andExpected(content().string("generated-id"));
-        }
+        MvcResult result = mockMvc.perform(post("/assets")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(emptyString())))
+                .andReturn();
 
-        @Test
-        @DisplayName("Should handle CRE asset with minimal required fields")
-        void shouldHandleCreAssetWithMinimalFields() throws Exception {
-            String minimalCreJson = """
-                {
-                    "type": "CRE",
-                    "name": "Simple Property"
-                }
-                """;
+        String assetId = result.getResponse().getContentAsString();
 
-            mockMvc.perform(post("/assets/cre")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(minimalCreJson))
-                    .andExpect(status().isOk());
-        }
+        mockMvc.perform(get("/assets/" + assetId)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(assetId)))
+                .andExpect(jsonPath("$.type", is("CRE")))
+                .andExpect(jsonPath("$.status", is("ACTIVE")))
+                .andExpect(jsonPath("$.subtype", is("OFFICE")))
+                .andExpect(jsonPath("$.notionalAmount", is(closeTo(1500000.75, 0.01))))
+                .andExpect(jsonPath("$.year", is(2023)))
+                .andExpect(jsonPath("$.description", is("Premium office building")))
+                .andExpect(jsonPath("$.currency", is("USD")))
+                .andExpect(jsonPath("$.attributes.city.value", is("New York")))
+                .andExpect(jsonPath("$.attributes.rooms.value", is(25)))
+                .andExpect(jsonPath("$.attributes.area.value", is(closeTo(5000.5, 0.01))))
+                .andExpect(jsonPath("$.attributes.active.value", is(true)));
     }
 
-    @Nested
-    @DisplayName("Error Response Data Tests")
-    class ErrorResponseDataTests {
+    @Test
+    void createSingleAsset_SHIP_withMinimalFields_handlesDefaults() throws Exception {
+        String payload = """
+                {
+                    "type": "SHIP",
+                    "attributes": {
+                        "name": "Cargo Vessel",
+                        "imo": 1234567
+                    }
+                }
+                """;
 
-        @Test
-        @DisplayName("Should return 404 with proper error structure for non-existent asset")
-        void shouldReturn404WithProperErrorStructure() throws Exception {
-            when(assetQueryService.get(new AssetId("non-existent")))
-                    .thenReturn(Optional.empty());
+        MvcResult result = mockMvc.perform(post("/assets")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andReturn();
 
-            mockMvc.perform(get("/assets/{id}", "non-existent")
-                            .accept(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isNotFound());
-        }
+        String assetId = result.getResponse().getContentAsString();
 
-        @Test
-        @DisplayName("Should return 404 for bulk patch with non-existent asset")
-        void shouldReturn404ForBulkPatchWithNonExistentAsset() throws Exception {
-            when(assetQueryService.get(new AssetId("non-existent")))
-                    .thenReturn(Optional.empty());
+        mockMvc.perform(get("/assets/" + assetId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.type", is("SHIP")))
+                .andExpect(jsonPath("$.status").doesNotExist())
+                .andExpect(jsonPath("$.subtype").doesNotExist())
+                .andExpect(jsonPath("$.attributes.name.value", is("Cargo Vessel")))
+                .andExpect(jsonPath("$.attributes.imo.value", is(1234567)));
+    }
 
-            String bulkPatchJson = """
+    @Test
+    void createSingleAsset_withProvidedId_usesSpecifiedId() throws Exception {
+        String payload = """
+                {
+                    "id": "custom-asset-123",
+                    "type": "CRE",
+                    "attributes": {
+                        "city": "London"
+                    }
+                }
+                """;
+
+        mockMvc.perform(post("/assets")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(content().string("custom-asset-123"));
+
+        mockMvc.perform(get("/assets/custom-asset-123"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is("custom-asset-123")));
+    }
+
+    @Test
+    void createSingleAsset_invalidJson_returnsBadRequest() throws Exception {
+        String invalidPayload = """
+                {
+                    "type": "CRE",
+                    "invalidField": true,
+                    "attributes": {
+                        "city": "Berlin"
+                    }
+                """; // Missing closing brace
+
+        mockMvc.perform(post("/assets")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(invalidPayload))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createBulkAssets_mixedTypes_returnsAllIds() throws Exception {
+        String payload = """
                 [
                     {
-                        "id": "non-existent",
-                        "name": "This should fail"
+                        "id": "bulk-cre-1",
+                        "type": "CRE",
+                        "status": "ACTIVE",
+                        "attributes": {
+                            "city": "Paris",
+                            "rooms": 10
+                        }
+                    },
+                    {
+                        "id": "bulk-ship-1",
+                        "type": "SHIP",
+                        "status": "OPERATIONAL",
+                        "attributes": {
+                            "name": "Ocean Liner",
+                            "imo": 7654321
+                        }
                     }
                 ]
                 """;
 
-            mockMvc.perform(patch("/assets/bulk")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(bulkPatchJson))
-                    .andExpect(status().isNotFound());
-        }
+        mockMvc.perform(post("/assets/bulk")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0]", is("bulk-cre-1")))
+                .andExpect(jsonPath("$[1]", is("bulk-ship-1")));
+
+        mockMvc.perform(get("/assets/bulk-cre-1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.type", is("CRE")))
+                .andExpect(jsonPath("$.attributes.city.value", is("Paris")));
+
+        mockMvc.perform(get("/assets/bulk-ship-1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.type", is("SHIP")))
+                .andExpect(jsonPath("$.attributes.name.value", is("Ocean Liner")));
     }
 
-    @Nested
-    @DisplayName("Special Characters and Edge Cases")
-    class SpecialCharactersAndEdgeCasesTests {
+    @Test
+    void createBulkAssets_emptyArray_returnsEmptyArray() throws Exception {
+        mockMvc.perform(post("/assets/bulk")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("[]"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(0)));
+    }
 
-        @Test
-        @DisplayName("Should handle special characters in asset data")
-        void shouldHandleSpecialCharactersInAssetData() throws Exception {
-            String specialCharsJson = """
+    @Test
+    void createBulkAssets_nullRequest_returnsBadRequest() throws Exception {
+        mockMvc.perform(post("/assets/bulk")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("null"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createCreAsset_typeSpecificEndpoint_infersCREType() throws Exception {
+        String payload = """
                 {
-                    "name": "Asset with special chars: éñüñà & símböls!",
-                    "description": "Description with quotes \\\"double\\\" and 'single' and newlines\\nand tabs\\t",
-                    "type": "GENERIC",
-                    "metadata": {
-                        "unicode": "测试中文字符",
-                        "emoji": "🏢📊💻",
-                        "symbols": "©®™€£¥",
-                        "math": "∑∆∏√∞"
+                    "id": "cre-specific-1",
+                    "city": "Madrid",
+                    "rooms": 8,
+                    "area": 1200.0
+                }
+                """;
+
+        MvcResult result = mockMvc.perform(post("/assets/cre")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String assetId = result.getResponse().getContentAsString();
+
+        mockMvc.perform(get("/assets/" + assetId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.type", is("CRE")))
+                .andExpect(jsonPath("$.attributes.city.value", is("Madrid")))
+                .andExpect(jsonPath("$.attributes.rooms.value", is(8)))
+                .andExpect(jsonPath("$.attributes.area.value", is(1200)));
+    }
+
+    @Test
+    void listAssets_afterCreatingMultiple_returnsAllWithProperStructure() throws Exception {
+        // Create test data
+        String cre = """
+                {
+                    "id": "list-cre-1",
+                    "type": "CRE",
+                    "attributes": {"city": "Berlin", "rooms": 5}
+                }
+                """;
+        String ship = """
+                {
+                    "id": "list-ship-1",
+                    "type": "SHIP",
+                    "attributes": {"name": "Tanker", "imo": 9999999}
+                }
+                """;
+
+        mockMvc.perform(post("/assets").contentType(MediaType.APPLICATION_JSON).content(cre))
+                .andExpect(status().isOk());
+        mockMvc.perform(post("/assets").contentType(MediaType.APPLICATION_JSON).content(ship))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/assets")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(2))))
+                .andExpect(jsonPath("$[?(@.id=='list-cre-1')].type", contains("CRE")))
+                .andExpect(jsonPath("$[?(@.id=='list-cre-1')].attributes.city.value", contains("Berlin")))
+                .andExpect(jsonPath("$[?(@.id=='list-ship-1')].type", contains("SHIP")))
+                .andExpect(jsonPath("$[?(@.id=='list-ship-1')].attributes.name.value", contains("Tanker")));
+    }
+
+    @Test
+    void listAssets_returnsJsonArray() throws Exception {
+        mockMvc.perform(get("/assets"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$", isA(java.util.List.class)));
+    }
+
+    @Test
+    void getAsset_existingId_returnsFullAssetData() throws Exception {
+        // Create asset first
+        String payload = """
+                {
+                    "id": "get-test-1",
+                    "type": "CRE",
+                    "status": "PENDING",
+                    "currency": "EUR",
+                    "notionalAmount": 750000,
+                    "attributes": {
+                        "city": "Amsterdam",
+                        "rooms": 15,
+                        "active": false
                     }
                 }
                 """;
 
-            mockMvc.perform(post("/assets")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(specialCharsJson))
-                    .andExpect(status().isOk());
-        }
+        mockMvc.perform(post("/assets").contentType(MediaType.APPLICATION_JSON).content(payload))
+                .andExpect(status().isOk());
 
-        @Test
-        @DisplayName("Should handle very large numbers and precision")
-        void shouldHandleVeryLargeNumbersAndPrecision() throws Exception {
-            String largeNumbersJson = """
+        mockMvc.perform(get("/assets/get-test-1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is("get-test-1")))
+                .andExpect(jsonPath("$.type", is("CRE")))
+                .andExpect(jsonPath("$.status", is("PENDING")))
+                .andExpect(jsonPath("$.currency", is("EUR")))
+                .andExpect(jsonPath("$.notionalAmount", is(750000)))
+                .andExpect(jsonPath("$.attributes.city.value", is("Amsterdam")))
+                .andExpect(jsonPath("$.attributes.rooms.value", is(15)))
+                .andExpect(jsonPath("$.attributes.active.value", is(false)));
+    }
+
+    @Test
+    void getAsset_nonExistentId_returnsNotFound() throws Exception {
+        mockMvc.perform(get("/assets/non-existent-id"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void updateAsset_PUT_updatesAllFields() throws Exception {
+        String initialPayload = """
                 {
-                    "name": "Asset with large numbers",
-                    "type": "GENERIC",
-                    "metadata": {
-                        "veryLargeNumber": 999999999999999999,
-                        "verySmallNumber": 0.000000000001,
-                        "scientificNotation": 1.23e+15,
-                        "negativeNumber": -999999.99,
-                        "preciseDecimal": 123.456789012345
+                    "id": "put-test-1",
+                    "type": "CRE",
+                    "status": "DRAFT",
+                    "currency": "USD",
+                    "attributes": {
+                        "city": "Chicago",
+                        "rooms": 20
                     }
                 }
                 """;
 
-            mockMvc.perform(post("/assets")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(largeNumbersJson))
-                    .andExpect(status().isOk());
-        }
+        mockMvc.perform(post("/assets").contentType(MediaType.APPLICATION_JSON).content(initialPayload))
+                .andExpect(status().isOk());
 
-        @Test
-        @DisplayName("Should handle deeply nested JSON structures")
-        void shouldHandleDeeplyNestedJsonStructures() throws Exception {
-            String deeplyNestedJson = """
+        String updatePayload = """
                 {
-                    "name": "Deeply nested asset",
-                    "type": "GENERIC",
-                    "level1": {
-                        "level2": {
-                            "level3": {
-                                "level4": {
-                                    "level5": {
-                                        "deepValue": "Found me!",
-                                        "deepArray": [1, 2, 3, {"nested": true}]
-                                    }
-                                }
-                            }
+                    "status": "ACTIVE",
+                    "currency": "EUR",
+                    "description": "Updated description",
+                    "attributes": {
+                        "city": "Brussels",
+                        "rooms": 25,
+                        "area": 2500.0
+                    }
+                }
+                """;
+
+        mockMvc.perform(put("/assets/put-test-1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updatePayload))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/assets/put-test-1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status", is("ACTIVE")))
+                .andExpect(jsonPath("$.currency", is("EUR")))
+                .andExpect(jsonPath("$.description", is("Updated description")))
+                .andExpect(jsonPath("$.attributes.city.value", is("Brussels")))
+                .andExpect(jsonPath("$.attributes.rooms.value", is(25)))
+                .andExpect(jsonPath("$.attributes.area.value", is(2500)));
+    }
+
+    @Test
+    void updateAsset_PUT_nonExistentId_returnsNotFound() throws Exception {
+        String updatePayload = """
+                {
+                    "status": "ACTIVE"
+                }
+                """;
+
+        mockMvc.perform(put("/assets/non-existent")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updatePayload))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void patchAsset_PATCH_updatesOnlyProvidedFields() throws Exception {
+        String initialPayload = """
+                {
+                    "id": "patch-test-1",
+                    "type": "CRE",
+                    "status": "DRAFT",
+                    "currency": "USD",
+                    "description": "Original description",
+                    "attributes": {
+                        "city": "Toronto",
+                        "rooms": 12,
+                        "active": true
+                    }
+                }
+                """;
+
+        mockMvc.perform(post("/assets").contentType(MediaType.APPLICATION_JSON).content(initialPayload))
+                .andExpect(status().isOk());
+
+        String patchPayload = """
+                {
+                    "status": "ACTIVE",
+                    "attributes": {
+                        "rooms": 18
+                    }
+                }
+                """;
+
+        mockMvc.perform(patch("/assets/patch-test-1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(patchPayload))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/assets/patch-test-1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status", is("ACTIVE"))) // Updated
+                .andExpect(jsonPath("$.currency", is("USD"))) // Preserved
+                .andExpect(jsonPath("$.description", is("Original description"))) // Preserved
+                .andExpect(jsonPath("$.attributes.city.value", is("Toronto"))) // Preserved
+                .andExpect(jsonPath("$.attributes.rooms.value", is(18))) // Updated
+                .andExpect(jsonPath("$.attributes.active.value", is(true))); // Preserved
+    }
+
+    @Test
+    void patchAsset_PATCH_nonExistentId_returnsNotFound() throws Exception {
+        mockMvc.perform(patch("/assets/non-existent")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"ACTIVE\"}"))
+                .andExpect(status().isNotFound());
+    }
+
+
+    @Test
+    void patchAssetsBulk_updatesMultipleAssetsPartially() throws Exception {
+        String asset1 = """
+                {
+                    "id": "bulk-patch-1",
+                    "type": "CRE",
+                    "status": "DRAFT",
+                    "attributes": {"city": "Vienna", "rooms": 8}
+                }
+                """;
+        String asset2 = """
+                {
+                    "id": "bulk-patch-2",
+                    "type": "SHIP",
+                    "status": "DRAFT",
+                    "attributes": {"name": "Freighter", "imo": 1111111}
+                }
+                """;
+
+        mockMvc.perform(post("/assets").contentType(MediaType.APPLICATION_JSON).content(asset1)).andExpect(status().isOk());
+        mockMvc.perform(post("/assets").contentType(MediaType.APPLICATION_JSON).content(asset2)).andExpect(status().isOk());
+
+        String bulkPatchPayload = """
+                [
+                    {
+                        "id": "bulk-patch-1",
+                        "status": "ACTIVE",
+                        "attributes": {
+                            "rooms": 12
+                        }
+                    },
+                    {
+                        "id": "bulk-patch-2",
+                        "status": "OPERATIONAL",
+                        "attributes": {
+                            "imo": 2222222
                         }
                     }
+                ]
+                """;
+
+        mockMvc.perform(patch("/assets/bulk")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bulkPatchPayload))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/assets/bulk-patch-1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status", is("ACTIVE")))
+                .andExpect(jsonPath("$.attributes.city.value", is("Vienna"))) // Preserved
+                .andExpect(jsonPath("$.attributes.rooms.value", is(12))); // Updated
+
+        mockMvc.perform(get("/assets/bulk-patch-2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status", is("OPERATIONAL")))
+                .andExpect(jsonPath("$.attributes.name.value", is("Freighter"))) // Preserved
+                .andExpect(jsonPath("$.attributes.imo.value", is(2222222))); // Updated
+    }
+
+    @Test
+    void patchAssetsBulk_emptyArray_returnsNoContent() throws Exception {
+        mockMvc.perform(patch("/assets/bulk")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("[]"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void patchAssetsBulk_withNonExistentId_returnsNotFound() throws Exception {
+        String bulkPatchPayload = """
+                [
+                    {
+                        "id": "non-existent-bulk",
+                        "status": "ACTIVE"
+                    }
+                ]
+                """;
+
+        mockMvc.perform(patch("/assets/bulk")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bulkPatchPayload))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void createAsset_decimalAttributeNormalization_stripsTrailingZeros() throws Exception {
+        String payload = """
+                {
+                    "type": "CRE",
+                    "status": "ACTIVE",
+                    "attributes": {
+                        "city": "Berlin",
+                        "area": 1000.00,
+                        "rooms": 15
+                    }
                 }
                 """;
 
-            mockMvc.perform(post("/assets")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(deeplyNestedJson))
-                    .andExpect(status().isOk());
-        }
+        MvcResult result = mockMvc.perform(post("/assets")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String assetId = result.getResponse().getContentAsString();
+
+        mockMvc.perform(get("/assets/" + assetId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.attributes.city.value", is("Berlin")))
+                .andExpect(jsonPath("$.attributes.area.value", is(1000)))
+                .andExpect(jsonPath("$.attributes.rooms.value", is(15)));
     }
 
-    // Helper methods to create test data
-    private List<Asset> createMockAssetList() {
-        Asset asset1 = new Asset();
-        asset1.setId("asset-1");
-        asset1.setName("Laptop Dell");
-        asset1.setType(AssetType.GENERIC);
-        asset1.setDescription("Business laptop");
-        asset1.setCreatedAt(Instant.parse("2024-01-01T10:00:00Z"));
-        asset1.setUpdatedAt(Instant.parse("2024-01-15T14:30:00Z"));
+    @Test
+    void createAsset_nullAttributeValues_handledGracefully() throws Exception {
+        String payload = """
+                {
+                    "type": "CRE",
+                    "attributes": {
+                        "city": "Prague",
+                        "rooms": null,
+                        "active": null
+                    }
+                }
+                """;
 
-        Map<String, Object> metadata1 = new HashMap<>();
-        metadata1.put("category", "electronics");
-        metadata1.put("value", 1500.0);
-        asset1.setMetadata(metadata1);
+        MvcResult result = mockMvc.perform(post("/assets")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andReturn();
 
-        Asset asset2 = new Asset();
-        asset2.setId("asset-2");
-        asset2.setName("Office Chair");
-        asset2.setType(AssetType.GENERIC);
-        asset2.setDescription("Ergonomic office chair");
-        asset2.setCreatedAt(Instant.parse("2024-01-02T09:00:00Z"));
-        asset2.setUpdatedAt(Instant.parse("2024-01-10T16:00:00Z"));
+        String assetId = result.getResponse().getContentAsString();
 
-        Map<String, Object> metadata2 = new HashMap<>();
-        metadata2.put("category", "furniture");
-        metadata2.put("value", 300.0);
-        asset2.setMetadata(metadata2);
-
-        return List.of(asset1, asset2);
+        mockMvc.perform(get("/assets/" + assetId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.attributes.city.value", is("Prague")))
+                .andExpect(jsonPath("$.attributes.rooms.value").doesNotExist())
+                .andExpect(jsonPath("$.attributes.active.value").doesNotExist());
     }
 
-    private Asset createDetailedMockAsset() {
-        Asset asset = new Asset();
-        asset.setId("detailed-asset");
-        asset.setName("Detailed Asset");
-        asset.setType(AssetType.GENERIC);
-        asset.setDescription("A very detailed asset");
-        asset.setCreatedAt(Instant.parse("2024-01-01T10:00:00Z"));
-        asset.setUpdatedAt(Instant.parse("2024-01-15T14:30:00Z"));
+    @Test
+    void createAsset_mixedAttributeTypes_preservesTypeInformation() throws Exception {
+        String payload = """
+                {
+                    "type": "CRE",
+                    "status": "ACTIVE",
+                    "attributes": {
+                        "city": "Stockholm",
+                        "rooms": 30,
+                        "area": 3500.75,
+                        "active": true
+                    }
+                }
+                """;
 
-        Map<String, Object> metadata = new HashMap<>();
+        MvcResult result = mockMvc.perform(post("/assets")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andReturn();
 
-        Map<String, Object> specifications = new HashMap<>();
-        specifications.put("weight", "2.5kg");
-        specifications.put("dimensions", "30x20x2cm");
-        specifications.put("color", "silver");
-        metadata.put("specifications", specifications);
+        String assetId = result.getResponse().getContentAsString();
 
-        Map<String, Object> financial = new HashMap<>();
-        financial.put("purchasePrice", 2999.99);
-        financial.put("currentValue", 2500.00);
-        financial.put("depreciationRate", 0.1);
-        metadata.put("financial", financial);
-
-        asset.setMetadata(metadata);
-        asset.setTags(List.of("premium", "business", "mobile"));
-
-        return asset;
+        mockMvc.perform(get("/assets/" + assetId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.attributes.city.value", is("Stockholm"))) // String
+                .andExpect(jsonPath("$.attributes.rooms.value", is(30))) // Integer (as number)
+                .andExpect(jsonPath("$.attributes.area.value", is(closeTo(3500.75, 0.01)))) // Decimal
+                .andExpect(jsonPath("$.attributes.active.value", is(true))); // Boolean
     }
 
-    private Asset createBasicMockAsset() {
-        Asset asset = new Asset();
-        asset.setId("basic-asset");
-        asset.setName("Basic Asset");
-        asset.setType(AssetType.GENERIC);
-        asset.setDescription("Basic test asset");
-        asset.setCreatedAt(Instant.now());
-        asset.setUpdatedAt(Instant.now());
-        return asset;
-    }
 }

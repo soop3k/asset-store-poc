@@ -11,12 +11,14 @@ class JsonSchemaValidatorTest {
     @Test
     void ignoresUnknownProperties_whenSchemaDisallowsThem() {
         String payload = "{\"foo\":\"bar\",\"extra\":123}";
-        assertDoesNotThrow(() -> JsonSchemaValidator.validateOrThrow(payload, "schemas/strict.schema.json"));
+        assertDoesNotThrow(() -> JsonSchemaValidator.validateOrThrow(
+                payload, "schemas/strict.schema.json"));
     }
 
     @Test
     void stillFailsOnRealSchemaErrors_likeTypeMismatch() {
         String payload = "{\"foo\":123}"; // foo should be string per schema
-        assertThrows(IllegalArgumentException.class, () -> JsonSchemaValidator.validateOrThrow(payload, "schemas/strict.schema.json"));
+        assertThrows(IllegalArgumentException.class, () -> JsonSchemaValidator.validateOrThrow(
+                payload, "schemas/strict.schema.json"));
     }
 }

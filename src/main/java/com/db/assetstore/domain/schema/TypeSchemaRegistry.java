@@ -1,8 +1,11 @@
 package com.db.assetstore.domain.schema;
 
 import com.db.assetstore.AssetType;
+import jakarta.annotation.PostConstruct;
+import lombok.NoArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.net.URL;
 import java.util.*;
@@ -13,21 +16,16 @@ import java.util.concurrent.ConcurrentHashMap;
  * A type is considered "supported" only if a classpath resource exists at schemas/{TYPE}.schema.json.
  * Adding a new type is as simple as dropping a new schema file with that naming convention.
  */
+@Component
+@NoArgsConstructor
 public final class TypeSchemaRegistry {
     private static final Logger log = LoggerFactory.getLogger(TypeSchemaRegistry.class);
     private static final String SCHEMA_PATH_PATTERN = "schemas/%s.schema.json";
 
-    private static final TypeSchemaRegistry INSTANCE = new TypeSchemaRegistry();
+    private final Map<AssetType, String> typeToSchema = new HashMap<>();
 
-    private final Map<AssetType, String> typeToSchema = new ConcurrentHashMap<>();
-
-    private TypeSchemaRegistry() {
-        discover();
-    }
-
-    public static TypeSchemaRegistry getInstance() { return INSTANCE; }
-
-    private void discover() {
+    @PostConstruct
+    public void discover() {
         ClassLoader cl = TypeSchemaRegistry.class.getClassLoader();
         int found = 0;
         for (AssetType t : AssetType.values()) {

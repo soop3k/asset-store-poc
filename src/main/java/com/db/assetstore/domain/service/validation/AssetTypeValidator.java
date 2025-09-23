@@ -4,12 +4,16 @@ import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.schema.TypeSchemaRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import java.util.*;
 
+@Component
+@RequiredArgsConstructor
 public final class AssetTypeValidator {
-    private final TypeSchemaRegistry registry = TypeSchemaRegistry.getInstance();
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private final TypeSchemaRegistry registry;
+    private final ObjectMapper objectMapper;
 
     public void ensureSupported(AssetType type) {
         Objects.requireNonNull(type, "type");
@@ -30,7 +34,7 @@ public final class AssetTypeValidator {
             map.put(av.name(), av.value());
         }
         try {
-            String json = MAPPER.writeValueAsString(map);
+            String json = objectMapper.writeValueAsString(map);
             JsonSchemaValidator.validateIfPresent(json, schemaPath);
         } catch (Exception e) {
             throw new IllegalArgumentException("Failed to encode attributes JSON: " + e.getMessage(), e);

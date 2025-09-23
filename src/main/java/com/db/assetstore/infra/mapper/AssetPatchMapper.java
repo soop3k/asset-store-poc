@@ -6,33 +6,32 @@ import com.db.assetstore.domain.model.AssetPatch;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.infra.api.dto.AssetPatchItemRequest;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import org.mapstruct.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
-@Component
-@RequiredArgsConstructor
-public class AssetPatchMapper {
-    private final ObjectMapper mapper;
-    private final AttributeJsonReader attrReader;
+@Mapper(componentModel = "spring")
+public abstract class AssetPatchMapper {
+    
+    @Autowired
+    protected AttributeJsonReader attrReader;
 
-    public AssetPatch toPatch(AssetType type, AssetPatchRequest req) {
-        List<AttributeValue<?>> avs =
-                req.getAttributes() == null ? List.of() : attrReader.read(type, req.getAttributes());
-        return new AssetPatch(
-                req.getStatus(), req.getSubtype(), req.getNotionalAmount(), req.getYear(),
-                req.getDescription(), req.getCurrency(), avs
-        );
+    @Mapping(target = "attributes", ignore = true)
+    public abstract AssetPatch toPatch(AssetType type, AssetPatchRequest req);
+
+    @Mapping(target = "attributes", ignore = true) 
+    public abstract AssetPatch toPatch(AssetType type, AssetPatchItemRequest item);
+
+    @AfterMapping
+    protected void setPatchRequestAttributes(AssetType type, AssetPatchRequest req, @MappingTarget AssetPatch.AssetPatchBuilder builder) {
+        List<AttributeValue<?>> avs = req.getAttributes() == null ? List.of() : attrReader.read(type, req.getAttributes());
+        builder.attributes(avs);
     }
 
-    public AssetPatch toPatch(AssetType type, AssetPatchItemRequest item) {
-        List<AttributeValue<?>> avs =
-                item.getAttributes() == null ? List.of() : attrReader.read(type, item.getAttributes());
-        return new AssetPatch(
-                item.getStatus(), item.getSubtype(), item.getNotionalAmount(), item.getYear(),
-                item.getDescription(), item.getCurrency(), avs
-        );
+    @AfterMapping
+    protected void setPatchItemAttributes(AssetType type, AssetPatchItemRequest item, @MappingTarget AssetPatch.AssetPatchBuilder builder) {
+        List<AttributeValue<?>> avs = item.getAttributes() == null ? List.of() : attrReader.read(type, item.getAttributes());
+        builder.attributes(avs);
     }
 }

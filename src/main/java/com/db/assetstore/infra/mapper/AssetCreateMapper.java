@@ -5,35 +5,42 @@ import com.db.assetstore.domain.model.Asset;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.model.attribute.AttributesCollection;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import org.mapstruct.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-@Component
-@RequiredArgsConstructor
-public class AssetCreateMapper {
-    private final AttributeJsonReader attrReader;
+@Mapper(componentModel = "spring")
+public abstract class AssetCreateMapper {
+    
+    @Autowired
+    protected AttributeJsonReader attrReader;
 
-    public Asset toAsset(AssetCreateRequest req) {
-        List<AttributeValue<?>> avs =
-                req.attributes() == null ? List.of() : attrReader.read(req.type(), req.attributes());
+    @Mapping(target = "id", source = "req", qualifiedByName = "generateId")
+    @Mapping(target = "createdAt", expression = "java(java.time.Instant.now())")
+    @Mapping(target = "attributes", source = "req", qualifiedByName = "mapAttributes")
+    public abstract Asset toAsset(AssetCreateRequest req);
 
-        String id = (req.id() != null && !req.id().isBlank()) ? req.id() : UUID.randomUUID().toString();
-        Asset asset = new Asset(
-                id,
-                req.type(),
-                Instant.now(),
-                AttributesCollection.fromFlat(avs)
-        );
+    @AfterMapping
+    protected void setAdditionalFields(AssetCreateRequest req, @MappingTarget Asset asset) {
         asset.setStatus(req.status());
         asset.setSubtype(req.subtype());
         asset.setNotionalAmount(req.notionalAmount());
         asset.setYear(req.year());
         asset.setDescription(req.description());
         asset.setCurrency(req.currency());
-        return asset;
+    }
+
+    @Named("generateId")
+    protected String generateId(AssetCreateRequest req) {
+        return (req.id() != null && !req.id().isBlank()) ? req.id() : UUID.randomUUID().toString();
+    }
+
+    @Named("mapAttributes")
+    protected AttributesCollection mapAttributes(AssetCreateRequest req) {
+        List<AttributeValue<?>> avs = req.attributes() == null ? List.of() : attrReader.read(req.type(), req.attributes());
+        return AttributesCollection.fromFlat(avs);
     }
 }

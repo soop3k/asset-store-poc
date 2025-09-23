@@ -30,8 +30,8 @@ class IntegrationAssetPersistenceTest {
     AssetCommandService commandService;
     @Autowired
     AssetQueryService queryService;
-
-    private final AssetJsonFactory factory = new AssetJsonFactory();
+    @Autowired
+    AssetJsonFactory factory;
 
     @Test
     void persistAndReadCreAsset() {

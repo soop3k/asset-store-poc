@@ -3,9 +3,9 @@ package com.db.assetstore.domain.json;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-// Removed infra dependency: use local ObjectMapper
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.model.Asset;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
@@ -22,6 +22,7 @@ import java.util.Map;
  * Does NOT perform type or schema validation (DDD separation) – callers must validate beforehand.
  */
 @Slf4j
+@Component
 @RequiredArgsConstructor
 public class AssetJsonFactory {
     private static final String FIELD_TYPE = "type";
@@ -29,26 +30,7 @@ public class AssetJsonFactory {
 
     private final ObjectMapper mapper;
     private final AttributeJsonReader jsonReader;
-
-    public AssetJsonFactory() {
-        this(new ObjectMapper(), new AttributeJsonReader(new ObjectMapper()));
-    }
-
-    /**
-     * Parse a type-specific JSON (without generic wrapper) and build Asset.
-     * The JSON is expected to be a flat object where all fields except 'id' are treated as attributes.
-     * No validation is performed here.
-     */
-    public Asset fromJsonForType(AssetType type, String json) {
-        Objects.requireNonNull(type, "type");
-        Objects.requireNonNull(json, "json");
-        try {
-            JsonNode root = parseJson(json);
-            return buildAsset(root, type);
-        } catch (Exception ex) {
-            throw new IllegalArgumentException("Invalid JSON payload: " + ex.getMessage(), ex);
-        }
-    }
+    private final AttributeDefinitionRegistry attributeDefinitionRegistry;
 
     /**
      * Parse flat JSON like: {"type":"CRE","id":"uuid","city":"Warsaw","area":100.0}
@@ -66,9 +48,6 @@ public class AssetJsonFactory {
         }
     }
 
-    /**
-     * Same as fromJson(String), but accepts a pre-parsed JsonNode (object) for bulk parsing flows.
-     */
     public Asset fromJson(JsonNode root) {
         Objects.requireNonNull(root, "root");
         if (!root.isObject()) {
@@ -77,8 +56,6 @@ public class AssetJsonFactory {
 
         return buildAsset(root, null);
     }
-
-    // --- small, focused helpers for readability ---
 
     private JsonNode parseJson(String json) throws Exception {
         return mapper.readTree(json);
@@ -116,7 +93,7 @@ public class AssetJsonFactory {
             return attributes;
         }
 
-        final var definitions = AttributeDefinitionRegistry.getInstance().getDefinitions(type);
+        final var definitions = attributeDefinitionRegistry.getDefinitions(type);
 
         if (definitions.isEmpty()) {
             return attributes;
