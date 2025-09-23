@@ -2,48 +2,43 @@ package com.db.assetstore.infra.service.cmd;
 
 import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.json.AttributeJsonReader;
-import com.db.assetstore.domain.model.attribute.AttributeValue;
+import com.db.assetstore.domain.model.type.AVBoolean;
+import com.db.assetstore.domain.model.type.AVDecimal;
+import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
+import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
+import com.db.assetstore.domain.schema.TypeSchemaRegistry;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
 class CreateAssetCommandFactoryTest {
 
-    @Mock
-    AttributeJsonReader attributeJsonReader;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @InjectMocks
-    CreateAssetCommandFactory factory;
+    private CreateAssetCommandFactory factory;
 
     private ObjectNode attributes;
 
     @BeforeEach
     void setUp() {
-        attributes = new ObjectMapper().createObjectNode();
+        AttributeJsonReader attributeJsonReader = createJsonReader();
+        factory = new CreateAssetCommandFactory(attributeJsonReader);
+
+        attributes = objectMapper.createObjectNode();
         attributes.put("city", "Berlin");
+        attributes.put("area", new BigDecimal("321.75"));
+        attributes.put("active", true);
     }
 
     @Test
     void createCommand_populatesCommandAndParsesAttributes() {
-        AttributeValue<?> av = mock(AttributeValue.class);
-        when(attributeJsonReader.read(AssetType.CRE, attributes)).thenReturn(List.of(av));
-
         AssetCreateRequest request = new AssetCreateRequest(
                 "asset-1",
                 AssetType.CRE,
@@ -66,9 +61,11 @@ class CreateAssetCommandFactoryTest {
         assertThat(cmd.year()).isEqualTo(2024);
         assertThat(cmd.description()).isEqualTo("Desc");
         assertThat(cmd.currency()).isEqualTo("USD");
-        assertThat(cmd.attributes()).containsExactly(av);
-
-        verify(attributeJsonReader).read(AssetType.CRE, attributes);
+        assertThat(cmd.attributes()).containsExactly(
+                new AVString("city", "Berlin"),
+                new AVDecimal("area", new BigDecimal("321.75")),
+                new AVBoolean("active", true)
+        );
     }
 
     @Test
@@ -88,5 +85,15 @@ class CreateAssetCommandFactoryTest {
         CreateAssetCommand cmd = factory.createCommand(request);
 
         assertThat(cmd.attributes()).isEmpty();
+    }
+
+    private AttributeJsonReader createJsonReader() {
+        TypeSchemaRegistry typeSchemaRegistry = new TypeSchemaRegistry();
+        typeSchemaRegistry.discover();
+
+        AttributeDefinitionRegistry attributeDefinitionRegistry = new AttributeDefinitionRegistry(objectMapper, typeSchemaRegistry);
+        attributeDefinitionRegistry.rebuild();
+
+        return new AttributeJsonReader(objectMapper, attributeDefinitionRegistry);
     }
 }
