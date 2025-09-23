@@ -7,6 +7,7 @@ import com.db.assetstore.domain.model.type.AVBoolean;
 import com.db.assetstore.domain.model.type.AVDecimal;
 import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.domain.service.EventService;
+import com.db.assetstore.infra.config.JsonMapperProvider;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -22,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * More comprehensive tests for EventService JSON generation using JSLT.
  */
 class EventServiceAdvancedTest {
-    private static final ObjectMapper M = new ObjectMapper();
+    private static final ObjectMapper M = new JsonMapperProvider().objectMapper();
 
     @Test
     void generatesRichAssetUpsertedEvent_withVariousTypesAndNulls() throws Exception {

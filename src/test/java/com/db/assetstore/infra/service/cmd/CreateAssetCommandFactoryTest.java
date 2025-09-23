@@ -6,6 +6,7 @@ import com.db.assetstore.domain.model.type.AVBoolean;
 import com.db.assetstore.domain.model.type.AVDecimal;
 import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
+import com.db.assetstore.domain.service.cmd.factory.CreateAssetCommandFactory;
 import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
 import com.db.assetstore.domain.schema.TypeSchemaRegistry;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;

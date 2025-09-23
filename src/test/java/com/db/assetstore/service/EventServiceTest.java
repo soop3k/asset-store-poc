@@ -6,6 +6,7 @@ import com.db.assetstore.domain.model.Asset;
 import com.db.assetstore.domain.model.type.AVDecimal;
 import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.domain.service.EventService;
+import com.db.assetstore.infra.config.JsonMapperProvider;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class EventServiceTest {
-    private static final ObjectMapper M = new ObjectMapper();
+    private static final ObjectMapper M = new JsonMapperProvider().objectMapper();
     private static final AssetCanonicalizer assetCanon = new AssetCanonicalizer(M);
 
     @Test

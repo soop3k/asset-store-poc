@@ -1,9 +1,7 @@
 package integration;
 
 import com.db.assetstore.AssetType;
-import com.db.assetstore.domain.json.AssetJsonFactory;
 import com.db.assetstore.domain.model.Asset;
-import com.db.assetstore.domain.model.AssetPatch;
 import com.db.assetstore.domain.model.attribute.AttributeHistory;
 import com.db.assetstore.domain.model.type.AVBoolean;
 import com.db.assetstore.domain.model.type.AVDecimal;
@@ -37,8 +35,6 @@ class IntegrationAssetHistoryTest {
     AssetQueryService queryService;
     @Autowired
     AssetHistoryService historyService;
-    @Autowired
-    AssetJsonFactory factory;
 
     @Test
     void multipleUpdatesProduceHistoryAndFinalState() {

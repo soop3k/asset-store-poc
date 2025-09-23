@@ -1,4 +1,4 @@
-package com.db.assetstore.infra.service.cmd;
+package com.db.assetstore.domain.service.cmd.factory;
 
 import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.json.AttributeJsonReader;

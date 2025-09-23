@@ -9,6 +9,8 @@ import com.db.assetstore.domain.search.SearchCriteria;
 import com.db.assetstore.infra.jpa.AssetEntity;
 import com.db.assetstore.infra.jpa.AttributeEntity;
 import com.db.assetstore.infra.mapper.AssetMapper;
+import com.db.assetstore.infra.mapper.AssetMapperImpl;
+import com.db.assetstore.infra.mapper.AttributesCollectionMapper;
 import com.db.assetstore.infra.repository.AssetRepository;
 import com.db.assetstore.infra.service.AssetQueryServiceImpl;
 import com.db.assetstore.infra.service.search.AssetSearchSpecificationService;
@@ -28,7 +30,8 @@ import static org.mockito.Mockito.*;
 
 class AssetQueryServiceImplTest {
 
-    AssetMapper assetMapper = Mappers.getMapper(AssetMapper.class);
+    AttributesCollectionMapper collectionMapper = Mappers.getMapper(AttributesCollectionMapper.class);
+    AssetMapper assetMapper = new AssetMapperImpl(collectionMapper);
     AssetRepository assetRepo;
     AssetSearchSpecificationService specService;
 
