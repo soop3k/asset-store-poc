@@ -33,8 +33,4 @@ public record CreateAssetCommand(
         return requireVisitor(visitor).visit(this);
     }
 
-    @Override
-    public String executedBy() {
-        return executedBy;
-    }
 }

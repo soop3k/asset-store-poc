@@ -30,8 +30,4 @@ public record PatchAssetCommand(
         return requireVisitor(visitor).visit(this);
     }
 
-    @Override
-    public String executedBy() {
-        return executedBy;
-    }
 }

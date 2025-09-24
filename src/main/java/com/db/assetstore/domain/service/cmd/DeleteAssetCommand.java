@@ -19,8 +19,4 @@ public record DeleteAssetCommand(
         return requireVisitor(visitor).visit(this);
     }
 
-    @Override
-    public String executedBy() {
-        return executedBy;
-    }
 }

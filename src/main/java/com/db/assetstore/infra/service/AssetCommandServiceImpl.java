@@ -228,11 +228,24 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
         CommandLogEntity entity = CommandLogEntity.builder()
                 .commandType(commandType)
                 .assetId(assetId)
-                .executedBy(command.executedBy())
+                .executedBy(resolveExecutor(command))
                 .payload(payload)
                 .createdAt(Instant.now())
                 .build();
 
         commandLogRepository.save(entity);
+    }
+
+    private String resolveExecutor(AssetCommand<?> command) {
+        if (command instanceof CreateAssetCommand create) {
+            return create.executedBy();
+        }
+        if (command instanceof PatchAssetCommand patch) {
+            return patch.executedBy();
+        }
+        if (command instanceof DeleteAssetCommand delete) {
+            return delete.executedBy();
+        }
+        return null;
     }
 }
