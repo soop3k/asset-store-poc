@@ -9,6 +9,13 @@ import java.util.Objects;
 public interface AssetCommand<R> {
 
     /**
+     * Identifies who initiated the command execution.
+     *
+     * @return executor identifier associated with the command
+     */
+    String executedBy();
+
+    /**
      * Applies the visitor to the command so it can execute its behaviour.
      *
      * @param visitor visitor handling the execution for the command type
