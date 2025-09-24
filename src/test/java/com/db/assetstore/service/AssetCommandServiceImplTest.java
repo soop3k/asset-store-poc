@@ -140,6 +140,7 @@ class AssetCommandServiceImplTest {
 
         assertEquals("exec-1", result.result());
         assertEquals("exec-1", result.assetId());
+        assertEquals("tester", result.executedBy());
         verify(assetRepo).save(entity);
 
         ArgumentCaptor<CommandLogEntity> logCaptor = ArgumentCaptor.forClass(CommandLogEntity.class);

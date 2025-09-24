@@ -73,7 +73,7 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
         Objects.requireNonNull(command, "command");
         CommandResult<R> result = command.accept(this);
         if (result.success()) {
-            recordCommand(result.assetId(), command);
+            recordCommand(result, command);
         }
         return result;
     }
@@ -81,6 +81,7 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
     @Override
     public CommandResult<String> visit(CreateAssetCommand command) {
         Objects.requireNonNull(command, "command");
+        String executedBy = requireExecutor(command.executedBy(), command);
         String assetId = resolveAssetId(command);
         Asset asset = Asset.builder()
                 .id(assetId)
@@ -92,19 +93,20 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
                 .year(command.year())
                 .description(command.description())
                 .currency(command.currency())
-                .createdBy(command.executedBy())
-                .modifiedBy(command.executedBy())
+                .createdBy(executedBy)
+                .modifiedBy(executedBy)
                 .modifiedAt(Instant.now())
                 .build();
         asset.setAttributes(command.attributes());
         String persistedId = persistAsset(asset);
-        return new CommandResult<>(persistedId, persistedId);
+        return new CommandResult<>(persistedId, persistedId, executedBy);
     }
 
     @Override
     public CommandResult<Void> visit(PatchAssetCommand command) {
         Objects.requireNonNull(command, "command");
         String assetId = Objects.requireNonNull(command.assetId(), "assetId");
+        String executedBy = requireExecutor(command.executedBy(), command);
         AssetPatch patch = AssetPatch.builder()
                 .status(command.status())
                 .subtype(command.subtype())
@@ -114,16 +116,17 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
                 .currency(command.currency())
                 .attributes(command.attributes())
                 .build();
-        applyPatch(assetId, patch, command.executedBy());
-        return CommandResult.noResult(assetId);
+        applyPatch(assetId, patch, executedBy);
+        return CommandResult.noResult(assetId, executedBy);
     }
 
     @Override
     public CommandResult<Void> visit(DeleteAssetCommand command) {
         Objects.requireNonNull(command, "command");
         String assetId = Objects.requireNonNull(command.assetId(), "assetId");
+        String executedBy = requireExecutor(command.executedBy(), command);
         deleteAsset(assetId);
-        return CommandResult.noResult(assetId);
+        return CommandResult.noResult(assetId, executedBy);
     }
 
     private String resolveAssetId(CreateAssetCommand command) {
@@ -215,49 +218,27 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
         assetRepo.save(asset);
     }
 
-    private void recordCommand(String assetId, AssetCommand<?> command) {
+    private void recordCommand(CommandResult<?> result, AssetCommand<?> command) {
+        Objects.requireNonNull(result, "result");
         Objects.requireNonNull(command, "command");
         String commandType = command.commandType();
         String payload;
         try {
             payload = objectMapper.writeValueAsString(command);
         } catch (JsonProcessingException e) {
-            log.warn("Failed to serialise {} command for asset {}", commandType, assetId, e);
+            log.warn("Failed to serialise {} command for asset {}", commandType, result.assetId(), e);
             payload = String.valueOf(command);
         }
 
         CommandLogEntity entity = CommandLogEntity.builder()
                 .commandType(commandType)
-                .assetId(assetId)
-                .executedBy(resolveExecutedBy(command))
+                .assetId(result.assetId())
+                .executedBy(result.executedBy())
                 .payload(payload)
                 .createdAt(Instant.now())
                 .build();
 
         commandLogRepository.save(entity);
-    }
-
-    private String resolveExecutedBy(AssetCommand<?> command) {
-        if (command instanceof CreateAssetCommand create) {
-            return requireExecutor(create.executedBy(), create);
-        }
-        if (command instanceof PatchAssetCommand patch) {
-            return requireExecutor(patch.executedBy(), patch);
-        }
-        if (command instanceof DeleteAssetCommand delete) {
-            return requireExecutor(delete.executedBy(), delete);
-        }
-
-        try {
-            Object value = command.getClass().getMethod("executedBy").invoke(command);
-            if (value instanceof String executor && !executor.isBlank()) {
-                return executor;
-            }
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalArgumentException("Command type %s must expose an executedBy accessor".formatted(command.getClass().getName()), e);
-        }
-
-        throw new IllegalArgumentException("Command type %s returned empty executedBy".formatted(command.getClass().getName()));
     }
 
     private String requireExecutor(String executedBy, Object command) {

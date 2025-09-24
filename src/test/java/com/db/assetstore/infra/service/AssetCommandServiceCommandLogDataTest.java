@@ -46,6 +46,7 @@ class AssetCommandServiceCommandLogDataTest {
 
         assertNull(result.result());
         assertEquals("asset-123", result.assetId());
+        assertEquals("auditor", result.executedBy());
 
         List<CommandLogEntity> entries = commandLogRepository.findAll();
         assertEquals(1, entries.size(), "exactly one command log entry should be persisted");
@@ -70,6 +71,7 @@ class AssetCommandServiceCommandLogDataTest {
 
         assertNull(result.result());
         assertEquals("asset-456", result.assetId());
+        assertEquals("auditor", result.executedBy());
         assertFalse(result.success());
 
         assertTrue(commandLogRepository.findAll().isEmpty(), "no command log entry should be persisted for failed command");
@@ -80,7 +82,7 @@ class AssetCommandServiceCommandLogDataTest {
 
         @Override
         public CommandResult<Void> accept(AssetCommandVisitor visitor) {
-            return CommandResult.noResult(assetId);
+            return CommandResult.noResult(assetId, executedBy);
         }
     }
 
@@ -88,7 +90,7 @@ class AssetCommandServiceCommandLogDataTest {
 
         @Override
         public CommandResult<Void> accept(AssetCommandVisitor visitor) {
-            return CommandResult.failure(assetId);
+            return CommandResult.failure(assetId, executedBy);
         }
     }
 }
