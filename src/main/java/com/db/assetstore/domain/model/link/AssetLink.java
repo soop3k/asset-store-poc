@@ -13,6 +13,7 @@ public record AssetLink(
     String assetId,
     String linkCode,
     String linkSubtype,
+    String entitySubtype,
     String entityType,
     String entityId,
     boolean active,

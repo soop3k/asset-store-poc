@@ -16,11 +16,11 @@ public interface AssetLinkRepository extends JpaRepository<AssetLinkEntity, Stri
 
     List<AssetLinkEntity> findByEntityTypeAndEntityIdAndActiveAndDeleted(String entityType, String entityId, boolean active, boolean deleted);
 
-    long countByAssetIdAndLinkCodeAndLinkSubtypeAndActiveIsTrueAndDeletedIsFalse(String assetId, String linkCode, String linkSubtype);
+    long countByAssetIdAndLinkCodeAndLinkSubtypeAndEntitySubtypeAndActiveIsTrueAndDeletedIsFalse(String assetId, String linkCode, String linkSubtype, String entitySubtype);
 
-    long countByEntityTypeAndEntityIdAndLinkCodeAndLinkSubtypeAndActiveIsTrueAndDeletedIsFalse(String entityType, String entityId, String linkCode, String linkSubtype);
+    long countByEntityTypeAndEntityIdAndEntitySubtypeAndLinkCodeAndLinkSubtypeAndActiveIsTrueAndDeletedIsFalse(String entityType, String entityId, String entitySubtype, String linkCode, String linkSubtype);
 
-    boolean existsByAssetIdAndEntityTypeAndEntityIdAndLinkCodeAndLinkSubtypeAndDeletedIsFalse(String assetId, String entityType, String entityId, String linkCode, String linkSubtype);
+    boolean existsByAssetIdAndEntityTypeAndEntityIdAndEntitySubtypeAndLinkCodeAndLinkSubtypeAndDeletedIsFalse(String assetId, String entityType, String entityId, String entitySubtype, String linkCode, String linkSubtype);
 
     Optional<AssetLinkEntity> findByIdAndDeletedIsFalse(String id);
 }

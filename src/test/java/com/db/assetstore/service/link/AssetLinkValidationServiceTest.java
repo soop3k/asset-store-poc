@@ -38,6 +38,7 @@ class AssetLinkValidationServiceTest {
                 .entityType("WORKFLOW")
                 .entityId("WF-1")
                 .linkSubtype("BULK")
+                .entitySubtype("PRIMARY")
                 .build();
 
         assertThrows(IllegalStateException.class, () -> validationService.validate(definition, command));
@@ -53,6 +54,7 @@ class AssetLinkValidationServiceTest {
                 .entityType("INSTRUMENT")
                 .entityId("WF-1")
                 .linkSubtype("BULK")
+                .entitySubtype("PRIMARY")
                 .build();
 
         assertThrows(IllegalArgumentException.class, () -> validationService.validate(definition, command));
@@ -68,6 +70,7 @@ class AssetLinkValidationServiceTest {
                 .entityType("WORKFLOW")
                 .entityId("WF-1")
                 .linkSubtype("BULK")
+                .entitySubtype("PRIMARY")
                 .build();
 
         assertDoesNotThrow(() -> validationService.validate(definition, command));
@@ -79,10 +82,10 @@ class AssetLinkValidationServiceTest {
         definition.setCardinality(LinkCardinality.ONE_TO_ONE);
         definition.setAllowedEntityTypes(Set.of("WORKFLOW"));
 
-        when(assetLinkRepository.countByAssetIdAndLinkCodeAndLinkSubtypeAndActiveIsTrueAndDeletedIsFalse(anyString(), anyString(), anyString()))
+        when(assetLinkRepository.countByAssetIdAndLinkCodeAndLinkSubtypeAndEntitySubtypeAndActiveIsTrueAndDeletedIsFalse(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(1L);
 
-        assertThrows(IllegalStateException.class, () -> validationService.validate(definition, "A1", "WORKFLOW", "WF-1", "BULK", true));
+        assertThrows(IllegalStateException.class, () -> validationService.validate(definition, "A1", "WORKFLOW", "WF-1", "PRIMARY", "BULK", true));
     }
 
     @Test
@@ -91,10 +94,10 @@ class AssetLinkValidationServiceTest {
         definition.setCardinality(LinkCardinality.MANY_TO_ONE);
         definition.setAllowedEntityTypes(Set.of("WORKFLOW"));
 
-        when(assetLinkRepository.countByAssetIdAndLinkCodeAndLinkSubtypeAndActiveIsTrueAndDeletedIsFalse("A1", "WORKFLOW", "BULK"))
+        when(assetLinkRepository.countByAssetIdAndLinkCodeAndLinkSubtypeAndEntitySubtypeAndActiveIsTrueAndDeletedIsFalse("A1", "WORKFLOW", "BULK", "PRIMARY"))
                 .thenReturn(1L);
 
-        assertThrows(IllegalStateException.class, () -> validationService.validate(definition, "A1", "WORKFLOW", "WF-1", "BULK", true));
+        assertThrows(IllegalStateException.class, () -> validationService.validate(definition, "A1", "WORKFLOW", "WF-1", "PRIMARY", "BULK", true));
     }
 
     @Test
@@ -103,12 +106,12 @@ class AssetLinkValidationServiceTest {
         definition.setCardinality(LinkCardinality.ONE_TO_MANY);
         definition.setAllowedEntityTypes(Set.of("WORKFLOW"));
 
-        when(assetLinkRepository.countByAssetIdAndLinkCodeAndLinkSubtypeAndActiveIsTrueAndDeletedIsFalse(anyString(), anyString(), anyString()))
+        when(assetLinkRepository.countByAssetIdAndLinkCodeAndLinkSubtypeAndEntitySubtypeAndActiveIsTrueAndDeletedIsFalse(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(0L);
-        when(assetLinkRepository.countByEntityTypeAndEntityIdAndLinkCodeAndLinkSubtypeAndActiveIsTrueAndDeletedIsFalse(anyString(), anyString(), anyString(), anyString()))
+        when(assetLinkRepository.countByEntityTypeAndEntityIdAndEntitySubtypeAndLinkCodeAndLinkSubtypeAndActiveIsTrueAndDeletedIsFalse(anyString(), anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(0L);
 
-        assertDoesNotThrow(() -> validationService.validate(definition, "A1", "WORKFLOW", "WF-1", "BULK", true));
+        assertDoesNotThrow(() -> validationService.validate(definition, "A1", "WORKFLOW", "WF-1", "PRIMARY", "BULK", true));
     }
 
     @Test
@@ -121,6 +124,7 @@ class AssetLinkValidationServiceTest {
                 .entityType("WORKFLOW")
                 .entityId("WF-1")
                 .linkSubtype("BULK")
+                .entitySubtype("PRIMARY")
                 .active(false)
                 .build();
 

@@ -14,22 +14,27 @@ public class AssetLinkValidationService {
 
     public void validate(LinkDefinitionEntity definition, CreateAssetLinkCommand command) {
         boolean activate = command.active() == null || command.active();
-        validate(definition, command.assetId(), command.entityType(), command.entityId(), command.linkSubtype(), activate);
+        validate(definition, command.assetId(), command.entityType(), command.entityId(), command.entitySubtype(), command.linkSubtype(), activate);
     }
 
     public void validate(LinkDefinitionEntity definition,
                          String assetId,
                          String entityType,
                          String entityId,
+                         String entitySubtype,
                          String linkSubtype,
                          boolean activate) {
-        validateDefinition(definition, entityType, entityId, linkSubtype);
+        validateDefinition(definition, entityType, entityId, entitySubtype, linkSubtype);
         if (activate) {
-            validateCardinality(definition, assetId, entityType, entityId, linkSubtype);
+            validateCardinality(definition, assetId, entityType, entityId, entitySubtype, linkSubtype);
         }
     }
 
-    private void validateDefinition(LinkDefinitionEntity definition, String entityType, String entityId, String linkSubtype) {
+    private void validateDefinition(LinkDefinitionEntity definition,
+                                    String entityType,
+                                    String entityId,
+                                    String entitySubtype,
+                                    String linkSubtype) {
         if (!definition.isEnabled()) {
             throw new IllegalStateException("Link definition %s is disabled".formatted(definition.getCode()));
         }
@@ -38,6 +43,9 @@ public class AssetLinkValidationService {
         }
         if (entityId == null || entityId.isBlank()) {
             throw new IllegalArgumentException("Entity id must be provided");
+        }
+        if (entitySubtype == null || entitySubtype.isBlank()) {
+            throw new IllegalArgumentException("Entity subtype must be provided");
         }
         if (linkSubtype == null || linkSubtype.isBlank()) {
             throw new IllegalArgumentException("Link subtype must be provided");
@@ -54,11 +62,16 @@ public class AssetLinkValidationService {
         }
     }
 
-    private void validateCardinality(LinkDefinitionEntity definition, String assetId, String entityType, String entityId, String linkSubtype) {
-        long assetActive = assetLinkRepository.countByAssetIdAndLinkCodeAndLinkSubtypeAndActiveIsTrueAndDeletedIsFalse(
-                assetId, definition.getCode(), linkSubtype);
-        long entityActive = assetLinkRepository.countByEntityTypeAndEntityIdAndLinkCodeAndLinkSubtypeAndActiveIsTrueAndDeletedIsFalse(
-                entityType, entityId, definition.getCode(), linkSubtype);
+    private void validateCardinality(LinkDefinitionEntity definition,
+                                     String assetId,
+                                     String entityType,
+                                     String entityId,
+                                     String entitySubtype,
+                                     String linkSubtype) {
+        long assetActive = assetLinkRepository.countByAssetIdAndLinkCodeAndLinkSubtypeAndEntitySubtypeAndActiveIsTrueAndDeletedIsFalse(
+                assetId, definition.getCode(), linkSubtype, entitySubtype);
+        long entityActive = assetLinkRepository.countByEntityTypeAndEntityIdAndEntitySubtypeAndLinkCodeAndLinkSubtypeAndActiveIsTrueAndDeletedIsFalse(
+                entityType, entityId, entitySubtype, definition.getCode(), linkSubtype);
         switch (definition.getCardinality()) {
             case ONE_TO_ONE -> {
                 if (assetActive > 0 || entityActive > 0) {

@@ -27,6 +27,9 @@ public class AssetLinkEntity {
     @Column(name = "link_subtype", length = 64, nullable = false)
     private String linkSubtype;
 
+    @Column(name = "entity_subtype", length = 64, nullable = false)
+    private String entitySubtype;
+
     @Column(name = "entity_type", length = 64, nullable = false)
     private String entityType;
 

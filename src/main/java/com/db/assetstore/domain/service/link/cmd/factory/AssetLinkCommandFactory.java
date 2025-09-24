@@ -23,6 +23,7 @@ public class AssetLinkCommandFactory {
                 .assetId(assetId)
                 .linkCode(request.getLinkCode())
                 .linkSubtype(request.getLinkSubtype())
+                .entitySubtype(request.getEntitySubtype())
                 .entityType(request.getEntityType())
                 .entityId(request.getEntityId())
                 .active(request.getActive())

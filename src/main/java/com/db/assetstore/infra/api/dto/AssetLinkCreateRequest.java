@@ -15,6 +15,7 @@ import java.time.Instant;
 public class AssetLinkCreateRequest {
     private String linkCode;
     private String linkSubtype;
+    private String entitySubtype;
     private String entityType;
     private String entityId;
     private Boolean active;

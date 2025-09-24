@@ -142,8 +142,8 @@ public class AssetCommandServiceImpl implements AssetCommandService {
 
         assetLinkValidationService.validate(definition, command);
 
-        if (assetLinkRepository.existsByAssetIdAndEntityTypeAndEntityIdAndLinkCodeAndLinkSubtypeAndDeletedIsFalse(
-                asset.getId(), command.entityType(), command.entityId(), definition.getCode(), command.linkSubtype())) {
+        if (assetLinkRepository.existsByAssetIdAndEntityTypeAndEntityIdAndEntitySubtypeAndLinkCodeAndLinkSubtypeAndDeletedIsFalse(
+                asset.getId(), command.entityType(), command.entityId(), command.entitySubtype(), definition.getCode(), command.linkSubtype())) {
             throw new IllegalStateException("Link already exists for asset %s and entity %s".formatted(asset.getId(), command.entityId()));
         }
 
@@ -187,7 +187,7 @@ public class AssetCommandServiceImpl implements AssetCommandService {
             if (Boolean.TRUE.equals(command.active())) {
                 LinkDefinitionEntity definition = linkDefinitionRepository.findByCodeIgnoreCase(entity.getLinkCode())
                         .orElseThrow(() -> new IllegalStateException("Link definition not found for code: " + entity.getLinkCode()));
-                assetLinkValidationService.validate(definition, entity.getAssetId(), entity.getEntityType(), entity.getEntityId(), entity.getLinkSubtype(), true);
+                assetLinkValidationService.validate(definition, entity.getAssetId(), entity.getEntityType(), entity.getEntityId(), entity.getEntitySubtype(), entity.getLinkSubtype(), true);
                 entity.setActive(true);
                 entity.setDeleted(false);
             } else {
@@ -257,6 +257,7 @@ public class AssetCommandServiceImpl implements AssetCommandService {
                 .assetId(assetId)
                 .linkCode(linkCode)
                 .linkSubtype(command.linkSubtype())
+                .entitySubtype(command.entitySubtype())
                 .entityType(command.entityType())
                 .entityId(command.entityId())
                 .active(active)

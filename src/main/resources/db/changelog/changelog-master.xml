@@ -172,6 +172,9 @@
             <column name="link_subtype" type="varchar(64)">
                 <constraints nullable="false"/>
             </column>
+            <column name="entity_subtype" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
             <column name="entity_type" type="varchar(64)">
                 <constraints nullable="false"/>
             </column>

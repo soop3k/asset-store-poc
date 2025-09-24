@@ -57,6 +57,7 @@ class AssetCommandServiceImplLinkTest {
                 .assetId("A1")
                 .linkCode("WORKFLOW")
                 .linkSubtype("BULK")
+                .entitySubtype("PRIMARY")
                 .entityType("WORKFLOW")
                 .entityId("WF-1")
                 .build();
@@ -81,6 +82,7 @@ class AssetCommandServiceImplLinkTest {
                 .assetId("A1")
                 .linkCode("WORKFLOW")
                 .linkSubtype("BULK")
+                .entitySubtype("PRIMARY")
                 .entityType("WORKFLOW")
                 .entityId("WF-1")
                 .build();
@@ -95,7 +97,7 @@ class AssetCommandServiceImplLinkTest {
                 .build();
         definition.setAllowedEntityTypes(Set.of("WORKFLOW"));
         when(linkDefinitionRepository.findByCodeIgnoreCase("WORKFLOW")).thenReturn(Optional.of(definition));
-        when(assetLinkRepository.countByAssetIdAndLinkCodeAndLinkSubtypeAndActiveIsTrueAndDeletedIsFalse("A1", "WORKFLOW", "BULK"))
+        when(assetLinkRepository.countByAssetIdAndLinkCodeAndLinkSubtypeAndEntitySubtypeAndActiveIsTrueAndDeletedIsFalse("A1", "WORKFLOW", "BULK", "PRIMARY"))
                 .thenReturn(1L);
 
         assertThrows(IllegalStateException.class, () -> service.createLink(command));
@@ -107,6 +109,7 @@ class AssetCommandServiceImplLinkTest {
                 .assetId("A1")
                 .linkCode("WORKFLOW")
                 .linkSubtype("BULK")
+                .entitySubtype("PRIMARY")
                 .entityType("WORKFLOW")
                 .entityId("WF-1")
                 .requestedBy("tester")
@@ -123,7 +126,7 @@ class AssetCommandServiceImplLinkTest {
                 .build();
         definition.setAllowedEntityTypes(Set.of("WORKFLOW"));
         when(linkDefinitionRepository.findByCodeIgnoreCase("WORKFLOW")).thenReturn(Optional.of(definition));
-        when(assetLinkRepository.existsByAssetIdAndEntityTypeAndEntityIdAndLinkCodeAndLinkSubtypeAndDeletedIsFalse(any(), any(), any(), any(), any()))
+        when(assetLinkRepository.existsByAssetIdAndEntityTypeAndEntityIdAndEntitySubtypeAndLinkCodeAndLinkSubtypeAndDeletedIsFalse(any(), any(), any(), any(), any(), any()))
                 .thenReturn(false);
 
         ArgumentCaptor<AssetLinkEntity> entityCaptor = ArgumentCaptor.forClass(AssetLinkEntity.class);
@@ -175,6 +178,7 @@ class AssetCommandServiceImplLinkTest {
                 .assetId("A1")
                 .linkCode("WORKFLOW")
                 .linkSubtype("BULK")
+                .entitySubtype("PRIMARY")
                 .entityType("WORKFLOW")
                 .entityId("WF-1")
                 .active(false)
@@ -191,9 +195,9 @@ class AssetCommandServiceImplLinkTest {
 
         when(assetLinkRepository.findByIdAndDeletedIsFalse("L1")).thenReturn(Optional.of(entity));
         when(linkDefinitionRepository.findByCodeIgnoreCase("WORKFLOW")).thenReturn(Optional.of(definition));
-        when(assetLinkRepository.countByAssetIdAndLinkCodeAndLinkSubtypeAndActiveIsTrueAndDeletedIsFalse("A1", "WORKFLOW", "BULK"))
+        when(assetLinkRepository.countByAssetIdAndLinkCodeAndLinkSubtypeAndEntitySubtypeAndActiveIsTrueAndDeletedIsFalse("A1", "WORKFLOW", "BULK", "PRIMARY"))
                 .thenReturn(0L);
-        when(assetLinkRepository.countByEntityTypeAndEntityIdAndLinkCodeAndLinkSubtypeAndActiveIsTrueAndDeletedIsFalse("WORKFLOW", "WF-1", "WORKFLOW", "BULK"))
+        when(assetLinkRepository.countByEntityTypeAndEntityIdAndEntitySubtypeAndLinkCodeAndLinkSubtypeAndActiveIsTrueAndDeletedIsFalse("WORKFLOW", "WF-1", "PRIMARY", "WORKFLOW", "BULK"))
                 .thenReturn(0L);
 
         service.patchLink(command);

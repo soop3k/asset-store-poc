@@ -12,6 +12,7 @@ public record CreateAssetLinkCommand(
         String assetId,
         String linkCode,
         String linkSubtype,
+        String entitySubtype,
         String entityType,
         String entityId,
         Boolean active,
