@@ -5,6 +5,7 @@ import com.db.assetstore.domain.search.SearchCriteria;
 import com.db.assetstore.domain.service.AssetCommandService;
 import com.db.assetstore.domain.service.AssetQueryService;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;
+import com.db.assetstore.infra.api.dto.AssetDeleteRequest;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;
 import com.db.assetstore.domain.service.cmd.factory.AssetCommandFactoryRegistry;
 import org.slf4j.Logger;
@@ -105,6 +106,15 @@ public class AssetController {
             var cmd = commandFactoryRegistry.createPatchCommand(current.getType(), item);
             commandService.update(cmd);
         }
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping(path = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> deleteAsset(@PathVariable("id") String id,
+                                            @RequestBody AssetDeleteRequest request) {
+        log.info("HTTP DELETE /assets/{} - delete asset", id);
+        var cmd = commandFactoryRegistry.createDeleteCommand(id, request);
+        commandService.delete(cmd);
         return ResponseEntity.noContent().build();
     }
 }

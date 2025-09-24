@@ -24,8 +24,8 @@ import static org.junit.jupiter.api.Assertions.*;
  * More comprehensive tests for EventService JSON generation using JSLT.
  */
 class EventServiceAdvancedTest {
-    private static final ObjectMapper mapper = new JsonMapperProvider().objectMapper();
-    private static final JsonSchemaValidator validator = new JsonSchemaValidator(mapper);
+    private static final ObjectMapper M = new JsonMapperProvider().objectMapper();
+    private static final JsonSchemaValidator validator = new JsonSchemaValidator(M);
 
     @Test
     void generatesRichAssetUpsertedEvent_withVariousTypesAndNulls() throws Exception {
@@ -59,9 +59,9 @@ class EventServiceAdvancedTest {
         asset.setDescription("desc");
         asset.setCurrency("PLN");
 
-        EventService svc = new EventService(new JsonTransformer(mapper, validator), new AssetCanonicalizer(mapper), mapper);
+        EventService svc = new EventService(new JsonTransformer(M, validator), new AssetCanonicalizer(M), M);
         String eventJson = svc.generate("asset-cre", asset);
-        JsonNode e = mapper.readTree(eventJson);
+        JsonNode e = M.readTree(eventJson);
 
         assertEquals("E-1", e.get("id").asText());
         assertEquals("CRE", e.get("type").asText());
@@ -77,4 +77,5 @@ class EventServiceAdvancedTest {
         assertTrue(attrs.get("nullAttr").isNull());
         assertEquals(created.toString(), attrs.get("tsAttr").asText());
     }
+
 }

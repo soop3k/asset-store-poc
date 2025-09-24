@@ -25,48 +25,49 @@ class CreateAssetCommandFactoryTest {
 
     private CreateAssetCommandFactory factory;
 
-    private ObjectNode attributes;
-
     @BeforeEach
     void setUp() {
         AttributeJsonReader attributeJsonReader = createJsonReader();
         factory = new CreateAssetCommandFactory(attributeJsonReader);
-
-        attributes = objectMapper.createObjectNode();
-        attributes.put("city", "Berlin");
-        attributes.put("area", new BigDecimal("321.75"));
-        attributes.put("active", true);
     }
 
     @Test
     void createCommand_populatesCommandAndParsesAttributes() {
+        ObjectNode attributes = objectMapper.createObjectNode();
+        attributes.put("city", "Frankfurt");
+        attributes.put("area", new BigDecimal("500.25"));
+        attributes.put("active", true);
+
         AssetCreateRequest request = new AssetCreateRequest(
                 "asset-1",
                 AssetType.CRE,
                 "ACTIVE",
                 "OFFICE",
-                new BigDecimal("123.45"),
+                new BigDecimal("150.00"),
                 2024,
-                "Desc",
+                "Created",
                 "USD",
-                attributes
+                attributes,
+                "creator"
         );
 
-        CreateAssetCommand cmd = factory.createCommand(request);
+        CreateAssetCommand command = factory.createCommand(request);
 
-        assertThat(cmd.id()).isEqualTo("asset-1");
-        assertThat(cmd.type()).isEqualTo(AssetType.CRE);
-        assertThat(cmd.status()).isEqualTo("ACTIVE");
-        assertThat(cmd.subtype()).isEqualTo("OFFICE");
-        assertThat(cmd.notionalAmount()).isEqualTo(new BigDecimal("123.45"));
-        assertThat(cmd.year()).isEqualTo(2024);
-        assertThat(cmd.description()).isEqualTo("Desc");
-        assertThat(cmd.currency()).isEqualTo("USD");
-        assertThat(cmd.attributes()).containsExactly(
-                new AVString("city", "Berlin"),
-                new AVDecimal("area", new BigDecimal("321.75")),
+        assertThat(command.id()).isEqualTo("asset-1");
+        assertThat(command.type()).isEqualTo(AssetType.CRE);
+        assertThat(command.status()).isEqualTo("ACTIVE");
+        assertThat(command.subtype()).isEqualTo("OFFICE");
+        assertThat(command.notionalAmount()).isEqualTo(new BigDecimal("150.00"));
+        assertThat(command.year()).isEqualTo(2024);
+        assertThat(command.description()).isEqualTo("Created");
+        assertThat(command.currency()).isEqualTo("USD");
+        assertThat(command.attributes()).containsExactly(
+                new AVString("city", "Frankfurt"),
+                new AVDecimal("area", new BigDecimal("500.25")),
                 new AVBoolean("active", true)
         );
+        assertThat(command.executedBy()).isEqualTo("creator");
+        assertThat(command.requestTime()).isNotNull();
     }
 
     @Test
@@ -80,19 +81,23 @@ class CreateAssetCommandFactoryTest {
                 null,
                 null,
                 null,
-                null
+                null,
+                "executor"
         );
 
-        CreateAssetCommand cmd = factory.createCommand(request);
+        CreateAssetCommand command = factory.createCommand(request);
 
-        assertThat(cmd.attributes()).isEmpty();
+        assertThat(command.attributes()).isEmpty();
+        assertThat(command.executedBy()).isEqualTo("executor");
+        assertThat(command.requestTime()).isNotNull();
     }
 
     private AttributeJsonReader createJsonReader() {
         TypeSchemaRegistry typeSchemaRegistry = new TypeSchemaRegistry(objectMapper);
         typeSchemaRegistry.discover();
 
-        AttributeDefinitionRegistry attributeDefinitionRegistry = new AttributeDefinitionRegistry(objectMapper, typeSchemaRegistry);
+        AttributeDefinitionRegistry attributeDefinitionRegistry =
+                new AttributeDefinitionRegistry(objectMapper, typeSchemaRegistry);
         attributeDefinitionRegistry.rebuild();
 
         return new AttributeJsonReader(objectMapper, attributeDefinitionRegistry);

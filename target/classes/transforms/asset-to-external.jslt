@@ -1,5 +1,0 @@
-{
-  "assetId": .id,
-  "kind": .type,
-  "payload": .attributes
-}

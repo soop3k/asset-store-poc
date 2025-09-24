@@ -3,7 +3,6 @@ package com.db.assetstore.domain.service.cmd;
 import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import lombok.Builder;
-import lombok.Singular;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -23,7 +22,14 @@ public record CreateAssetCommand(
         Integer year,
         String description,
         String currency,
-        @Singular("attribute") List<AttributeValue<?>> attributes,
-        String createdBy,
+        List<AttributeValue<?>> attributes,
+        String executedBy,
         Instant requestTime
-) {}
+) implements AssetCommand<String> {
+
+    @Override
+    public CommandResult<String> accept(AssetCommandVisitor visitor) {
+        return requireVisitor(visitor).visit(this);
+    }
+
+}

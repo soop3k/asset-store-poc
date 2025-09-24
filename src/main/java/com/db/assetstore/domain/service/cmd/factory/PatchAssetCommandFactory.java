@@ -7,6 +7,7 @@ import com.db.assetstore.domain.service.cmd.PatchAssetCommand;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
@@ -16,7 +17,7 @@ public class PatchAssetCommandFactory {
     private final AttributeJsonReader attributeJsonReader;
 
     public PatchAssetCommandFactory(AttributeJsonReader attributeJsonReader) {
-        this.attributeJsonReader = attributeJsonReader;
+        this.attributeJsonReader = Objects.requireNonNull(attributeJsonReader, "attributeJsonReader");
     }
 
     public PatchAssetCommand createCommand(AssetType assetType, String assetId, AssetPatchRequest request) {
@@ -24,9 +25,13 @@ public class PatchAssetCommandFactory {
         Objects.requireNonNull(assetId, "assetId");
         Objects.requireNonNull(request, "request");
 
+        if (assetId.isBlank()) {
+            throw new IllegalArgumentException("assetId must not be blank");
+        }
+
         List<AttributeValue<?>> attributes = request.getAttributes() == null
                 ? List.of()
-                : attributeJsonReader.read(assetType, request.getAttributes());
+                : List.copyOf(attributeJsonReader.read(assetType, request.getAttributes()));
 
         return PatchAssetCommand.builder()
                 .assetId(assetId)
@@ -37,6 +42,8 @@ public class PatchAssetCommandFactory {
                 .description(request.getDescription())
                 .currency(request.getCurrency())
                 .attributes(attributes)
+                .executedBy(request.getExecutedBy())
+                .requestTime(Instant.now())
                 .build();
     }
 }

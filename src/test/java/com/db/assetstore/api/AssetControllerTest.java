@@ -39,6 +39,7 @@ class AssetControllerTest {
                     "year": 2023,
                     "description": "Premium office building",
                     "currency": "USD",
+                    "executedBy": "tester",
                     "attributes": {
                         "city": "New York",
                         "rooms": 25,
@@ -79,6 +80,7 @@ class AssetControllerTest {
         String payload = """
                 {
                     "type": "SHIP",
+                    "executedBy": "tester",
                     "attributes": {
                         "name": "Cargo Vessel",
                         "imo": 1234567
@@ -109,6 +111,7 @@ class AssetControllerTest {
                 {
                     "id": "custom-asset-123",
                     "type": "CRE",
+                    "executedBy": "tester",
                     "attributes": {
                         "city": "London"
                     }
@@ -151,6 +154,7 @@ class AssetControllerTest {
                         "id": "bulk-cre-1",
                         "type": "CRE",
                         "status": "ACTIVE",
+                        "executedBy": "tester",
                         "attributes": {
                             "city": "Paris",
                             "rooms": 10
@@ -160,6 +164,7 @@ class AssetControllerTest {
                         "id": "bulk-ship-1",
                         "type": "SHIP",
                         "status": "OPERATIONAL",
+                        "executedBy": "tester",
                         "attributes": {
                             "name": "Ocean Liner",
                             "imo": 7654321
@@ -210,6 +215,7 @@ class AssetControllerTest {
                 {
                     "id": "list-cre-1",
                     "type": "CRE",
+                    "executedBy": "tester",
                     "attributes": {"city": "Berlin", "rooms": 5}
                 }
                 """;
@@ -217,6 +223,7 @@ class AssetControllerTest {
                 {
                     "id": "list-ship-1",
                     "type": "SHIP",
+                    "executedBy": "tester",
                     "attributes": {"name": "Tanker", "imo": 9999999}
                 }
                 """;
@@ -254,6 +261,7 @@ class AssetControllerTest {
                     "status": "PENDING",
                     "currency": "EUR",
                     "notionalAmount": 750000,
+                    "executedBy": "tester",
                     "attributes": {
                         "city": "Amsterdam",
                         "rooms": 15,
@@ -291,6 +299,7 @@ class AssetControllerTest {
                     "type": "CRE",
                     "status": "DRAFT",
                     "currency": "USD",
+                    "executedBy": "tester",
                     "attributes": {
                         "city": "Chicago",
                         "rooms": 20
@@ -306,6 +315,7 @@ class AssetControllerTest {
                     "status": "ACTIVE",
                     "currency": "EUR",
                     "description": "Updated description",
+                    "executedBy": "updater",
                     "attributes": {
                         "city": "Brussels",
                         "rooms": 25,
@@ -333,7 +343,8 @@ class AssetControllerTest {
     void updateAsset_PUT_nonExistentId_returnsNotFound() throws Exception {
         String updatePayload = """
                 {
-                    "status": "ACTIVE"
+                    "status": "ACTIVE",
+                    "executedBy": "updater"
                 }
                 """;
 
@@ -352,6 +363,7 @@ class AssetControllerTest {
                     "status": "DRAFT",
                     "currency": "USD",
                     "description": "Original description",
+                    "executedBy": "tester",
                     "attributes": {
                         "city": "Toronto",
                         "rooms": 12,
@@ -366,6 +378,7 @@ class AssetControllerTest {
         String patchPayload = """
                 {
                     "status": "ACTIVE",
+                    "executedBy": "updater",
                     "attributes": {
                         "rooms": 18
                     }
@@ -391,7 +404,7 @@ class AssetControllerTest {
     void patchAsset_PATCH_nonExistentId_returnsNotFound() throws Exception {
         mockMvc.perform(patch("/assets/non-existent")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"status\":\"ACTIVE\"}"))
+                        .content("{\"status\":\"ACTIVE\",\"executedBy\":\"updater\"}"))
                 .andExpect(status().isNotFound());
     }
 
@@ -403,6 +416,7 @@ class AssetControllerTest {
                     "id": "bulk-patch-1",
                     "type": "CRE",
                     "status": "DRAFT",
+                    "executedBy": "tester",
                     "attributes": {"city": "Vienna", "rooms": 8}
                 }
                 """;
@@ -411,6 +425,7 @@ class AssetControllerTest {
                     "id": "bulk-patch-2",
                     "type": "SHIP",
                     "status": "DRAFT",
+                    "executedBy": "tester",
                     "attributes": {"name": "Freighter", "imo": 1111111}
                 }
                 """;
@@ -423,6 +438,7 @@ class AssetControllerTest {
                     {
                         "id": "bulk-patch-1",
                         "status": "ACTIVE",
+                        "executedBy": "updater",
                         "attributes": {
                             "rooms": 12
                         }
@@ -430,6 +446,7 @@ class AssetControllerTest {
                     {
                         "id": "bulk-patch-2",
                         "status": "OPERATIONAL",
+                        "executedBy": "updater",
                         "attributes": {
                             "imo": 2222222
                         }
@@ -469,7 +486,8 @@ class AssetControllerTest {
                 [
                     {
                         "id": "non-existent-bulk",
-                        "status": "ACTIVE"
+                        "status": "ACTIVE",
+                        "executedBy": "updater"
                     }
                 ]
                 """;
@@ -537,6 +555,37 @@ class AssetControllerTest {
                 .andExpect(jsonPath("$.attributes.rooms.value", is(30)))
                 .andExpect(jsonPath("$.attributes.area.value", is(closeTo(3500.75, 0.01))))
                 .andExpect(jsonPath("$.attributes.active.value", is(true)));
+    }
+
+
+    @Test
+    void deleteAsset_marksAssetAsDeleted() throws Exception {
+        String payload = """
+                {
+                    "type": "CRE",
+                    "attributes": {
+                        "city": "Lisbon"
+                    }
+                }
+                """;
+
+        MvcResult result = mockMvc.perform(post("/assets")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String assetId = result.getResponse().getContentAsString();
+        String json = """
+                {"id":"%s","executedBy":"tester"}
+                """.formatted(assetId);
+        mockMvc.perform(delete("/assets/" + assetId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/assets/" + assetId))
+                .andExpect(status().isNotFound());
     }
 
 }

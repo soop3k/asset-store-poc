@@ -122,4 +122,28 @@
         </addColumn>
         <dropColumn tableName="asset_attribute_history" columnName="attr_value"/>
     </changeSet>
+
+    <changeSet id="7-command-log" author="junie">
+        <createTable tableName="command_log">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="command_type" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="asset_id" type="varchar(64)"/>
+            <column name="payload" type="clob">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="command_log" indexName="idx_command_log_asset">
+            <column name="asset_id"/>
+        </createIndex>
+        <createIndex tableName="command_log" indexName="idx_command_log_type">
+            <column name="command_type"/>
+        </createIndex>
+    </changeSet>
 </databaseChangeLog>

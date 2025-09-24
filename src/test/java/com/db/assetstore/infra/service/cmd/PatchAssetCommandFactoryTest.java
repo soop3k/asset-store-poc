@@ -4,6 +4,7 @@ import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.json.AttributeJsonReader;
 import com.db.assetstore.domain.model.type.AVBoolean;
 import com.db.assetstore.domain.model.type.AVDecimal;
+import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.domain.service.cmd.PatchAssetCommand;
 import com.db.assetstore.domain.service.cmd.factory.PatchAssetCommandFactory;
 import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
@@ -25,59 +26,66 @@ class PatchAssetCommandFactoryTest {
     private PatchAssetCommandFactory factory;
 
     private AssetPatchRequest request;
-    private ObjectNode attributes;
 
     @BeforeEach
     void setUp() {
         AttributeJsonReader attributeJsonReader = createJsonReader();
         factory = new PatchAssetCommandFactory(attributeJsonReader);
 
-        attributes = objectMapper.createObjectNode();
-        attributes.put("rooms", 5);
+        ObjectNode attributes = objectMapper.createObjectNode();
+        attributes.put("name", "Sea Queen");
+        attributes.put("imo", 9876543);
         attributes.put("active", false);
 
         request = new AssetPatchRequest();
         request.setId("asset-2");
-        request.setStatus("ACTIVE");
-        request.setSubtype("OFFICE");
+        request.setStatus("INACTIVE");
+        request.setSubtype("FREIGHT");
         request.setNotionalAmount(new BigDecimal("321.10"));
         request.setYear(2025);
-        request.setDescription("Updated");
+        request.setDescription("Patched");
         request.setCurrency("EUR");
         request.setAttributes(attributes);
+        request.setExecutedBy("patcher");
     }
 
     @Test
     void createCommand_buildsCommandWithAttributes() {
-        PatchAssetCommand cmd = factory.createCommand(AssetType.CRE, "asset-2", request);
+        PatchAssetCommand command = factory.createCommand(AssetType.SHIP, "asset-2", request);
 
-        assertThat(cmd.assetId()).isEqualTo("asset-2");
-        assertThat(cmd.status()).isEqualTo("ACTIVE");
-        assertThat(cmd.subtype()).isEqualTo("OFFICE");
-        assertThat(cmd.notionalAmount()).isEqualTo(new BigDecimal("321.10"));
-        assertThat(cmd.year()).isEqualTo(2025);
-        assertThat(cmd.description()).isEqualTo("Updated");
-        assertThat(cmd.currency()).isEqualTo("EUR");
-        assertThat(cmd.attributes()).containsExactly(
-                new AVDecimal("rooms", new BigDecimal("5")),
+        assertThat(command.assetId()).isEqualTo("asset-2");
+        assertThat(command.status()).isEqualTo("INACTIVE");
+        assertThat(command.subtype()).isEqualTo("FREIGHT");
+        assertThat(command.notionalAmount()).isEqualTo(new BigDecimal("321.10"));
+        assertThat(command.year()).isEqualTo(2025);
+        assertThat(command.description()).isEqualTo("Patched");
+        assertThat(command.currency()).isEqualTo("EUR");
+        assertThat(command.attributes()).containsExactly(
+                new AVString("name", "Sea Queen"),
+                new AVDecimal("imo", new BigDecimal("9876543")),
                 new AVBoolean("active", false)
         );
+        assertThat(command.executedBy()).isEqualTo("patcher");
+        assertThat(command.requestTime()).isNotNull();
     }
 
     @Test
     void createCommand_withNullAttributes_usesEmptyList() {
         request.setAttributes(null);
 
-        PatchAssetCommand cmd = factory.createCommand(AssetType.SHIP, "asset-2", request);
+        PatchAssetCommand command = factory.createCommand(AssetType.CRE, "asset-2", request);
 
-        assertThat(cmd.attributes()).isEmpty();
+        assertThat(command.attributes()).isEmpty();
+        assertThat(command.executedBy()).isEqualTo("patcher");
+        assertThat(command.requestTime()).isNotNull();
     }
 
     private AttributeJsonReader createJsonReader() {
         TypeSchemaRegistry typeSchemaRegistry = new TypeSchemaRegistry(objectMapper);
         typeSchemaRegistry.discover();
 
-        AttributeDefinitionRegistry attributeDefinitionRegistry = new AttributeDefinitionRegistry(objectMapper, typeSchemaRegistry);
+        AttributeDefinitionRegistry attributeDefinitionRegistry =
+                new AttributeDefinitionRegistry(objectMapper, typeSchemaRegistry);
         attributeDefinitionRegistry.rebuild();
 
         return new AttributeJsonReader(objectMapper, attributeDefinitionRegistry);

@@ -16,5 +16,6 @@ public record AssetCreateRequest(
         Integer year,
         String description,
         String currency,
-        JsonNode attributes
+        JsonNode attributes,
+        String executedBy
 ) {}
