@@ -14,6 +14,6 @@ public record LinkDefinition(
         String entityType,
         LinkCardinality cardinality,
         boolean enabled,
-        @Singular Set<String> subtypes
+        @Singular Set<String> entityTypes
 ) {
 }

@@ -140,8 +140,7 @@ public class AssetCommandServiceImpl implements AssetCommandService {
         LinkDefinitionEntity definition = linkDefinitionRepository.findByCodeIgnoreCase(command.linkCode())
                 .orElseThrow(() -> new IllegalArgumentException("Unknown link code: " + command.linkCode()));
 
-        assetLinkValidationService.validateDefinition(definition, command);
-        assetLinkValidationService.validateCardinality(definition, command);
+        assetLinkValidationService.validate(definition, command);
 
         if (assetLinkRepository.existsByAssetIdAndEntityTypeAndEntityIdAndLinkCodeAndLinkSubtypeAndDeletedIsFalse(
                 asset.getId(), command.entityType(), command.entityId(), definition.getCode(), command.linkSubtype())) {
@@ -188,8 +187,7 @@ public class AssetCommandServiceImpl implements AssetCommandService {
             if (Boolean.TRUE.equals(command.active())) {
                 LinkDefinitionEntity definition = linkDefinitionRepository.findByCodeIgnoreCase(entity.getLinkCode())
                         .orElseThrow(() -> new IllegalStateException("Link definition not found for code: " + entity.getLinkCode()));
-                assetLinkValidationService.validateDefinition(definition, entity.getEntityType(), entity.getEntityId(), entity.getLinkSubtype());
-                assetLinkValidationService.validateCardinality(definition, entity.getAssetId(), entity.getEntityType(), entity.getEntityId(), entity.getLinkSubtype());
+                assetLinkValidationService.validate(definition, entity.getAssetId(), entity.getEntityType(), entity.getEntityId(), entity.getLinkSubtype(), true);
                 entity.setActive(true);
                 entity.setDeleted(false);
             } else {

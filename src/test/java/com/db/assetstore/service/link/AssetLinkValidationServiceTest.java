@@ -31,71 +31,9 @@ class AssetLinkValidationServiceTest {
     }
 
     @Test
-    void validateDefinition_whenDisabled_shouldThrow() {
+    void validate_whenDefinitionDisabled_shouldThrow() {
         LinkDefinitionEntity definition = baseDefinition().toBuilder().enabled(false).build();
-        definition.setSubtypes(Set.of(subtype(definition, "BULK")));
-
-        assertThrows(IllegalStateException.class, () -> validationService.validateDefinition(definition, "WORKFLOW", "WF-1", "BULK"));
-    }
-
-    @Test
-    void validateDefinition_whenSubtypeUnknown_shouldThrow() {
-        LinkDefinitionEntity definition = baseDefinition();
-        definition.setSubtypes(Set.of(subtype(definition, "BULK")));
-
-        assertThrows(IllegalArgumentException.class, () -> validationService.validateDefinition(definition, "WORKFLOW", "WF-1", "MONITORING"));
-    }
-
-    @Test
-    void validateDefinition_withValidConfiguration_shouldPass() {
-        LinkDefinitionEntity definition = baseDefinition();
-        definition.setSubtypes(Set.of(subtype(definition, "BULK")));
-
-        assertDoesNotThrow(() -> validationService.validateDefinition(definition, "WORKFLOW", "WF-1", "BULK"));
-    }
-
-    @Test
-    void validateCardinality_oneToOneExisting_shouldThrow() {
-        LinkDefinitionEntity definition = baseDefinition();
-        definition.setCardinality(LinkCardinality.ONE_TO_ONE);
-        definition.setSubtypes(Set.of(subtype(definition, "BULK")));
-
-        when(assetLinkRepository.countByAssetIdAndLinkCodeAndLinkSubtypeAndActiveIsTrueAndDeletedIsFalse(anyString(), anyString(), anyString()))
-                .thenReturn(1L);
-
-        assertThrows(IllegalStateException.class, () -> validationService.validateCardinality(definition, "A1", "WORKFLOW", "WF-1", "BULK"));
-    }
-
-    @Test
-    void validateCardinality_manyToOneAssetActive_shouldThrow() {
-        LinkDefinitionEntity definition = baseDefinition();
-        definition.setCardinality(LinkCardinality.MANY_TO_ONE);
-        definition.setSubtypes(Set.of(subtype(definition, "BULK")));
-
-        when(assetLinkRepository.countByAssetIdAndLinkCodeAndLinkSubtypeAndActiveIsTrueAndDeletedIsFalse("A1", "WORKFLOW", "BULK"))
-                .thenReturn(1L);
-
-        assertThrows(IllegalStateException.class, () -> validationService.validateCardinality(definition, "A1", "WORKFLOW", "WF-1", "BULK"));
-    }
-
-    @Test
-    void validateCardinality_oneToMany_noEntityConflict_shouldPass() {
-        LinkDefinitionEntity definition = baseDefinition();
-        definition.setCardinality(LinkCardinality.ONE_TO_MANY);
-        definition.setSubtypes(Set.of(subtype(definition, "BULK")));
-
-        when(assetLinkRepository.countByAssetIdAndLinkCodeAndLinkSubtypeAndActiveIsTrueAndDeletedIsFalse(anyString(), anyString(), anyString()))
-                .thenReturn(0L);
-        when(assetLinkRepository.countByEntityTypeAndEntityIdAndLinkCodeAndLinkSubtypeAndActiveIsTrueAndDeletedIsFalse(anyString(), anyString(), anyString(), anyString()))
-                .thenReturn(0L);
-
-        assertDoesNotThrow(() -> validationService.validateCardinality(definition, "A1", "WORKFLOW", "WF-1", "BULK"));
-    }
-
-    @Test
-    void validateDefinition_withCommandDelegates() {
-        LinkDefinitionEntity definition = baseDefinition();
-        definition.setSubtypes(Set.of(subtype(definition, "BULK")));
+        definition.setAllowedEntityTypes(Set.of(entityType(definition, "WORKFLOW")));
 
         CreateAssetLinkCommand command = CreateAssetLinkCommand.builder()
                 .assetId("A1")
@@ -104,13 +42,81 @@ class AssetLinkValidationServiceTest {
                 .linkSubtype("BULK")
                 .build();
 
-        assertDoesNotThrow(() -> validationService.validateDefinition(definition, command));
+        assertThrows(IllegalStateException.class, () -> validationService.validate(definition, command));
+    }
+
+    @Test
+    void validate_whenEntityTypeUnknown_shouldThrow() {
+        LinkDefinitionEntity definition = baseDefinition();
+        definition.setAllowedEntityTypes(Set.of(entityType(definition, "WORKFLOW")));
+
+        CreateAssetLinkCommand command = CreateAssetLinkCommand.builder()
+                .assetId("A1")
+                .entityType("INSTRUMENT")
+                .entityId("WF-1")
+                .linkSubtype("BULK")
+                .build();
+
+        assertThrows(IllegalArgumentException.class, () -> validationService.validate(definition, command));
+    }
+
+    @Test
+    void validate_withValidConfiguration_shouldPass() {
+        LinkDefinitionEntity definition = baseDefinition();
+        definition.setAllowedEntityTypes(Set.of(entityType(definition, "WORKFLOW")));
+
+        CreateAssetLinkCommand command = CreateAssetLinkCommand.builder()
+                .assetId("A1")
+                .entityType("WORKFLOW")
+                .entityId("WF-1")
+                .linkSubtype("BULK")
+                .build();
+
+        assertDoesNotThrow(() -> validationService.validate(definition, command));
+    }
+
+    @Test
+    void validateCardinality_oneToOneExisting_shouldThrow() {
+        LinkDefinitionEntity definition = baseDefinition();
+        definition.setCardinality(LinkCardinality.ONE_TO_ONE);
+        definition.setAllowedEntityTypes(Set.of(entityType(definition, "WORKFLOW")));
+
+        when(assetLinkRepository.countByAssetIdAndLinkCodeAndLinkSubtypeAndActiveIsTrueAndDeletedIsFalse(anyString(), anyString(), anyString()))
+                .thenReturn(1L);
+
+        assertThrows(IllegalStateException.class, () -> validationService.validate(definition, "A1", "WORKFLOW", "WF-1", "BULK", true));
+    }
+
+    @Test
+    void validateCardinality_manyToOneAssetActive_shouldThrow() {
+        LinkDefinitionEntity definition = baseDefinition();
+        definition.setCardinality(LinkCardinality.MANY_TO_ONE);
+        definition.setAllowedEntityTypes(Set.of(entityType(definition, "WORKFLOW")));
+
+        when(assetLinkRepository.countByAssetIdAndLinkCodeAndLinkSubtypeAndActiveIsTrueAndDeletedIsFalse("A1", "WORKFLOW", "BULK"))
+                .thenReturn(1L);
+
+        assertThrows(IllegalStateException.class, () -> validationService.validate(definition, "A1", "WORKFLOW", "WF-1", "BULK", true));
+    }
+
+    @Test
+    void validateCardinality_oneToMany_noEntityConflict_shouldPass() {
+        LinkDefinitionEntity definition = baseDefinition();
+        definition.setCardinality(LinkCardinality.ONE_TO_MANY);
+        definition.setAllowedEntityTypes(Set.of(entityType(definition, "WORKFLOW")));
+
+        when(assetLinkRepository.countByAssetIdAndLinkCodeAndLinkSubtypeAndActiveIsTrueAndDeletedIsFalse(anyString(), anyString(), anyString()))
+                .thenReturn(0L);
+        when(assetLinkRepository.countByEntityTypeAndEntityIdAndLinkCodeAndLinkSubtypeAndActiveIsTrueAndDeletedIsFalse(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(0L);
+
+        assertDoesNotThrow(() -> validationService.validate(definition, "A1", "WORKFLOW", "WF-1", "BULK", true));
     }
 
     @Test
     void validateCardinality_withInactiveCommand_shouldSkipChecks() {
         LinkDefinitionEntity definition = baseDefinition();
-        definition.setSubtypes(Set.of(subtype(definition, "BULK")));
+        definition.setAllowedEntityTypes(Set.of(entityType(definition, "WORKFLOW")));
 
         CreateAssetLinkCommand command = CreateAssetLinkCommand.builder()
                 .assetId("A1")
@@ -120,7 +126,7 @@ class AssetLinkValidationServiceTest {
                 .active(false)
                 .build();
 
-        assertDoesNotThrow(() -> validationService.validateCardinality(definition, command));
+        assertDoesNotThrow(() -> validationService.validate(definition, command));
         verifyNoInteractions(assetLinkRepository);
     }
 
@@ -133,9 +139,9 @@ class AssetLinkValidationServiceTest {
                 .build();
     }
 
-    private LinkSubtypeDefinitionEntity subtype(LinkDefinitionEntity definition, String subtype) {
+    private LinkSubtypeDefinitionEntity entityType(LinkDefinitionEntity definition, String entityType) {
         return LinkSubtypeDefinitionEntity.builder()
-                .id(new LinkSubtypeDefinitionId(definition.getCode(), subtype))
+                .id(new LinkSubtypeDefinitionId(definition.getCode(), entityType))
                 .definition(definition)
                 .build();
     }

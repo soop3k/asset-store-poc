@@ -32,5 +32,5 @@ public class LinkDefinitionEntity {
 
     @Builder.Default
     @OneToMany(mappedBy = "definition", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private Set<LinkSubtypeDefinitionEntity> subtypes = new HashSet<>();
+    private Set<LinkSubtypeDefinitionEntity> allowedEntityTypes = new HashSet<>();
 }

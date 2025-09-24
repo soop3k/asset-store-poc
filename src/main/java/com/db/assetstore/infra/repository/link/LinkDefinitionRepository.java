@@ -8,9 +8,9 @@ import java.util.Optional;
 
 public interface LinkDefinitionRepository extends JpaRepository<LinkDefinitionEntity, String> {
 
-    @EntityGraph(attributePaths = "subtypes")
+    @EntityGraph(attributePaths = "allowedEntityTypes")
     Optional<LinkDefinitionEntity> findByCode(String code);
 
-    @EntityGraph(attributePaths = "subtypes")
+    @EntityGraph(attributePaths = "allowedEntityTypes")
     Optional<LinkDefinitionEntity> findByCodeIgnoreCase(String code);
 }

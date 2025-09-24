@@ -145,11 +145,11 @@
             <column name="code" type="varchar(64)">
                 <constraints nullable="false"/>
             </column>
-            <column name="subtype" type="varchar(64)">
+            <column name="entity_type" type="varchar(64)">
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <addPrimaryKey tableName="link_subtype_def" columnNames="code, subtype" constraintName="pk_link_subtype_def"/>
+        <addPrimaryKey tableName="link_subtype_def" columnNames="code, entity_type" constraintName="pk_link_subtype_def"/>
         <addForeignKeyConstraint baseTableName="link_subtype_def"
                                  baseColumnNames="code"
                                  referencedTableName="link_definition"
@@ -218,36 +218,44 @@
 
         <insert tableName="link_subtype_def">
             <column name="code" value="WORKFLOW"/>
-            <column name="subtype" value="BULK"/>
+            <column name="entity_type" value="WORKFLOW"/>
         </insert>
         <insert tableName="link_subtype_def">
             <column name="code" value="WORKFLOW"/>
-            <column name="subtype" value="MONITORING"/>
+            <column name="entity_type" value="BULK"/>
         </insert>
         <insert tableName="link_subtype_def">
             <column name="code" value="WORKFLOW"/>
-            <column name="subtype" value="REVALUATION"/>
+            <column name="entity_type" value="MONITORING"/>
         </insert>
         <insert tableName="link_subtype_def">
             <column name="code" value="WORKFLOW"/>
-            <column name="subtype" value="CHG"/>
+            <column name="entity_type" value="REVALUATION"/>
+        </insert>
+        <insert tableName="link_subtype_def">
+            <column name="code" value="WORKFLOW"/>
+            <column name="entity_type" value="CHG"/>
         </insert>
 
         <insert tableName="link_subtype_def">
             <column name="code" value="INSTRUMENT"/>
-            <column name="subtype" value="BULK"/>
+            <column name="entity_type" value="INSTRUMENT"/>
         </insert>
         <insert tableName="link_subtype_def">
             <column name="code" value="INSTRUMENT"/>
-            <column name="subtype" value="MONITORING"/>
+            <column name="entity_type" value="BULK"/>
         </insert>
         <insert tableName="link_subtype_def">
             <column name="code" value="INSTRUMENT"/>
-            <column name="subtype" value="REVALUATION"/>
+            <column name="entity_type" value="MONITORING"/>
         </insert>
         <insert tableName="link_subtype_def">
             <column name="code" value="INSTRUMENT"/>
-            <column name="subtype" value="CHG"/>
+            <column name="entity_type" value="REVALUATION"/>
+        </insert>
+        <insert tableName="link_subtype_def">
+            <column name="code" value="INSTRUMENT"/>
+            <column name="entity_type" value="CHG"/>
         </insert>
     </changeSet>
 </databaseChangeLog>

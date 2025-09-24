@@ -71,7 +71,7 @@ class AssetCommandServiceImplLinkTest {
                 .cardinality(LinkCardinality.ONE_TO_ONE)
                 .enabled(false)
                 .build();
-        definition.setSubtypes(Set.of(buildSubtype(definition, "BULK")));
+        definition.setAllowedEntityTypes(Set.of(buildEntityType(definition, "WORKFLOW")));
         when(linkDefinitionRepository.findByCodeIgnoreCase("WORKFLOW")).thenReturn(Optional.of(definition));
 
         assertThrows(IllegalStateException.class, () -> service.createLink(command));
@@ -95,7 +95,7 @@ class AssetCommandServiceImplLinkTest {
                 .cardinality(LinkCardinality.ONE_TO_ONE)
                 .enabled(true)
                 .build();
-        definition.setSubtypes(Set.of(buildSubtype(definition, "BULK")));
+        definition.setAllowedEntityTypes(Set.of(buildEntityType(definition, "WORKFLOW")));
         when(linkDefinitionRepository.findByCodeIgnoreCase("WORKFLOW")).thenReturn(Optional.of(definition));
         when(assetLinkRepository.countByAssetIdAndLinkCodeAndLinkSubtypeAndActiveIsTrueAndDeletedIsFalse("A1", "WORKFLOW", "BULK"))
                 .thenReturn(1L);
@@ -123,7 +123,7 @@ class AssetCommandServiceImplLinkTest {
                 .cardinality(LinkCardinality.MANY_TO_ONE)
                 .enabled(true)
                 .build();
-        definition.setSubtypes(Set.of(buildSubtype(definition, "BULK")));
+        definition.setAllowedEntityTypes(Set.of(buildEntityType(definition, "WORKFLOW")));
         when(linkDefinitionRepository.findByCodeIgnoreCase("WORKFLOW")).thenReturn(Optional.of(definition));
         when(assetLinkRepository.existsByAssetIdAndEntityTypeAndEntityIdAndLinkCodeAndLinkSubtypeAndDeletedIsFalse(any(), any(), any(), any(), any()))
                 .thenReturn(false);
@@ -189,7 +189,7 @@ class AssetCommandServiceImplLinkTest {
                 .cardinality(LinkCardinality.ONE_TO_ONE)
                 .enabled(true)
                 .build();
-        definition.setSubtypes(Set.of(buildSubtype(definition, "BULK")));
+        definition.setAllowedEntityTypes(Set.of(buildEntityType(definition, "WORKFLOW")));
 
         when(assetLinkRepository.findByIdAndDeletedIsFalse("L1")).thenReturn(Optional.of(entity));
         when(linkDefinitionRepository.findByCodeIgnoreCase("WORKFLOW")).thenReturn(Optional.of(definition));
@@ -234,9 +234,9 @@ class AssetCommandServiceImplLinkTest {
         verify(assetLinkRepository).save(entity);
     }
 
-    private LinkSubtypeDefinitionEntity buildSubtype(LinkDefinitionEntity parent, String subtype) {
+    private LinkSubtypeDefinitionEntity buildEntityType(LinkDefinitionEntity parent, String entityType) {
         return LinkSubtypeDefinitionEntity.builder()
-                .id(new LinkSubtypeDefinitionId(parent.getCode(), subtype))
+                .id(new LinkSubtypeDefinitionId(parent.getCode(), entityType))
                 .definition(parent)
                 .build();
     }

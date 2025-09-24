@@ -17,14 +17,14 @@ public class LinkSubtypeDefinitionId implements Serializable {
     @Column(name = "code", length = 64, nullable = false)
     private String code;
 
-    @Column(name = "subtype", length = 64, nullable = false)
-    private String subtype;
+    @Column(name = "entity_type", length = 64, nullable = false)
+    private String entityType;
 
     public String getCode() {
         return code;
     }
 
-    public String getSubtype() {
-        return subtype;
+    public String getEntityType() {
+        return entityType;
     }
 }
