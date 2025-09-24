@@ -21,13 +21,12 @@ class PatchAssetCommandFactoryTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private AttributeJsonReader attributeJsonReader;
     private PatchAssetCommandFactory factory;
 
     @BeforeEach
     void setUp() {
-        attributeJsonReader = createJsonReader();
-        factory = new PatchAssetCommandFactory();
+        AttributeJsonReader attributeJsonReader = createJsonReader();
+        factory = new PatchAssetCommandFactory(attributeJsonReader);
     }
 
     @Test
@@ -44,9 +43,7 @@ class PatchAssetCommandFactoryTest {
         request.setCurrency("EUR");
         request.setAttributes(attributes);
 
-        AssetCommandContext context = AssetCommandContext.forPatch(attributeJsonReader, AssetType.SHIP, "asset-2", request);
-
-        var command = factory.create(context);
+        var command = factory.create(AssetType.SHIP, "asset-2", request);
 
         assertThat(command.assetId()).isEqualTo("asset-2");
         assertThat(command.status()).isEqualTo("INACTIVE");

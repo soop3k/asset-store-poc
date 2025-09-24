@@ -21,13 +21,12 @@ class CreateAssetCommandFactoryTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private AttributeJsonReader attributeJsonReader;
     private CreateAssetCommandFactory factory;
 
     @BeforeEach
     void setUp() {
-        attributeJsonReader = createJsonReader();
-        factory = new CreateAssetCommandFactory();
+        AttributeJsonReader attributeJsonReader = createJsonReader();
+        factory = new CreateAssetCommandFactory(attributeJsonReader);
     }
 
     @Test
@@ -49,9 +48,7 @@ class CreateAssetCommandFactoryTest {
                 attributes
         );
 
-        AssetCommandContext context = AssetCommandContext.forCreate(attributeJsonReader, request);
-
-        var command = factory.create(context);
+        var command = factory.create(request);
 
         assertThat(command.id()).isEqualTo("asset-1");
         assertThat(command.type()).isEqualTo(AssetType.CRE);

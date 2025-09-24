@@ -1,16 +1,29 @@
 package com.db.assetstore.infra.service.cmd;
 
+import com.db.assetstore.domain.json.AttributeJsonReader;
+import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
+import com.db.assetstore.infra.api.dto.AssetCreateRequest;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Objects;
 
 @Component
 public class CreateAssetCommandFactory {
 
-    public CreateAssetCommand create(AssetCommandContext context) {
-        Objects.requireNonNull(context, "context");
-        var request = Objects.requireNonNull(context.createRequest(), "createRequest");
+    private final AttributeJsonReader attributeJsonReader;
+
+    public CreateAssetCommandFactory(AttributeJsonReader attributeJsonReader) {
+        this.attributeJsonReader = Objects.requireNonNull(attributeJsonReader, "attributeJsonReader");
+    }
+
+    public CreateAssetCommand create(AssetCreateRequest request) {
+        Objects.requireNonNull(request, "request");
+
+        List<AttributeValue<?>> attributes = request.attributes() == null
+                ? List.of()
+                : List.copyOf(attributeJsonReader.read(request.type(), request.attributes()));
 
         return CreateAssetCommand.builder()
                 .id(request.id())
@@ -21,7 +34,7 @@ public class CreateAssetCommandFactory {
                 .year(request.year())
                 .description(request.description())
                 .currency(request.currency())
-                .attributes(context.attributes())
+                .attributes(attributes)
                 .build();
     }
 }

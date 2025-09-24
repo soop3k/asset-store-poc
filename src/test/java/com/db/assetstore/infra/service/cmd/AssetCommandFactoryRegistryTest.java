@@ -24,16 +24,14 @@ class AssetCommandFactoryRegistryTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private AttributeJsonReader attributeJsonReader;
     private AssetCommandFactoryRegistry registry;
 
     @BeforeEach
     void setUp() {
-        attributeJsonReader = createJsonReader();
+        AttributeJsonReader attributeJsonReader = createJsonReader();
         registry = new AssetCommandFactoryRegistry(
-                attributeJsonReader,
-                new CreateAssetCommandFactory(),
-                new PatchAssetCommandFactory(),
+                new CreateAssetCommandFactory(attributeJsonReader),
+                new PatchAssetCommandFactory(attributeJsonReader),
                 new DeleteAssetCommandFactory()
         );
     }
