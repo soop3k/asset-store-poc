@@ -45,7 +45,7 @@ public class LinkDefinitionEntity {
 
     @Builder.Default
     @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "link_subtype_def", joinColumns = @JoinColumn(name = "code"))
+    @CollectionTable(name = "link_definition_allowed_entity", joinColumns = @JoinColumn(name = "link_code"))
     @Column(name = "entity_type", length = 64, nullable = false)
     private Set<String> allowedEntityTypes = new HashSet<>();
 }

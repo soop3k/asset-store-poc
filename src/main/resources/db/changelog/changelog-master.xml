@@ -140,21 +140,22 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="8-link-subtype-definition" author="junie">
-        <createTable tableName="link_subtype_def">
-            <column name="code" type="varchar(64)">
+    <changeSet id="8-link-definition-entity-types" author="junie">
+        <createTable tableName="link_definition_allowed_entity">
+            <column name="link_code" type="varchar(64)">
                 <constraints nullable="false"/>
             </column>
             <column name="entity_type" type="varchar(64)">
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <addPrimaryKey tableName="link_subtype_def" columnNames="code, entity_type" constraintName="pk_link_subtype_def"/>
-        <addForeignKeyConstraint baseTableName="link_subtype_def"
-                                 baseColumnNames="code"
+        <addPrimaryKey tableName="link_definition_allowed_entity" columnNames="link_code, entity_type"
+                       constraintName="pk_link_definition_allowed_entity"/>
+        <addForeignKeyConstraint baseTableName="link_definition_allowed_entity"
+                                 baseColumnNames="link_code"
                                  referencedTableName="link_definition"
                                  referencedColumnNames="code"
-                                 constraintName="fk_link_subtype_def"/>
+                                 constraintName="fk_link_definition_allowed_entity"/>
     </changeSet>
 
     <changeSet id="9-asset-link" author="junie">
@@ -216,45 +217,45 @@
             <column name="is_enabled" valueBoolean="true"/>
         </insert>
 
-        <insert tableName="link_subtype_def">
-            <column name="code" value="WORKFLOW"/>
+        <insert tableName="link_definition_allowed_entity">
+            <column name="link_code" value="WORKFLOW"/>
             <column name="entity_type" value="WORKFLOW"/>
         </insert>
-        <insert tableName="link_subtype_def">
-            <column name="code" value="WORKFLOW"/>
+        <insert tableName="link_definition_allowed_entity">
+            <column name="link_code" value="WORKFLOW"/>
             <column name="entity_type" value="BULK"/>
         </insert>
-        <insert tableName="link_subtype_def">
-            <column name="code" value="WORKFLOW"/>
+        <insert tableName="link_definition_allowed_entity">
+            <column name="link_code" value="WORKFLOW"/>
             <column name="entity_type" value="MONITORING"/>
         </insert>
-        <insert tableName="link_subtype_def">
-            <column name="code" value="WORKFLOW"/>
+        <insert tableName="link_definition_allowed_entity">
+            <column name="link_code" value="WORKFLOW"/>
             <column name="entity_type" value="REVALUATION"/>
         </insert>
-        <insert tableName="link_subtype_def">
-            <column name="code" value="WORKFLOW"/>
+        <insert tableName="link_definition_allowed_entity">
+            <column name="link_code" value="WORKFLOW"/>
             <column name="entity_type" value="CHG"/>
         </insert>
 
-        <insert tableName="link_subtype_def">
-            <column name="code" value="INSTRUMENT"/>
+        <insert tableName="link_definition_allowed_entity">
+            <column name="link_code" value="INSTRUMENT"/>
             <column name="entity_type" value="INSTRUMENT"/>
         </insert>
-        <insert tableName="link_subtype_def">
-            <column name="code" value="INSTRUMENT"/>
+        <insert tableName="link_definition_allowed_entity">
+            <column name="link_code" value="INSTRUMENT"/>
             <column name="entity_type" value="BULK"/>
         </insert>
-        <insert tableName="link_subtype_def">
-            <column name="code" value="INSTRUMENT"/>
+        <insert tableName="link_definition_allowed_entity">
+            <column name="link_code" value="INSTRUMENT"/>
             <column name="entity_type" value="MONITORING"/>
         </insert>
-        <insert tableName="link_subtype_def">
-            <column name="code" value="INSTRUMENT"/>
+        <insert tableName="link_definition_allowed_entity">
+            <column name="link_code" value="INSTRUMENT"/>
             <column name="entity_type" value="REVALUATION"/>
         </insert>
-        <insert tableName="link_subtype_def">
-            <column name="code" value="INSTRUMENT"/>
+        <insert tableName="link_definition_allowed_entity">
+            <column name="link_code" value="INSTRUMENT"/>
             <column name="entity_type" value="CHG"/>
         </insert>
     </changeSet>
