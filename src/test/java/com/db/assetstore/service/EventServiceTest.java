@@ -19,12 +19,13 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class EventServiceTest {
-    private static final ObjectMapper M = new JsonMapperProvider().objectMapper();
-    private static final AssetCanonicalizer assetCanon = new AssetCanonicalizer(M);
-    private static final JsonSchemaValidator validator = new JsonSchemaValidator(M);
+    private static final ObjectMapper mapper = new JsonMapperProvider().objectMapper();
+    private static final AssetCanonicalizer assetCanon = new AssetCanonicalizer(mapper);
+    private static final JsonSchemaValidator validator = new JsonSchemaValidator(mapper);
+    private static final JsonTransformer transformer = new JsonTransformer(mapper, validator);
 
     @Test
-    void generatesAssetUpsertedEvent_usingJslt_and_validatesIfSchemaPresent() throws Exception {
+    void generatesAssetEvent() throws Exception {
         Asset asset = Asset.builder()
                 .id("A-1")
                 .type(AssetType.CRE)
@@ -35,9 +36,9 @@ class EventServiceTest {
                 AVDecimal.of("rooms", 2)
         ));
 
-        EventService svc = new EventService(new JsonTransformer(M, validator), assetCanon, M);
+        EventService svc = new EventService(transformer, assetCanon, mapper);
         String event = svc.generate("asset-cre", asset);
-        JsonNode node = M.readTree(event);
+        JsonNode node = mapper.readTree(event);
 
         assertEquals("A-1", node.get("id").asText());
         assertEquals("CRE", node.get("type").asText());
