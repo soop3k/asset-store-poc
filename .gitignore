@@ -1,3 +1,4 @@
-/target/
-/.idea/
-/.mvn/
+target/
+.idea/
+.mvn/
+*.class
