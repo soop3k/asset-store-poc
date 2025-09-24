@@ -13,7 +13,7 @@ import com.db.assetstore.domain.service.cmd.factory.CreateAssetCommandFactory;
 import com.db.assetstore.domain.service.cmd.factory.DeleteAssetCommandFactory;
 import com.db.assetstore.domain.service.cmd.factory.PatchAssetCommandFactory;
 import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
-import com.db.assetstore.domain.schema.TypeSchemaRegistry;
+import com.db.assetstore.domain.service.type.TypeSchemaRegistry;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;
 import com.db.assetstore.infra.api.dto.AssetDeleteRequest;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;
@@ -39,7 +39,9 @@ class AssetCommandFactoryRegistryTest {
 
     @BeforeEach
     void setUp() {
+
         AttributeJsonReader attributeJsonReader = createJsonReader();
+
         registry = new AssetCommandFactoryRegistry(
                 new CreateAssetCommandFactory(attributeJsonReader),
                 new PatchAssetCommandFactory(attributeJsonReader),
@@ -158,7 +160,7 @@ class AssetCommandFactoryRegistryTest {
     }
 
     private AttributeJsonReader createJsonReader() {
-        TypeSchemaRegistry typeSchemaRegistry = new TypeSchemaRegistry();
+        TypeSchemaRegistry typeSchemaRegistry = new TypeSchemaRegistry(objectMapper);
         typeSchemaRegistry.discover();
 
         AttributeDefinitionRegistry attributeDefinitionRegistry =
@@ -167,4 +169,5 @@ class AssetCommandFactoryRegistryTest {
 
         return new AttributeJsonReader(objectMapper, attributeDefinitionRegistry);
     }
+
 }
