@@ -7,7 +7,7 @@ import com.db.assetstore.domain.service.AssetQueryService;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;
 import com.db.assetstore.infra.api.dto.AssetDeleteRequest;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;
-import com.db.assetstore.infra.service.cmd.AssetCommandFactory;
+import com.db.assetstore.infra.service.cmd.AssetCommandFactoryRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -24,20 +24,20 @@ public class AssetController {
     private static final Logger log = LoggerFactory.getLogger(AssetController.class);
     private final AssetQueryService assetQueryService;
     private final AssetCommandService commandService;
-    private final AssetCommandFactory commandFactory;
+    private final AssetCommandFactoryRegistry commandFactoryRegistry;
 
     public AssetController(AssetQueryService assetQueryService,
                            AssetCommandService commandService,
-                           AssetCommandFactory commandFactory) {
+                           AssetCommandFactoryRegistry commandFactoryRegistry) {
         this.assetQueryService = assetQueryService;
         this.commandService = commandService;
-        this.commandFactory = commandFactory;
+        this.commandFactoryRegistry = commandFactoryRegistry;
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> addAsset(@RequestBody AssetCreateRequest request) {
         log.info("Creating asset");
-        String id = commandService.create(commandFactory.createCreateCommand(request));
+        String id = commandService.create(commandFactoryRegistry.createCreateCommand(request));
         log.debug("Created asset id={}", id);
         return ResponseEntity.ok(id);
     }
@@ -49,7 +49,7 @@ public class AssetController {
             return ResponseEntity.ok(List.of());
         }
         List<String> ids = requests.stream()
-                .map(commandFactory::createCreateCommand)
+                .map(commandFactoryRegistry::createCreateCommand)
                 .map(commandService::create)
                 .toList();
         log.debug("Created {} assets", ids.size());
@@ -79,7 +79,7 @@ public class AssetController {
         var current = assetQueryService.get(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Asset %s not found".formatted(id)));
 
-        var cmd = commandFactory.createPatchCommand(current.getType(), id, request);
+        var cmd = commandFactoryRegistry.createPatchCommand(current.getType(), id, request);
         commandService.update(cmd);
         return ResponseEntity.noContent().build();
     }
@@ -89,7 +89,7 @@ public class AssetController {
         log.info("HTTP PATCH /assets/{} - patch asset", id);
         var current = assetQueryService.get(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Asset %s not found".formatted(id)));
-        var cmd = commandFactory.createPatchCommand(current.getType(), id, request);
+        var cmd = commandFactoryRegistry.createPatchCommand(current.getType(), id, request);
         commandService.update(cmd);
         return ResponseEntity.noContent().build();
     }
@@ -103,7 +103,7 @@ public class AssetController {
         for (AssetPatchRequest item : requests) {
             var current = assetQueryService.get(item.getId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Asset %s not found".formatted(item.getId())));
-            var cmd = commandFactory.createPatchCommand(current.getType(), item);
+            var cmd = commandFactoryRegistry.createPatchCommand(current.getType(), item);
             commandService.update(cmd);
         }
         return ResponseEntity.noContent().build();
@@ -113,7 +113,7 @@ public class AssetController {
     public ResponseEntity<Void> deleteAsset(@PathVariable("id") String id,
                                             @RequestBody AssetDeleteRequest request) {
         log.info("HTTP DELETE /assets/{} - delete asset", id);
-        var cmd = commandFactory.createDeleteCommand(id, request);
+        var cmd = commandFactoryRegistry.createDeleteCommand(id, request);
         commandService.delete(cmd);
         return ResponseEntity.noContent().build();
     }
