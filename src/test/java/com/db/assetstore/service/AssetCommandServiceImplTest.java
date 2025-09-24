@@ -62,7 +62,7 @@ class AssetCommandServiceImplTest {
         // given command with attributes
         CreateAssetCommand cmd = CreateAssetCommand.builder()
                 .id("a-1").type(AssetType.CRE)
-                .attribute(new AVString("city", "Warsaw"))
+                .attributes(List.of(new AVString("city", "Warsaw")))
                 .status("ACTIVE")
                 .executedBy("test")
                 .requestTime(Instant.now())
@@ -94,7 +94,7 @@ class AssetCommandServiceImplTest {
         // given command with a single attribute
         CreateAssetCommand cmd = CreateAssetCommand.builder()
                 .id("a-2").type(AssetType.CRE)
-                .attribute(new AVString("city", "Gdansk"))
+                .attributes(List.of(new AVString("city", "Gdansk")))
                 .executedBy("creator")
                 .build();
 
@@ -127,7 +127,7 @@ class AssetCommandServiceImplTest {
         CreateAssetCommand cmd = CreateAssetCommand.builder()
                 .id("exec-1")
                 .type(AssetType.CRE)
-                .attribute(new AVString("city", "Poznan"))
+                .attributes(List.of(new AVString("city", "Poznan")))
                 .executedBy("tester")
                 .build();
 

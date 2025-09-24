@@ -2,7 +2,6 @@ package com.db.assetstore.domain.service.cmd;
 
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import lombok.Builder;
-import lombok.Singular;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -20,7 +19,7 @@ public record PatchAssetCommand(
         Integer year,
         String description,
         String currency,
-        @Singular("attribute") List<AttributeValue<?>> attributes,
+        List<AttributeValue<?>> attributes,
         String executedBy,
         Instant requestTime
 ) implements AssetCommand<Void> {
