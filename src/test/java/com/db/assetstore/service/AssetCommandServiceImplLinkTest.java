@@ -1,5 +1,7 @@
 package com.db.assetstore.service;
 
+import com.db.assetstore.domain.exception.DomainValidationException;
+import com.db.assetstore.domain.exception.LinkConflictException;
 import com.db.assetstore.domain.model.link.LinkCardinality;
 import com.db.assetstore.domain.service.link.cmd.CreateAssetLinkCommand;
 import com.db.assetstore.domain.service.link.cmd.DeleteAssetLinkCommand;
@@ -73,7 +75,7 @@ class AssetCommandServiceImplLinkTest {
         definition.setAllowedEntityTypes(Set.of("WORKFLOW"));
         when(linkDefinitionRepository.findByCodeIgnoreCase("WORKFLOW")).thenReturn(Optional.of(definition));
 
-        assertThrows(IllegalStateException.class, () -> service.createLink(command));
+        assertThrows(DomainValidationException.class, () -> service.createLink(command));
     }
 
     @Test
@@ -100,7 +102,7 @@ class AssetCommandServiceImplLinkTest {
         when(assetLinkRepository.countByAssetIdAndLinkCodeAndLinkSubtypeAndEntitySubtypeAndActiveIsTrueAndDeletedIsFalse("A1", "WORKFLOW", "BULK", "PRIMARY"))
                 .thenReturn(1L);
 
-        assertThrows(IllegalStateException.class, () -> service.createLink(command));
+        assertThrows(LinkConflictException.class, () -> service.createLink(command));
     }
 
     @Test

@@ -1,5 +1,7 @@
 package com.db.assetstore.service.link;
 
+import com.db.assetstore.domain.exception.DomainValidationException;
+import com.db.assetstore.domain.exception.LinkConflictException;
 import com.db.assetstore.domain.model.link.LinkCardinality;
 import com.db.assetstore.domain.service.link.cmd.CreateAssetLinkCommand;
 import com.db.assetstore.infra.jpa.link.LinkDefinitionEntity;
@@ -41,7 +43,7 @@ class AssetLinkValidationServiceTest {
                 .entitySubtype("PRIMARY")
                 .build();
 
-        assertThrows(IllegalStateException.class, () -> validationService.validate(definition, command));
+        assertThrows(DomainValidationException.class, () -> validationService.validate(definition, command));
     }
 
     @Test
@@ -57,7 +59,7 @@ class AssetLinkValidationServiceTest {
                 .entitySubtype("PRIMARY")
                 .build();
 
-        assertThrows(IllegalArgumentException.class, () -> validationService.validate(definition, command));
+        assertThrows(DomainValidationException.class, () -> validationService.validate(definition, command));
     }
 
     @Test
@@ -85,7 +87,7 @@ class AssetLinkValidationServiceTest {
         when(assetLinkRepository.countByAssetIdAndLinkCodeAndLinkSubtypeAndEntitySubtypeAndActiveIsTrueAndDeletedIsFalse(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(1L);
 
-        assertThrows(IllegalStateException.class, () -> validationService.validate(definition, "A1", "WORKFLOW", "WF-1", "PRIMARY", "BULK", true));
+        assertThrows(LinkConflictException.class, () -> validationService.validate(definition, "A1", "WORKFLOW", "WF-1", "PRIMARY", "BULK", true));
     }
 
     @Test
@@ -97,7 +99,7 @@ class AssetLinkValidationServiceTest {
         when(assetLinkRepository.countByAssetIdAndLinkCodeAndLinkSubtypeAndEntitySubtypeAndActiveIsTrueAndDeletedIsFalse("A1", "WORKFLOW", "BULK", "PRIMARY"))
                 .thenReturn(1L);
 
-        assertThrows(IllegalStateException.class, () -> validationService.validate(definition, "A1", "WORKFLOW", "WF-1", "PRIMARY", "BULK", true));
+        assertThrows(LinkConflictException.class, () -> validationService.validate(definition, "A1", "WORKFLOW", "WF-1", "PRIMARY", "BULK", true));
     }
 
     @Test

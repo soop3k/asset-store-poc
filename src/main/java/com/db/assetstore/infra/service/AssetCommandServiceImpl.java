@@ -1,15 +1,18 @@
 package com.db.assetstore.infra.service;
 
+import com.db.assetstore.domain.exception.DomainValidationException;
+import com.db.assetstore.domain.exception.LinkConflictException;
+import com.db.assetstore.domain.exception.ResourceNotFoundException;
 import com.db.assetstore.domain.model.Asset;
 import com.db.assetstore.domain.model.AssetPatch;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.model.attribute.AttributesCollection;
+import com.db.assetstore.domain.service.AssetCommandService;
 import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
 import com.db.assetstore.domain.service.cmd.PatchAssetCommand;
 import com.db.assetstore.domain.service.link.cmd.CreateAssetLinkCommand;
 import com.db.assetstore.domain.service.link.cmd.DeleteAssetLinkCommand;
 import com.db.assetstore.domain.service.link.cmd.PatchAssetLinkCommand;
-import com.db.assetstore.domain.service.AssetCommandService;
 import com.db.assetstore.infra.jpa.AssetEntity;
 import com.db.assetstore.infra.jpa.AttributeEntity;
 import com.db.assetstore.infra.jpa.link.AssetLinkEntity;
@@ -105,7 +108,7 @@ public class AssetCommandServiceImpl implements AssetCommandService {
         Objects.requireNonNull(id, "id");
         Objects.requireNonNull(patch, "patch");
         AssetEntity e = assetRepo.findByIdAndDeleted(id, 0)
-                .orElseThrow(() -> new IllegalArgumentException("Asset not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Asset not found: " + id));
 
         // Apply common fields if present
         if (patch.status() != null) e.setStatus(patch.status());
@@ -125,7 +128,7 @@ public class AssetCommandServiceImpl implements AssetCommandService {
     public void delete(String id) {
         Objects.requireNonNull(id, "id");
         AssetEntity e = assetRepo.findByIdAndDeleted(id, 0)
-                .orElseThrow(() -> new IllegalArgumentException("Asset not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Asset not found: " + id));
         e.setDeleted(1);
         assetRepo.save(e);
     }
@@ -135,16 +138,16 @@ public class AssetCommandServiceImpl implements AssetCommandService {
     public String createLink(CreateAssetLinkCommand command) {
         Objects.requireNonNull(command, "command");
         AssetEntity asset = assetRepo.findByIdAndDeleted(command.assetId(), 0)
-                .orElseThrow(() -> new IllegalArgumentException("Asset not found: " + command.assetId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Asset not found: " + command.assetId()));
 
         LinkDefinitionEntity definition = linkDefinitionRepository.findByCodeIgnoreCase(command.linkCode())
-                .orElseThrow(() -> new IllegalArgumentException("Unknown link code: " + command.linkCode()));
+                .orElseThrow(() -> new DomainValidationException("Unknown link code: " + command.linkCode()));
 
         assetLinkValidationService.validate(definition, command);
 
         if (assetLinkRepository.existsByAssetIdAndEntityTypeAndEntityIdAndEntitySubtypeAndLinkCodeAndLinkSubtypeAndDeletedIsFalse(
                 asset.getId(), command.entityType(), command.entityId(), command.entitySubtype(), definition.getCode(), command.linkSubtype())) {
-            throw new IllegalStateException("Link already exists for asset %s and entity %s".formatted(asset.getId(), command.entityId()));
+            throw new LinkConflictException("Link already exists for asset %s and entity %s".formatted(asset.getId(), command.entityId()));
         }
 
         AssetLinkEntity entity = buildLinkEntity(asset.getId(), definition.getCode(), command);
@@ -157,9 +160,9 @@ public class AssetCommandServiceImpl implements AssetCommandService {
     public void deleteLink(DeleteAssetLinkCommand command) {
         Objects.requireNonNull(command, "command");
         AssetLinkEntity entity = assetLinkRepository.findByIdAndDeletedIsFalse(command.linkId())
-                .orElseThrow(() -> new IllegalArgumentException("Asset link not found: " + command.linkId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Asset link not found: " + command.linkId()));
         if (!entity.getAssetId().equals(command.assetId())) {
-            throw new IllegalArgumentException("Link %s does not belong to asset %s".formatted(command.linkId(), command.assetId()));
+            throw new DomainValidationException("Link %s does not belong to asset %s".formatted(command.linkId(), command.assetId()));
         }
         Instant now = Optional.ofNullable(command.requestTime()).orElseGet(Instant::now);
         entity.setActive(false);
@@ -176,9 +179,9 @@ public class AssetCommandServiceImpl implements AssetCommandService {
         Objects.requireNonNull(command, "command");
 
         AssetLinkEntity entity = assetLinkRepository.findByIdAndDeletedIsFalse(command.linkId())
-                .orElseThrow(() -> new IllegalArgumentException("Asset link not found: " + command.linkId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Asset link not found: " + command.linkId()));
         if (!entity.getAssetId().equals(command.assetId())) {
-            throw new IllegalArgumentException("Link %s does not belong to asset %s".formatted(command.linkId(), command.assetId()));
+            throw new DomainValidationException("Link %s does not belong to asset %s".formatted(command.linkId(), command.assetId()));
         }
 
         Instant now = Optional.ofNullable(command.requestTime()).orElseGet(Instant::now);
@@ -186,7 +189,7 @@ public class AssetCommandServiceImpl implements AssetCommandService {
         if (command.hasActiveChange() && command.active() != entity.isActive()) {
             if (Boolean.TRUE.equals(command.active())) {
                 LinkDefinitionEntity definition = linkDefinitionRepository.findByCodeIgnoreCase(entity.getLinkCode())
-                        .orElseThrow(() -> new IllegalStateException("Link definition not found for code: " + entity.getLinkCode()));
+                        .orElseThrow(() -> new DomainValidationException("Link definition not found for code: " + entity.getLinkCode()));
                 assetLinkValidationService.validate(definition, entity.getAssetId(), entity.getEntityType(), entity.getEntityId(), entity.getEntitySubtype(), entity.getLinkSubtype(), true);
                 entity.setActive(true);
                 entity.setDeleted(false);

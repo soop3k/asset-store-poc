@@ -1,5 +1,7 @@
 package com.db.assetstore.infra.service.link;
 
+import com.db.assetstore.domain.exception.DomainValidationException;
+import com.db.assetstore.domain.exception.LinkConflictException;
 import com.db.assetstore.domain.service.link.cmd.CreateAssetLinkCommand;
 import com.db.assetstore.infra.jpa.link.LinkDefinitionEntity;
 import com.db.assetstore.infra.repository.link.AssetLinkRepository;
@@ -36,29 +38,29 @@ public class AssetLinkValidationService {
                                     String entitySubtype,
                                     String linkSubtype) {
         if (!definition.isEnabled()) {
-            throw new IllegalStateException("Link definition %s is disabled".formatted(definition.getCode()));
+            throw new DomainValidationException("Link definition %s is disabled".formatted(definition.getCode()));
         }
         if (entityType == null || entityType.isBlank()) {
-            throw new IllegalArgumentException("Entity type must be provided");
+            throw new DomainValidationException("Entity type must be provided");
         }
         if (entityId == null || entityId.isBlank()) {
-            throw new IllegalArgumentException("Entity id must be provided");
+            throw new DomainValidationException("Entity id must be provided");
         }
         if (entitySubtype == null || entitySubtype.isBlank()) {
-            throw new IllegalArgumentException("Entity subtype must be provided");
+            throw new DomainValidationException("Entity subtype must be provided");
         }
         if (linkSubtype == null || linkSubtype.isBlank()) {
-            throw new IllegalArgumentException("Link subtype must be provided");
+            throw new DomainValidationException("Link subtype must be provided");
         }
         var configuredTypes = definition.getAllowedEntityTypes();
         if (configuredTypes == null || configuredTypes.isEmpty()) {
-            throw new IllegalStateException("No entity types configured for link %s".formatted(definition.getCode()));
+            throw new DomainValidationException("No entity types configured for link %s".formatted(definition.getCode()));
         }
         boolean entityAllowed = configuredTypes.stream()
                 .filter(type -> type != null && !type.isBlank())
                 .anyMatch(allowed -> allowed.equalsIgnoreCase(entityType));
         if (!entityAllowed) {
-            throw new IllegalArgumentException("Entity type %s not allowed for link %s".formatted(entityType, definition.getCode()));
+            throw new DomainValidationException("Entity type %s not allowed for link %s".formatted(entityType, definition.getCode()));
         }
     }
 
@@ -75,20 +77,20 @@ public class AssetLinkValidationService {
         switch (definition.getCardinality()) {
             case ONE_TO_ONE -> {
                 if (assetActive > 0 || entityActive > 0) {
-                    throw new IllegalStateException("ONE_TO_ONE link already exists for asset %s or entity %s".formatted(assetId, entityId));
+                    throw new LinkConflictException("ONE_TO_ONE link already exists for asset %s or entity %s".formatted(assetId, entityId));
                 }
             }
             case ONE_TO_MANY -> {
                 if (entityActive > 0) {
-                    throw new IllegalStateException("Entity %s already linked for ONE_TO_MANY".formatted(entityId));
+                    throw new LinkConflictException("Entity %s already linked for ONE_TO_MANY".formatted(entityId));
                 }
             }
             case MANY_TO_ONE -> {
                 if (assetActive > 0) {
-                    throw new IllegalStateException("Asset %s already linked for MANY_TO_ONE".formatted(assetId));
+                    throw new LinkConflictException("Asset %s already linked for MANY_TO_ONE".formatted(assetId));
                 }
             }
-            default -> throw new IllegalStateException("Unsupported cardinality: " + definition.getCardinality());
+            default -> throw new DomainValidationException("Unsupported cardinality: " + definition.getCardinality());
         }
     }
 }
