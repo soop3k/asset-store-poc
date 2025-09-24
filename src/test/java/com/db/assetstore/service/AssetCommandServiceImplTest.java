@@ -10,7 +10,10 @@ import com.db.assetstore.infra.mapper.AssetMapper;
 import com.db.assetstore.infra.mapper.AttributeMapper;
 import com.db.assetstore.infra.repository.AssetRepository;
 import com.db.assetstore.infra.repository.AttributeRepository;
+import com.db.assetstore.infra.repository.link.AssetLinkRepository;
+import com.db.assetstore.infra.repository.link.LinkDefinitionRepository;
 import com.db.assetstore.infra.service.AssetCommandServiceImpl;
+import com.db.assetstore.infra.service.link.AssetLinkValidationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -29,6 +32,9 @@ class AssetCommandServiceImplTest {
     AttributeMapper attributeMapper;
     AssetRepository assetRepo;
     AttributeRepository attributeRepo;
+    AssetLinkRepository assetLinkRepository;
+    LinkDefinitionRepository linkDefinitionRepository;
+    AssetLinkValidationService assetLinkValidationService;
 
     AssetCommandServiceImpl service;
 
@@ -38,7 +44,10 @@ class AssetCommandServiceImplTest {
         attributeMapper = mock(AttributeMapper.class, Mockito.withSettings().defaultAnswer(Mockito.CALLS_REAL_METHODS));
         assetRepo = mock(AssetRepository.class);
         attributeRepo = mock(AttributeRepository.class);
-        service = new AssetCommandServiceImpl(assetMapper, attributeMapper, assetRepo, attributeRepo);
+        assetLinkRepository = mock(AssetLinkRepository.class);
+        linkDefinitionRepository = mock(LinkDefinitionRepository.class);
+        assetLinkValidationService = new AssetLinkValidationService(assetLinkRepository);
+        service = new AssetCommandServiceImpl(assetMapper, attributeMapper, assetRepo, attributeRepo, assetLinkRepository, linkDefinitionRepository, assetLinkValidationService);
 
         // Default behavior for save to echo the entity
         when(assetRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));

@@ -16,6 +16,7 @@ import com.db.assetstore.infra.repository.AttributeRepository;
 import com.db.assetstore.infra.repository.link.AssetLinkRepository;
 import com.db.assetstore.infra.repository.link.LinkDefinitionRepository;
 import com.db.assetstore.infra.service.AssetCommandServiceImpl;
+import com.db.assetstore.infra.service.link.AssetLinkValidationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -36,6 +37,7 @@ class AssetCommandServiceImplLinkTest {
     LinkDefinitionRepository linkDefinitionRepository;
     AssetMapper assetMapper;
     AttributeMapper attributeMapper;
+    AssetLinkValidationService assetLinkValidationService;
 
     AssetCommandServiceImpl service;
 
@@ -47,7 +49,8 @@ class AssetCommandServiceImplLinkTest {
         linkDefinitionRepository = mock(LinkDefinitionRepository.class);
         assetMapper = mock(AssetMapper.class);
         attributeMapper = mock(AttributeMapper.class);
-        service = new AssetCommandServiceImpl(assetMapper, attributeMapper, assetRepository, attributeRepository, assetLinkRepository, linkDefinitionRepository);
+        assetLinkValidationService = new AssetLinkValidationService(assetLinkRepository);
+        service = new AssetCommandServiceImpl(assetMapper, attributeMapper, assetRepository, attributeRepository, assetLinkRepository, linkDefinitionRepository, assetLinkValidationService);
     }
 
     @Test
