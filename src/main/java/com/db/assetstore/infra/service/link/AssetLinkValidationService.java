@@ -13,10 +13,8 @@ public class AssetLinkValidationService {
     private final AssetLinkRepository assetLinkRepository;
 
     public void validate(LinkDefinitionEntity definition, CreateAssetLinkCommand command) {
-        validateDefinition(definition, command.entityType(), command.entityId(), command.linkSubtype());
-        if (command.shouldActivate()) {
-            validateCardinality(definition, command.assetId(), command.entityType(), command.entityId(), command.linkSubtype());
-        }
+        boolean activate = command.active() == null || command.active();
+        validate(definition, command.assetId(), command.entityType(), command.entityId(), command.linkSubtype(), activate);
     }
 
     public void validate(LinkDefinitionEntity definition,
@@ -24,9 +22,9 @@ public class AssetLinkValidationService {
                          String entityType,
                          String entityId,
                          String linkSubtype,
-                         boolean shouldActivate) {
+                         boolean activate) {
         validateDefinition(definition, entityType, entityId, linkSubtype);
-        if (shouldActivate) {
+        if (activate) {
             validateCardinality(definition, assetId, entityType, entityId, linkSubtype);
         }
     }
@@ -81,4 +79,3 @@ public class AssetLinkValidationService {
         }
     }
 }
-

@@ -20,7 +20,4 @@ public record CreateAssetLinkCommand(
         String requestedBy,
         Instant requestTime
 ) {
-    public boolean shouldActivate() {
-        return active == null || active;
-    }
 }

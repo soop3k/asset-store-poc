@@ -251,7 +251,7 @@ public class AssetCommandServiceImpl implements AssetCommandService {
     private AssetLinkEntity buildLinkEntity(String assetId, String linkCode, CreateAssetLinkCommand command) {
         Instant now = Optional.ofNullable(command.requestTime()).orElseGet(Instant::now);
         Instant validFrom = Optional.ofNullable(command.validFrom()).orElse(now);
-        boolean active = command.shouldActivate();
+        boolean active = command.active() == null || command.active();
         return AssetLinkEntity.builder()
                 .id(UUID.randomUUID().toString())
                 .assetId(assetId)
