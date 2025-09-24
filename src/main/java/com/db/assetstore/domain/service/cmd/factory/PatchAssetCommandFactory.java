@@ -29,10 +29,6 @@ public class PatchAssetCommandFactory {
             throw new IllegalArgumentException("assetId must not be blank");
         }
 
-        if (request.getExecutedBy() == null || request.getExecutedBy().isBlank()) {
-            throw new IllegalArgumentException("Patch request must include executedBy");
-        }
-
         List<AttributeValue<?>> attributes = request.getAttributes() == null
                 ? List.of()
                 : List.copyOf(attributeJsonReader.read(assetType, request.getAttributes()));

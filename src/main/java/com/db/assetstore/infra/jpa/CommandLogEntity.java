@@ -24,9 +24,6 @@ public class CommandLogEntity {
     @Column(name = "asset_id", length = 64)
     private String assetId;
 
-    @Column(name = "executed_by", length = 128)
-    private String executedBy;
-
     @Lob
     @Column(name = "payload", nullable = false)
     private String payload;

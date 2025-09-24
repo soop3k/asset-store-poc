@@ -25,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.lang.reflect.ReflectiveOperationException;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.HashMap;
@@ -81,7 +80,6 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
     @Override
     public CommandResult<String> visit(CreateAssetCommand command) {
         Objects.requireNonNull(command, "command");
-        String executedBy = requireExecutor(command.executedBy(), command);
         String assetId = resolveAssetId(command);
         Asset asset = Asset.builder()
                 .id(assetId)
@@ -93,20 +91,19 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
                 .year(command.year())
                 .description(command.description())
                 .currency(command.currency())
-                .createdBy(executedBy)
-                .modifiedBy(executedBy)
+                .createdBy(command.executedBy())
+                .modifiedBy(command.executedBy())
                 .modifiedAt(Instant.now())
                 .build();
         asset.setAttributes(command.attributes());
         String persistedId = persistAsset(asset);
-        return new CommandResult<>(persistedId, persistedId, executedBy);
+        return new CommandResult<>(persistedId, persistedId);
     }
 
     @Override
     public CommandResult<Void> visit(PatchAssetCommand command) {
         Objects.requireNonNull(command, "command");
         String assetId = Objects.requireNonNull(command.assetId(), "assetId");
-        String executedBy = requireExecutor(command.executedBy(), command);
         AssetPatch patch = AssetPatch.builder()
                 .status(command.status())
                 .subtype(command.subtype())
@@ -116,17 +113,16 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
                 .currency(command.currency())
                 .attributes(command.attributes())
                 .build();
-        applyPatch(assetId, patch, executedBy);
-        return CommandResult.noResult(assetId, executedBy);
+        applyPatch(assetId, patch, command.executedBy());
+        return CommandResult.noResult(assetId);
     }
 
     @Override
     public CommandResult<Void> visit(DeleteAssetCommand command) {
         Objects.requireNonNull(command, "command");
         String assetId = Objects.requireNonNull(command.assetId(), "assetId");
-        String executedBy = requireExecutor(command.executedBy(), command);
         deleteAsset(assetId);
-        return CommandResult.noResult(assetId, executedBy);
+        return CommandResult.noResult(assetId);
     }
 
     private String resolveAssetId(CreateAssetCommand command) {
@@ -233,18 +229,10 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
         CommandLogEntity entity = CommandLogEntity.builder()
                 .commandType(commandType)
                 .assetId(result.assetId())
-                .executedBy(result.executedBy())
                 .payload(payload)
                 .createdAt(Instant.now())
                 .build();
 
         commandLogRepository.save(entity);
-    }
-
-    private String requireExecutor(String executedBy, Object command) {
-        if (executedBy == null || executedBy.isBlank()) {
-            throw new IllegalArgumentException("Command %s must provide executedBy".formatted(command.getClass().getSimpleName()));
-        }
-        return executedBy;
     }
 }

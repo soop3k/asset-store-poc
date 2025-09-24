@@ -22,10 +22,6 @@ public class CreateAssetCommandFactory {
     public CreateAssetCommand createCommand(AssetCreateRequest request) {
         Objects.requireNonNull(request, "request");
 
-        if (request.executedBy() == null || request.executedBy().isBlank()) {
-            throw new IllegalArgumentException("Create request must include executedBy");
-        }
-
         List<AttributeValue<?>> attributes = request.attributes() == null
                 ? List.of()
                 : List.copyOf(attributeJsonReader.read(request.type(), request.attributes()));

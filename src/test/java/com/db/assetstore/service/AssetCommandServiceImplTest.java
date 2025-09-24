@@ -87,7 +87,6 @@ class AssetCommandServiceImplTest {
         verify(commandLogRepository).save(logCaptor.capture());
         assertEquals("CreateAssetCommand", logCaptor.getValue().getCommandType());
         assertEquals("a-1", logCaptor.getValue().getAssetId());
-        assertEquals("test", logCaptor.getValue().getExecutedBy());
     }
 
     @Test
@@ -121,7 +120,6 @@ class AssetCommandServiceImplTest {
         verify(commandLogRepository).save(logCaptor.capture());
         assertEquals("CreateAssetCommand", logCaptor.getValue().getCommandType());
         assertEquals("a-2", logCaptor.getValue().getAssetId());
-        assertEquals("creator", logCaptor.getValue().getExecutedBy());
     }
 
     @Test
@@ -140,14 +138,12 @@ class AssetCommandServiceImplTest {
 
         assertEquals("exec-1", result.result());
         assertEquals("exec-1", result.assetId());
-        assertEquals("tester", result.executedBy());
         verify(assetRepo).save(entity);
 
         ArgumentCaptor<CommandLogEntity> logCaptor = ArgumentCaptor.forClass(CommandLogEntity.class);
         verify(commandLogRepository).save(logCaptor.capture());
         assertEquals("CreateAssetCommand", logCaptor.getValue().getCommandType());
         assertEquals("exec-1", logCaptor.getValue().getAssetId());
-        assertEquals("tester", logCaptor.getValue().getExecutedBy());
     }
 
     @Test
@@ -171,7 +167,6 @@ class AssetCommandServiceImplTest {
         verify(commandLogRepository).save(logCaptor.capture());
         assertEquals("PatchAssetCommand", logCaptor.getValue().getCommandType());
         assertEquals("a-3", logCaptor.getValue().getAssetId());
-        assertEquals("updater", logCaptor.getValue().getExecutedBy());
     }
 
     @Test
@@ -199,7 +194,6 @@ class AssetCommandServiceImplTest {
         verify(commandLogRepository).save(logCaptor.capture());
         assertEquals("PatchAssetCommand", logCaptor.getValue().getCommandType());
         assertEquals("a-4", logCaptor.getValue().getAssetId());
-        assertEquals("modifier", logCaptor.getValue().getExecutedBy());
     }
 
     @Test
@@ -225,7 +219,6 @@ class AssetCommandServiceImplTest {
         verify(commandLogRepository).save(logCaptor.capture());
         assertEquals("PatchAssetCommand", logCaptor.getValue().getCommandType());
         assertEquals("a-5", logCaptor.getValue().getAssetId());
-        assertEquals("modifier", logCaptor.getValue().getExecutedBy());
     }
 
     @Test
@@ -242,6 +235,5 @@ class AssetCommandServiceImplTest {
         verify(commandLogRepository).save(logCaptor.capture());
         assertEquals("DeleteAssetCommand", logCaptor.getValue().getCommandType());
         assertEquals("a-6", logCaptor.getValue().getAssetId());
-        assertEquals("deleter", logCaptor.getValue().getExecutedBy());
     }
 }

@@ -18,7 +18,6 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class PatchAssetCommandFactoryTest {
 
@@ -79,16 +78,6 @@ class PatchAssetCommandFactoryTest {
         assertThat(command.attributes()).isEmpty();
         assertThat(command.executedBy()).isEqualTo("patcher");
         assertThat(command.requestTime()).isNotNull();
-    }
-
-    @Test
-    void createCommand_withoutExecutor_throwsException() {
-        AssetPatchRequest withoutExecutor = new AssetPatchRequest();
-        withoutExecutor.setId("asset-3");
-
-        assertThatThrownBy(() -> factory.createCommand(AssetType.CRE, "asset-3", withoutExecutor))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("executedBy");
     }
 
     private AttributeJsonReader createJsonReader() {
