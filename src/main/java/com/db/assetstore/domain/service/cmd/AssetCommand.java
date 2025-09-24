@@ -17,14 +17,6 @@ public interface AssetCommand<R> {
     CommandResult<R> accept(AssetCommandVisitor visitor);
 
     /**
-     * Returns the identifier of the actor that executed the command.
-     * Implementations should provide the value captured when the command was created.
-     *
-     * @return executor identifier
-     */
-    String executedBy();
-
-    /**
      * Returns the logical name of the command.
      * Default implementation delegates to the concrete class simple name.
      *
