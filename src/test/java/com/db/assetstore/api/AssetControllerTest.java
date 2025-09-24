@@ -576,10 +576,12 @@ class AssetControllerTest {
                 .andReturn();
 
         String assetId = result.getResponse().getContentAsString();
-
+        String json = """
+                {"id":"%s","executedBy":"tester"}
+                """.formatted(assetId);
         mockMvc.perform(delete("/assets/" + assetId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""{"id":"%s","executedBy":"tester"}""".formatted(assetId)))
+                        .content(json))
                 .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/assets/" + assetId))
