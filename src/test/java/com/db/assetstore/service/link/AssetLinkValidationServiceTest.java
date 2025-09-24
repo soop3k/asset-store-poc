@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class AssetLinkValidationServiceTest {
@@ -104,6 +105,23 @@ class AssetLinkValidationServiceTest {
                 .build();
 
         assertDoesNotThrow(() -> validationService.validateDefinition(definition, command));
+    }
+
+    @Test
+    void validateCardinality_withInactiveCommand_shouldSkipChecks() {
+        LinkDefinitionEntity definition = baseDefinition();
+        definition.setSubtypes(Set.of(subtype(definition, "BULK")));
+
+        CreateAssetLinkCommand command = CreateAssetLinkCommand.builder()
+                .assetId("A1")
+                .entityType("WORKFLOW")
+                .entityId("WF-1")
+                .linkSubtype("BULK")
+                .active(false)
+                .build();
+
+        assertDoesNotThrow(() -> validationService.validateCardinality(definition, command));
+        verifyNoInteractions(assetLinkRepository);
     }
 
     private LinkDefinitionEntity baseDefinition() {

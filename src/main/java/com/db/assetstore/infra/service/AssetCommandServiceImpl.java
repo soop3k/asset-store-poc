@@ -141,9 +141,7 @@ public class AssetCommandServiceImpl implements AssetCommandService {
                 .orElseThrow(() -> new IllegalArgumentException("Unknown link code: " + command.linkCode()));
 
         assetLinkValidationService.validateDefinition(definition, command);
-        if (command.shouldActivate()) {
-            assetLinkValidationService.validateCardinality(definition, command);
-        }
+        assetLinkValidationService.validateCardinality(definition, command);
 
         if (assetLinkRepository.existsByAssetIdAndEntityTypeAndEntityIdAndLinkCodeAndLinkSubtypeAndDeletedIsFalse(
                 asset.getId(), command.entityType(), command.entityId(), definition.getCode(), command.linkSubtype())) {

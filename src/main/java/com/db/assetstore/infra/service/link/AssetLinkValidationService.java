@@ -47,6 +47,9 @@ public class AssetLinkValidationService {
     }
 
     public void validateCardinality(LinkDefinitionEntity definition, CreateAssetLinkCommand command) {
+        if (!command.shouldActivate()) {
+            return;
+        }
         validateCardinality(definition, command.assetId(), command.entityType(), command.entityId(), command.linkSubtype());
     }
 
