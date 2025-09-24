@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.lang.reflect.ReflectiveOperationException;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.HashMap;
@@ -228,11 +229,41 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
         CommandLogEntity entity = CommandLogEntity.builder()
                 .commandType(commandType)
                 .assetId(assetId)
-                .executedBy(command.executedBy())
+                .executedBy(resolveExecutedBy(command))
                 .payload(payload)
                 .createdAt(Instant.now())
                 .build();
 
         commandLogRepository.save(entity);
+    }
+
+    private String resolveExecutedBy(AssetCommand<?> command) {
+        if (command instanceof CreateAssetCommand create) {
+            return requireExecutor(create.executedBy(), create);
+        }
+        if (command instanceof PatchAssetCommand patch) {
+            return requireExecutor(patch.executedBy(), patch);
+        }
+        if (command instanceof DeleteAssetCommand delete) {
+            return requireExecutor(delete.executedBy(), delete);
+        }
+
+        try {
+            Object value = command.getClass().getMethod("executedBy").invoke(command);
+            if (value instanceof String executor && !executor.isBlank()) {
+                return executor;
+            }
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalArgumentException("Command type %s must expose an executedBy accessor".formatted(command.getClass().getName()), e);
+        }
+
+        throw new IllegalArgumentException("Command type %s returned empty executedBy".formatted(command.getClass().getName()));
+    }
+
+    private String requireExecutor(String executedBy, Object command) {
+        if (executedBy == null || executedBy.isBlank()) {
+            throw new IllegalArgumentException("Command %s must provide executedBy".formatted(command.getClass().getSimpleName()));
+        }
+        return executedBy;
     }
 }

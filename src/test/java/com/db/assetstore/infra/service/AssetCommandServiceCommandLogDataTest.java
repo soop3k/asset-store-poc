@@ -35,7 +35,12 @@ class AssetCommandServiceCommandLogDataTest {
 
     @Test
     void execute_persistsCommandLogEntryWithSerializedPayload() throws Exception {
-        LoggingOnlyCommand command = new LoggingOnlyCommand("asset-123", "payload-data", Instant.parse("2024-01-01T00:00:00Z"));
+        LoggingOnlyCommand command = new LoggingOnlyCommand(
+                "asset-123",
+                "payload-data",
+                Instant.parse("2024-01-01T00:00:00Z"),
+                "auditor"
+        );
 
         CommandResult<Void> result = service.execute(command);
 
@@ -59,7 +64,7 @@ class AssetCommandServiceCommandLogDataTest {
 
     @Test
     void execute_whenCommandReportsFailure_doesNotPersistLog() {
-        FailingCommand command = new FailingCommand("asset-456");
+        FailingCommand command = new FailingCommand("asset-456", "auditor");
 
         CommandResult<Void> result = service.execute(command);
 
@@ -70,29 +75,20 @@ class AssetCommandServiceCommandLogDataTest {
         assertTrue(commandLogRepository.findAll().isEmpty(), "no command log entry should be persisted for failed command");
     }
 
-    record LoggingOnlyCommand(String assetId, String data, Instant requestTime) implements AssetCommand<Void> {
+    record LoggingOnlyCommand(String assetId, String data, Instant requestTime, String executedBy)
+            implements AssetCommand<Void> {
 
         @Override
         public CommandResult<Void> accept(AssetCommandVisitor visitor) {
             return CommandResult.noResult(assetId);
         }
-
-        @Override
-        public String executedBy() {
-            return "auditor";
-        }
     }
 
-    record FailingCommand(String assetId) implements AssetCommand<Void> {
+    record FailingCommand(String assetId, String executedBy) implements AssetCommand<Void> {
 
         @Override
         public CommandResult<Void> accept(AssetCommandVisitor visitor) {
             return CommandResult.failure(assetId);
-        }
-
-        @Override
-        public String executedBy() {
-            return "auditor";
         }
     }
 }
