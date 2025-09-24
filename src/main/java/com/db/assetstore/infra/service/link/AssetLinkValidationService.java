@@ -47,7 +47,7 @@ public class AssetLinkValidationService {
             throw new IllegalStateException("No entity types configured for link %s".formatted(definition.getCode()));
         }
         boolean entityAllowed = configuredTypes.stream()
-                .map(type -> type.getId().getEntityType().toUpperCase())
+                .filter(type -> type != null && !type.isBlank())
                 .anyMatch(allowed -> allowed.equalsIgnoreCase(entityType));
         if (!entityAllowed) {
             throw new IllegalArgumentException("Entity type %s not allowed for link %s".formatted(entityType, definition.getCode()));

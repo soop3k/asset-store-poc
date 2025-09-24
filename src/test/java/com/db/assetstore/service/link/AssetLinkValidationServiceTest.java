@@ -3,8 +3,6 @@ package com.db.assetstore.service.link;
 import com.db.assetstore.domain.model.link.LinkCardinality;
 import com.db.assetstore.domain.service.link.cmd.CreateAssetLinkCommand;
 import com.db.assetstore.infra.jpa.link.LinkDefinitionEntity;
-import com.db.assetstore.infra.jpa.link.LinkSubtypeDefinitionEntity;
-import com.db.assetstore.infra.jpa.link.LinkSubtypeDefinitionId;
 import com.db.assetstore.infra.repository.link.AssetLinkRepository;
 import com.db.assetstore.infra.service.link.AssetLinkValidationService;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +31,7 @@ class AssetLinkValidationServiceTest {
     @Test
     void validate_whenDefinitionDisabled_shouldThrow() {
         LinkDefinitionEntity definition = baseDefinition().toBuilder().enabled(false).build();
-        definition.setAllowedEntityTypes(Set.of(entityType(definition, "WORKFLOW")));
+        definition.setAllowedEntityTypes(Set.of("WORKFLOW"));
 
         CreateAssetLinkCommand command = CreateAssetLinkCommand.builder()
                 .assetId("A1")
@@ -48,7 +46,7 @@ class AssetLinkValidationServiceTest {
     @Test
     void validate_whenEntityTypeUnknown_shouldThrow() {
         LinkDefinitionEntity definition = baseDefinition();
-        definition.setAllowedEntityTypes(Set.of(entityType(definition, "WORKFLOW")));
+        definition.setAllowedEntityTypes(Set.of("WORKFLOW"));
 
         CreateAssetLinkCommand command = CreateAssetLinkCommand.builder()
                 .assetId("A1")
@@ -63,7 +61,7 @@ class AssetLinkValidationServiceTest {
     @Test
     void validate_withValidConfiguration_shouldPass() {
         LinkDefinitionEntity definition = baseDefinition();
-        definition.setAllowedEntityTypes(Set.of(entityType(definition, "WORKFLOW")));
+        definition.setAllowedEntityTypes(Set.of("WORKFLOW"));
 
         CreateAssetLinkCommand command = CreateAssetLinkCommand.builder()
                 .assetId("A1")
@@ -79,7 +77,7 @@ class AssetLinkValidationServiceTest {
     void validateCardinality_oneToOneExisting_shouldThrow() {
         LinkDefinitionEntity definition = baseDefinition();
         definition.setCardinality(LinkCardinality.ONE_TO_ONE);
-        definition.setAllowedEntityTypes(Set.of(entityType(definition, "WORKFLOW")));
+        definition.setAllowedEntityTypes(Set.of("WORKFLOW"));
 
         when(assetLinkRepository.countByAssetIdAndLinkCodeAndLinkSubtypeAndActiveIsTrueAndDeletedIsFalse(anyString(), anyString(), anyString()))
                 .thenReturn(1L);
@@ -91,7 +89,7 @@ class AssetLinkValidationServiceTest {
     void validateCardinality_manyToOneAssetActive_shouldThrow() {
         LinkDefinitionEntity definition = baseDefinition();
         definition.setCardinality(LinkCardinality.MANY_TO_ONE);
-        definition.setAllowedEntityTypes(Set.of(entityType(definition, "WORKFLOW")));
+        definition.setAllowedEntityTypes(Set.of("WORKFLOW"));
 
         when(assetLinkRepository.countByAssetIdAndLinkCodeAndLinkSubtypeAndActiveIsTrueAndDeletedIsFalse("A1", "WORKFLOW", "BULK"))
                 .thenReturn(1L);
@@ -103,7 +101,7 @@ class AssetLinkValidationServiceTest {
     void validateCardinality_oneToMany_noEntityConflict_shouldPass() {
         LinkDefinitionEntity definition = baseDefinition();
         definition.setCardinality(LinkCardinality.ONE_TO_MANY);
-        definition.setAllowedEntityTypes(Set.of(entityType(definition, "WORKFLOW")));
+        definition.setAllowedEntityTypes(Set.of("WORKFLOW"));
 
         when(assetLinkRepository.countByAssetIdAndLinkCodeAndLinkSubtypeAndActiveIsTrueAndDeletedIsFalse(anyString(), anyString(), anyString()))
                 .thenReturn(0L);
@@ -116,7 +114,7 @@ class AssetLinkValidationServiceTest {
     @Test
     void validateCardinality_withInactiveCommand_shouldSkipChecks() {
         LinkDefinitionEntity definition = baseDefinition();
-        definition.setAllowedEntityTypes(Set.of(entityType(definition, "WORKFLOW")));
+        definition.setAllowedEntityTypes(Set.of("WORKFLOW"));
 
         CreateAssetLinkCommand command = CreateAssetLinkCommand.builder()
                 .assetId("A1")
@@ -139,11 +137,5 @@ class AssetLinkValidationServiceTest {
                 .build();
     }
 
-    private LinkSubtypeDefinitionEntity entityType(LinkDefinitionEntity definition, String entityType) {
-        return LinkSubtypeDefinitionEntity.builder()
-                .id(new LinkSubtypeDefinitionId(definition.getCode(), entityType))
-                .definition(definition)
-                .build();
-    }
 }
 
