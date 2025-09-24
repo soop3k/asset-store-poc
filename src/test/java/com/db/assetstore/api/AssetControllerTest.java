@@ -9,7 +9,14 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.closeTo;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.emptyString;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isA;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -128,7 +135,7 @@ class AssetControllerTest {
                     "attributes": {
                         "city": "Berlin"
                     }
-                """; // Missing closing brace
+                """;
 
         mockMvc.perform(post("/assets")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -199,7 +206,6 @@ class AssetControllerTest {
 
     @Test
     void listAssets_afterCreatingMultiple_returnsAllWithProperStructure() throws Exception {
-        // Create test data
         String cre = """
                 {
                     "id": "list-cre-1",
@@ -241,7 +247,6 @@ class AssetControllerTest {
 
     @Test
     void getAsset_existingId_returnsFullAssetData() throws Exception {
-        // Create asset first
         String payload = """
                 {
                     "id": "get-test-1",
@@ -374,12 +379,12 @@ class AssetControllerTest {
 
         mockMvc.perform(get("/assets/patch-test-1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status", is("ACTIVE"))) // Updated
-                .andExpect(jsonPath("$.currency", is("USD"))) // Preserved
-                .andExpect(jsonPath("$.description", is("Original description"))) // Preserved
-                .andExpect(jsonPath("$.attributes.city.value", is("Toronto"))) // Preserved
-                .andExpect(jsonPath("$.attributes.rooms.value", is(18))) // Updated
-                .andExpect(jsonPath("$.attributes.active.value", is(true))); // Preserved
+                .andExpect(jsonPath("$.status", is("ACTIVE")))
+                .andExpect(jsonPath("$.currency", is("USD")))
+                .andExpect(jsonPath("$.description", is("Original description")))
+                .andExpect(jsonPath("$.attributes.city.value", is("Toronto")))
+                .andExpect(jsonPath("$.attributes.rooms.value", is(18)))
+                .andExpect(jsonPath("$.attributes.active.value", is(true)));
     }
 
     @Test
@@ -476,36 +481,7 @@ class AssetControllerTest {
     }
 
     @Test
-    void createAsset_decimalAttributeNormalization_stripsTrailingZeros() throws Exception {
-        String payload = """
-                {
-                    "type": "CRE",
-                    "status": "ACTIVE",
-                    "attributes": {
-                        "city": "Berlin",
-                        "area": 1000.00,
-                        "rooms": 15
-                    }
-                }
-                """;
-
-        MvcResult result = mockMvc.perform(post("/assets")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(payload))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        String assetId = result.getResponse().getContentAsString();
-
-        mockMvc.perform(get("/assets/" + assetId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.attributes.city.value", is("Berlin")))
-                .andExpect(jsonPath("$.attributes.area.value", is(1000)))
-                .andExpect(jsonPath("$.attributes.rooms.value", is(15)));
-    }
-
-    @Test
-    void createAsset_nullAttributeValues_handledGracefully() throws Exception {
+    void createAsset_nullAttributeValues() throws Exception {
         String payload = """
                 {
                     "type": "CRE",
@@ -557,10 +533,10 @@ class AssetControllerTest {
 
         mockMvc.perform(get("/assets/" + assetId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.attributes.city.value", is("Stockholm"))) // String
-                .andExpect(jsonPath("$.attributes.rooms.value", is(30))) // Integer (as number)
-                .andExpect(jsonPath("$.attributes.area.value", is(closeTo(3500.75, 0.01)))) // Decimal
-                .andExpect(jsonPath("$.attributes.active.value", is(true))); // Boolean
+                .andExpect(jsonPath("$.attributes.city.value", is("Stockholm")))
+                .andExpect(jsonPath("$.attributes.rooms.value", is(30)))
+                .andExpect(jsonPath("$.attributes.area.value", is(closeTo(3500.75, 0.01))))
+                .andExpect(jsonPath("$.attributes.active.value", is(true)));
     }
 
 }

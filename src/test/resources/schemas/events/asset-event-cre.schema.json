@@ -108,6 +108,13 @@
       "title": "Property subtype",
       "description": "Property Subtype",
       "type": "string"
+    },
+    "attributes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
     }
   }
 }

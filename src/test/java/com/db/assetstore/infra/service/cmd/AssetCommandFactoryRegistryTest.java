@@ -11,7 +11,7 @@ import com.db.assetstore.domain.service.cmd.factory.AssetCommandFactoryRegistry;
 import com.db.assetstore.domain.service.cmd.factory.CreateAssetCommandFactory;
 import com.db.assetstore.domain.service.cmd.factory.PatchAssetCommandFactory;
 import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
-import com.db.assetstore.domain.schema.TypeSchemaRegistry;
+import com.db.assetstore.domain.service.type.TypeSchemaRegistry;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -131,7 +131,7 @@ class AssetCommandFactoryRegistryTest {
     }
 
     private AttributeJsonReader createJsonReader() {
-        TypeSchemaRegistry typeSchemaRegistry = new TypeSchemaRegistry();
+        TypeSchemaRegistry typeSchemaRegistry = new TypeSchemaRegistry(objectMapper);
         typeSchemaRegistry.discover();
 
         AttributeDefinitionRegistry attributeDefinitionRegistry = new AttributeDefinitionRegistry(objectMapper, typeSchemaRegistry);

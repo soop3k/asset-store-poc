@@ -1,5 +1,6 @@
 package com.db.assetstore.json;
 
+import com.db.assetstore.domain.service.validation.JsonSchemaValidator;
 import org.junit.jupiter.api.Test;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,32 +10,35 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class JsonTransformerTest {
 
-    private static final ObjectMapper M = new ObjectMapper();
+    private static final ObjectMapper mapper = new ObjectMapper();
+    private static final JsonSchemaValidator validator = new JsonSchemaValidator(mapper);
 
     @Test
     void transformsUsingJsltAndValidatesAgainstSchema() throws Exception {
-        JsonTransformer tr = new JsonTransformer(M);
-        String input = "{" +
-                "\"id\":\"id-9\"," +
-                "\"type\":\"CRE\"," +
-                "\"attributes\":{\"city\":\"Warsaw\",\"rooms\":3}}";
-        String out = tr.transform("asset-to-external", input);
-        JsonNode node = M.readTree(out);
-        assertEquals("id-9", node.get("assetId").asText());
-        assertEquals("CRE", node.get("kind").asText());
+        JsonTransformer tr = new JsonTransformer(mapper, validator);
+        String input = """
+            { "asset": {
+                  "id": "id-9",
+                  "type": "CRE",
+                  "attributes": {
+                    "city": "Warsaw",
+                    "rooms": 3
+                  }
+                }
+            }
+            """;
+        String out = tr.transform("asset-cre", input);
+        JsonNode node = mapper.readTree(out);
+        assertEquals("id-9", node.get("id").asText());
+        assertEquals("CRE", node.get("type").asText());
         assertTrue(node.get("payload").isObject());
         assertEquals(3, node.get("payload").get("rooms").asInt());
     }
 
     @Test
     void missingSchemaDoesNotFailWhenNotProvided() throws Exception {
-        JsonTransformer tr = new JsonTransformer(M);
+        JsonTransformer tr = new JsonTransformer(mapper, validator);
         String input = "{\"x\":1}";
-        // Provide a template with no schema by name that doesn't exist in schemas/transforms
-        // First, create a very simple transform inline resource is not possible here, so we use existing one
-        // The purpose of this test is to ensure validateIfPresent won't throw when schema is absent.
-        // We'll invoke a non-existing template name to check error path: should throw template not found.
-        // Therefore, this is a lightweight placeholder; main behavior covered above.
         assertThrows(IllegalArgumentException.class, () -> tr.transform("non-existing", input));
     }
 }

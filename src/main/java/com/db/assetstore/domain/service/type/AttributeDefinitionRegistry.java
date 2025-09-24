@@ -1,23 +1,21 @@
 package com.db.assetstore.domain.service.type;
 
 import com.db.assetstore.AssetType;
-import com.db.assetstore.domain.schema.TypeSchemaRegistry;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public final class AttributeDefinitionRegistry {
-    private static final Logger log = LoggerFactory.getLogger(AttributeDefinitionRegistry.class);
 
     private final ObjectMapper objectMapper;
     private final TypeSchemaRegistry typeSchemaRegistry;

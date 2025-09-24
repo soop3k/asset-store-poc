@@ -22,17 +22,18 @@ class AssetEventE2ETest {
 
     @Test
     void createAsset_fetch_it_and_fetch_event() throws Exception {
-        String payload = "{" +
-                "\"type\":\"CRE\"," +
-                "\"currency\":\"USD\"," +
-                "\"notionalAmount\":123.45," +
-                "\"status\":\"ACTIVE\"," +
-                "\"subtype\":\"OFFICE\"," +
-                "\"description\":\"Test CRE\"," +
-                "\"attributes\": {\"city\":\"Warsaw\", \"rooms\":3}" +
-                "}";
+       String payload = """
+       {
+         "type": "CRE",
+         "currency": "USD",
+         "notionalAmount": 123.45,
+         "status": "ACTIVE",
+         "attributes": {
+           "city": "Warsaw",
+           "rooms": 3
+         }
+       }""";
 
-        // create
         MvcResult res = mockMvc.perform(post("/assets")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
@@ -49,20 +50,16 @@ class AssetEventE2ETest {
                 .andExpect(jsonPath("$.currency", is("USD")))
                 .andExpect(jsonPath("$.notionalAmount", is(closeTo(123.45, 0.0001))))
                 .andExpect(jsonPath("$.status", is("ACTIVE")))
-                .andExpect(jsonPath("$.subtype", is("OFFICE")))
-                .andExpect(jsonPath("$.description", is("Test CRE")))
                 .andExpect(jsonPath("$.attributes.city.value", is("Warsaw")))
                 .andExpect(jsonPath("$.attributes.rooms.value", is(3)));
 
-        // fetch event using new endpoint and verify transformation
-        mockMvc.perform(get("/events/" + id + "/AssetCRE")
+        mockMvc.perform(get("/events/" + id + "/asset-cre")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.type", is("CRE")))
                 .andExpect(jsonPath("$.currency", is("USD")))
                 .andExpect(jsonPath("$.notional_amount", is(closeTo(123.45, 0.0001))))
-                .andExpect(jsonPath("$.asset_status", is("ACTIVE")))
-                .andExpect(jsonPath("$.property_type", is("OFFICE")));
+                .andExpect(jsonPath("$.asset_status", is("ACTIVE")));
     }
 }

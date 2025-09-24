@@ -8,7 +8,7 @@ import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
 import com.db.assetstore.domain.service.cmd.factory.CreateAssetCommandFactory;
 import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
-import com.db.assetstore.domain.schema.TypeSchemaRegistry;
+import com.db.assetstore.domain.service.type.TypeSchemaRegistry;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -89,7 +89,7 @@ class CreateAssetCommandFactoryTest {
     }
 
     private AttributeJsonReader createJsonReader() {
-        TypeSchemaRegistry typeSchemaRegistry = new TypeSchemaRegistry();
+        TypeSchemaRegistry typeSchemaRegistry = new TypeSchemaRegistry(objectMapper);
         typeSchemaRegistry.discover();
 
         AttributeDefinitionRegistry attributeDefinitionRegistry = new AttributeDefinitionRegistry(objectMapper, typeSchemaRegistry);

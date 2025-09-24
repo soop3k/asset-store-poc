@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "Asset CRE",
+  "properties": {
+    "asset_id": {
+      "$id": "#AssetEvent:asset_id",
+      "title": "Asset Id",
+      "description": "Asset Id",
+      "type": "integer"
+    },
+    "currency": {
+      "$id": "#AssetEvent:currency",
+      "title": "Currency",
+      "description": "Currency",
+      "type": "string"
+    },
+    "notional_amount": {
+      "$id": "#AssetEvent:notional_amount",
+      "title": "Notional Amount",
+      "description": "Notional Amount of Instrument",
+      "type": "number"
+    },
+    "asset_status" : {
+      "$id": "#AssetEvent:asset_status",
+      "title": "String representation of the Asset status name for specific status id",
+      "description": "Asset Status string representation of the Asset status id, which is mapped from AssetStatus.java enum",
+      "type" : "string"
+    }
+  },
+  "additionalProperties": true,
+  "required": []
+}

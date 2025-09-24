@@ -2,7 +2,7 @@ package com.db.assetstore.domain.service.validation;
 
 import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
-import com.db.assetstore.domain.schema.TypeSchemaRegistry;
+import com.db.assetstore.domain.service.type.TypeSchemaRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -12,6 +12,8 @@ import java.util.*;
 @Component
 @RequiredArgsConstructor
 public final class AssetTypeValidator {
+
+    private final JsonSchemaValidator validator;
     private final TypeSchemaRegistry registry;
     private final ObjectMapper objectMapper;
 
@@ -27,7 +29,6 @@ public final class AssetTypeValidator {
         Objects.requireNonNull(type, "type");
         Objects.requireNonNull(attrs, "attrs");
         String schemaPath = registry.getSchemaPath(type).orElse(null);
-        // Build a simple JSON object from attribute list to validate against schema
         Map<String, Object> map = new LinkedHashMap<>();
         for (AttributeValue<?> av : attrs) {
             if (av == null) continue;
@@ -35,7 +36,7 @@ public final class AssetTypeValidator {
         }
         try {
             String json = objectMapper.writeValueAsString(map);
-            JsonSchemaValidator.validateIfPresent(json, schemaPath);
+            validator.validateOrThrow(json, schemaPath);
         } catch (Exception e) {
             throw new IllegalArgumentException("Failed to encode attributes JSON: " + e.getMessage(), e);
         }

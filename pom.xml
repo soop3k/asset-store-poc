@@ -57,21 +57,18 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- MapStruct for entity-model mapping -->
         <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
             <version>1.5.5.Final</version>
         </dependency>
 
-        <!-- JSON Schema validator for type-specific payload validation -->
         <dependency>
             <groupId>com.networknt</groupId>
             <artifactId>json-schema-validator</artifactId>
             <version>1.5.1</version>
         </dependency>
 
-        <!-- JSLT (Schibsted) for JSON transformations -->
         <dependency>
             <groupId>com.schibsted.spt.data</groupId>
             <artifactId>jslt</artifactId>

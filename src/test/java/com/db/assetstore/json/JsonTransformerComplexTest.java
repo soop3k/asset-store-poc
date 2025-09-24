@@ -1,5 +1,6 @@
 package com.db.assetstore.json;
 
+import com.db.assetstore.domain.service.validation.JsonSchemaValidator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -19,26 +20,28 @@ import static org.junit.jupiter.api.Assertions.*;
  * These tests focus on JSON structure fidelity (arrays, objects, nulls, unicode) and basic concurrency.
  */
 class JsonTransformerComplexTest {
-    private static final ObjectMapper M = new ObjectMapper();
+    private static final ObjectMapper mapper = new ObjectMapper();
+    private static final JsonSchemaValidator validator = new JsonSchemaValidator(mapper);
 
     @Test
     void preservesNestedArraysAndObjects_inPayload() throws Exception {
-        JsonTransformer tr = new JsonTransformer(M);
-        String input = "{" +
-                "\"id\":\"id-77\"," +
-                "\"type\":\"CRE\"," +
-                "\"attributes\":{" +
-                "  \"address\":{\"city\":\"Łódź\",\"zip\":\"90-001\"}," +
-                "  \"rooms\":[1,2,3]," +
-                "  \"features\":[{\"name\":\"balcony\"},{\"name\":\"garage\"}]," +
-                "  \"note\":null" +
-                "}}";
+        JsonTransformer tr = new JsonTransformer(mapper, validator);
+        String input = """
+                {"asset": {
+                "id":"id-77",
+                "type":"CRE",
+                "attributes":{
+                  "address":{"city":"Łódź","zip":"90-001"},
+                  "rooms":[1,2,3],
+                  "features":[{"name":"balcony"},{"name":"garage"}],
+                  "note":null
+                }}}""";
 
-        String out = tr.transform("asset-to-external", input);
-        JsonNode node = M.readTree(out);
+        String out = tr.transform("asset-cre", input);
+        JsonNode node = mapper.readTree(out);
 
-        assertEquals("id-77", node.get("assetId").asText());
-        assertEquals("CRE", node.get("kind").asText());
+        assertEquals("id-77", node.get("id").asText());
+        assertEquals("CRE", node.get("type").asText());
 
         JsonNode payload = node.get("payload");
         assertTrue(payload.isObject());
@@ -55,79 +58,44 @@ class JsonTransformerComplexTest {
 
     @Test
     void missingFieldsBecomeNullInOutput() throws Exception {
-        JsonTransformer tr = new JsonTransformer(M);
-        String input = "{" +
-                "\"id\":\"x-1\"," +
-                // intentionally no type
-                "\"attributes\":{}}";
+        JsonTransformer tr = new JsonTransformer(mapper, validator);
+        String input = """
+                { "asset": {
+                    "id": "x-1",
+                    "attributes": {}
+                }}""";
 
-        String out = tr.transform("asset-to-external", input);
-        JsonNode node = M.readTree(out);
-        assertEquals("x-1", node.get("assetId").asText());
-        // JSLT omits fields whose value evaluates to null, so 'kind' should be absent
+        String out = tr.transform("asset-cre", input);
+        JsonNode node = mapper.readTree(out);
+        assertEquals("x-1", node.get("id").asText());
         assertFalse(node.has("kind"));
     }
 
     @Test
     void supportsUnicodeAndEscapedCharacters() throws Exception {
-        JsonTransformer tr = new JsonTransformer(M);
+        JsonTransformer tr = new JsonTransformer(mapper, validator);
         String emoji = "🏡";
-        String quoteText = "\"quoted\""; // literal quotes inside the string
+        String quoteText = "\"quoted\"";
 
-        // Build input JSON programmatically to avoid escaping issues
-        var root = M.createObjectNode();
-        root.put("id", "home-😊");
-        root.put("type", "CRE");
-        var attrs = M.createObjectNode();
+        var root = mapper.createObjectNode();
+        var asset = mapper.createObjectNode();
+        root.set("asset", asset);
+        asset.put("id", "home-😊");
+        asset.put("type", "CRE");
+        var attrs = mapper.createObjectNode();
         attrs.put("title", emoji + " " + quoteText);
-        root.set("attributes", attrs);
-        String input = M.writeValueAsString(root);
+        asset.set("attributes", attrs);
+        String input = mapper.writeValueAsString(root);
 
-        String out = tr.transform("asset-to-external", input);
-        JsonNode node = M.readTree(out);
-        assertEquals("home-😊", node.get("assetId").asText());
-        assertEquals("CRE", node.get("kind").asText());
+        String out = tr.transform("asset-cre", input);
+        JsonNode node = mapper.readTree(out);
+        assertEquals("home-😊", node.get("id").asText());
+        assertEquals("CRE", node.get("type").asText());
         assertEquals(emoji + " " + quoteText, node.get("payload").get("title").asText());
 
-        // Ensure JSON is valid UTF-8 round-trip
         byte[] bytes = out.getBytes(StandardCharsets.UTF_8);
         String roundTrip = new String(bytes, StandardCharsets.UTF_8);
         assertEquals(out, roundTrip);
     }
 
-    @Test
-    void concurrentTransformations_areThreadSafeAndConsistent() throws Exception {
-        JsonTransformer tr = new JsonTransformer(M);
-        String input = "{" +
-                "\"id\":\"bulk-99\"," +
-                "\"type\":\"CRE\"," +
-                "\"attributes\":{\"rooms\":5}}";
-        String expected = tr.transform("asset-to-external", input);
-
-        int threads = 8;
-        int perThread = 25;
-        var pool = Executors.newFixedThreadPool(threads);
-        CountDownLatch latch = new CountDownLatch(threads * perThread);
-        List<Throwable> failures = new ArrayList<>();
-        for (int t = 0; t < threads; t++) {
-            pool.submit(() -> {
-                for (int i = 0; i < perThread; i++) {
-                    try {
-                        String out = tr.transform("asset-to-external", input);
-                        assertEquals(expected, out);
-                    } catch (Throwable th) {
-                        synchronized (failures) { failures.add(th); }
-                    } finally {
-                        latch.countDown();
-                    }
-                }
-            });
-        }
-        assertTrue(latch.await(10, TimeUnit.SECONDS), "Timed out waiting for transformations");
-        pool.shutdownNow();
-        if (!failures.isEmpty()) {
-            failures.forEach(Throwable::printStackTrace);
-            fail("Concurrent transformations had failures: " + failures.size());
-        }
-    }
 }

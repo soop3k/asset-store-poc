@@ -4,7 +4,6 @@ import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.model.type.AttributeType;
 import com.db.assetstore.infra.jpa.AttributeDefEntity;
 import com.db.assetstore.infra.repository.AttributeDefRepository;
-import com.db.assetstore.domain.schema.TypeSchemaRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

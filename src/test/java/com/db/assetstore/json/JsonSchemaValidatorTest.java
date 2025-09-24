@@ -1,5 +1,6 @@
 package com.db.assetstore.json;
 
+import com.db.assetstore.infra.config.JsonMapperProvider;
 import org.junit.jupiter.api.Test;
 import com.db.assetstore.domain.service.validation.JsonSchemaValidator;
 
@@ -11,14 +12,18 @@ class JsonSchemaValidatorTest {
     @Test
     void ignoresUnknownProperties_whenSchemaDisallowsThem() {
         String payload = "{\"foo\":\"bar\",\"extra\":123}";
-        assertThrows(IllegalArgumentException.class, () -> JsonSchemaValidator.validateOrThrow(
+        var mapper = new JsonMapperProvider().objectMapper();
+        var validator = new JsonSchemaValidator(mapper);
+        assertThrows(IllegalArgumentException.class, () -> validator.validateOrThrow(
                 payload, "schemas/strict.schema.json"));
     }
 
     @Test
     void stillFailsOnRealSchemaErrors_likeTypeMismatch() {
         String payload = "{\"foo\":123}";
-        assertThrows(IllegalArgumentException.class, () -> JsonSchemaValidator.validateOrThrow(
+        var mapper = new JsonMapperProvider().objectMapper();
+        var validator = new JsonSchemaValidator(mapper);
+        assertThrows(IllegalArgumentException.class, () -> validator.validateOrThrow(
                 payload, "schemas/strict.schema.json"));
     }
 }

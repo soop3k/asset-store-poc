@@ -39,7 +39,6 @@ public final class EventService {
         log.debug("Generating event '{}' for asset id={} type={}", eventName, asset.getId(), asset.getType());
         String canonical = canonicalizer.toCanonicalJson(asset);
 
-        // Build envelope for transformation
         ObjectNode ctx = objectMapper.createObjectNode();
         ctx.put("eventName", eventName);
         ctx.put("occurredAt", Instant.now().toString());
@@ -57,9 +56,7 @@ public final class EventService {
             throw new IllegalStateException("Failed to serialize transform input", e);
         }
 
-        // transform using JSLT
-        String transformed = transformer.transform("events/" + eventName, inputForTransform);
-        // Schema validation intentionally disabled; unknown extra fields in downstream models are ignored at consumers.
+        String transformed = transformer.transform(eventName, inputForTransform);
         log.debug("Generated event '{}' successfully", eventName);
         return transformed;
     }

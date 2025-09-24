@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
-import com.db.assetstore.domain.schema.TypeSchemaRegistry;
+import com.db.assetstore.domain.service.type.TypeSchemaRegistry;
 
 /**
  * Logs startup information previously handled by a CommandLineRunner.
