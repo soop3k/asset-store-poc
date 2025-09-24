@@ -6,19 +6,21 @@ import com.db.assetstore.domain.model.attribute.AttributeValueVisitor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-/**
- * Builds canonical JSON representation for Asset entities used as input for transformations/events.
- * Extracted to reduce complexity of EventService and promote reuse.
- */
+
+@Component
+@RequiredArgsConstructor
 public final class AssetCanonicalizer {
-    private static final ObjectMapper M = new ObjectMapper();
+
+    private final ObjectMapper mapper;
 
     public String toCanonicalJson(Asset asset) {
-        ObjectNode root = M.createObjectNode();
+        ObjectNode root = mapper.createObjectNode();
         put(root, "id", asset.getId());
         put(root, "type", asset.getType());
         put(root, "createdAt", asset.getCreatedAt());
@@ -38,13 +40,13 @@ public final class AssetCanonicalizer {
         put(root, "description", asset.getDescription());
         put(root, "currency", asset.getCurrency());
 
-        ObjectNode attrs = M.createObjectNode();
+        ObjectNode attrs = mapper.createObjectNode();
         AttributeNodeWriter writer = new AttributeNodeWriter(attrs);
         asset.getAttributesByName().forEach((name, values) -> writer.write(name, first(values)));
         root.set("attributes", attrs);
 
         try {
-            return M.writeValueAsString(root);
+            return mapper.writeValueAsString(root);
         } catch (JsonProcessingException e) {
             throw new IllegalStateException("Failed to serialize canonical asset JSON", e);
         }
