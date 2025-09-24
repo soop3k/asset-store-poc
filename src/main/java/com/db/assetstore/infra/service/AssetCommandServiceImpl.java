@@ -71,7 +71,9 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
     public <R> CommandResult<R> execute(AssetCommand<R> command) {
         Objects.requireNonNull(command, "command");
         CommandResult<R> result = command.accept(this);
-        recordCommand(result.assetId(), command);
+        if (result.success()) {
+            recordCommand(result.assetId(), command);
+        }
         return result;
     }
 
@@ -89,8 +91,8 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
                 .year(command.year())
                 .description(command.description())
                 .currency(command.currency())
-                .createdBy(command.createdBy())
-                .modifiedBy(command.createdBy())
+                .createdBy(command.executedBy())
+                .modifiedBy(command.executedBy())
                 .modifiedAt(Instant.now())
                 .build();
         asset.setAttributes(command.attributes());
@@ -111,7 +113,7 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
                 .currency(command.currency())
                 .attributes(command.attributes())
                 .build();
-        applyPatch(assetId, patch);
+        applyPatch(assetId, patch, command.executedBy());
         return CommandResult.noResult(assetId);
     }
 
@@ -142,7 +144,7 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
         return entity.getId();
     }
 
-    private void applyPatch(String id, AssetPatch patch) {
+    private void applyPatch(String id, AssetPatch patch, String executedBy) {
         Objects.requireNonNull(id, "id");
         Objects.requireNonNull(patch, "patch");
         AssetEntity entity = assetRepo.findByIdAndDeleted(id, 0)
@@ -154,6 +156,8 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
         if (patch.year() != null) entity.setYear(patch.year());
         if (patch.description() != null) entity.setDescription(patch.description());
         if (patch.currency() != null) entity.setCurrency(patch.currency());
+        entity.setModifiedBy(executedBy);
+        entity.setModifiedAt(Instant.now());
         assetRepo.save(entity);
 
         if (patch.attributes() != null) {
@@ -224,6 +228,7 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
         CommandLogEntity entity = CommandLogEntity.builder()
                 .commandType(commandType)
                 .assetId(assetId)
+                .executedBy(command.executedBy())
                 .payload(payload)
                 .createdAt(Instant.now())
                 .build();

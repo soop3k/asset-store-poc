@@ -21,6 +21,10 @@ public class CreateAssetCommandFactory {
     public CreateAssetCommand create(AssetCreateRequest request) {
         Objects.requireNonNull(request, "request");
 
+        if (request.executedBy() == null || request.executedBy().isBlank()) {
+            throw new IllegalArgumentException("Create request must include executedBy");
+        }
+
         List<AttributeValue<?>> attributes = request.attributes() == null
                 ? List.of()
                 : List.copyOf(attributeJsonReader.read(request.type(), request.attributes()));
@@ -35,6 +39,7 @@ public class CreateAssetCommandFactory {
                 .description(request.description())
                 .currency(request.currency())
                 .attributes(attributes)
+                .executedBy(request.executedBy())
                 .build();
     }
 }

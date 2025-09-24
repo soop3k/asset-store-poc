@@ -26,6 +26,10 @@ public class PatchAssetCommandFactory {
         }
         Objects.requireNonNull(request, "request");
 
+        if (request.getExecutedBy() == null || request.getExecutedBy().isBlank()) {
+            throw new IllegalArgumentException("Patch request must include executedBy");
+        }
+
         List<AttributeValue<?>> attributes = request.getAttributes() == null
                 ? List.of()
                 : List.copyOf(attributeJsonReader.read(assetType, request.getAttributes()));
@@ -39,6 +43,7 @@ public class PatchAssetCommandFactory {
                 .description(request.getDescription())
                 .currency(request.getCurrency())
                 .attributes(attributes)
+                .executedBy(request.getExecutedBy())
                 .build();
     }
 

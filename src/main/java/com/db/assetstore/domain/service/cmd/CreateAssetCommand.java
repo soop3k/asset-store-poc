@@ -24,12 +24,17 @@ public record CreateAssetCommand(
         String description,
         String currency,
         @Singular("attribute") List<AttributeValue<?>> attributes,
-        String createdBy,
+        String executedBy,
         Instant requestTime
 ) implements AssetCommand<String> {
 
     @Override
     public CommandResult<String> accept(AssetCommandVisitor visitor) {
         return requireVisitor(visitor).visit(this);
+    }
+
+    @Override
+    public String executedBy() {
+        return executedBy;
     }
 }

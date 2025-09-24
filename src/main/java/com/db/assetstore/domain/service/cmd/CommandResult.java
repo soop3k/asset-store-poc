@@ -7,13 +7,21 @@ import java.util.Objects;
  *
  * @param <T> result type produced by the command execution
  */
-public record CommandResult<T>(T result, String assetId) {
+public record CommandResult<T>(T result, String assetId, boolean success) {
 
     public CommandResult {
         Objects.requireNonNull(assetId, "assetId");
     }
 
+    public CommandResult(T result, String assetId) {
+        this(result, assetId, true);
+    }
+
     public static CommandResult<Void> noResult(String assetId) {
-        return new CommandResult<>(null, assetId);
+        return new CommandResult<>(null, assetId, true);
+    }
+
+    public static CommandResult<Void> failure(String assetId) {
+        return new CommandResult<>(null, assetId, false);
     }
 }

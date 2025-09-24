@@ -146,4 +146,9 @@
             <column name="command_type"/>
         </createIndex>
     </changeSet>
+    <changeSet id="8-command-log-executed-by" author="agent">
+        <addColumn tableName="command_log">
+            <column name="executed_by" type="varchar(128)"/>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

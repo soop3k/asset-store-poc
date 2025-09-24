@@ -1,6 +1,7 @@
 package com.db.assetstore.infra.service;
 
 import com.db.assetstore.domain.service.cmd.AssetCommand;
+import com.db.assetstore.domain.service.cmd.AssetCommandVisitor;
 import com.db.assetstore.domain.service.cmd.CommandResult;
 import com.db.assetstore.infra.config.JsonMapperProvider;
 import com.db.assetstore.infra.jpa.CommandLogEntity;
@@ -29,16 +30,7 @@ class AssetCommandServiceCommandLogDataTest {
 
     @BeforeEach
     void setUp() {
-        service = new AssetCommandServiceImpl(null, null, null, null, commandLogRepository, objectMapper) {
-            @Override
-            @SuppressWarnings("unchecked")
-            protected <R> CommandResult<R> doExecute(AssetCommand<R> command) {
-                if (command instanceof LoggingOnlyCommand loggingOnlyCommand) {
-                    return (CommandResult<R>) CommandResult.noResult(loggingOnlyCommand.assetId());
-                }
-                return super.doExecute(command);
-            }
-        };
+        service = new AssetCommandServiceImpl(null, null, null, null, commandLogRepository, objectMapper);
     }
 
     @Test
@@ -56,6 +48,7 @@ class AssetCommandServiceCommandLogDataTest {
 
         assertEquals("LoggingOnlyCommand", entry.getCommandType());
         assertEquals("asset-123", entry.getAssetId());
+        assertEquals("auditor", entry.getExecutedBy());
         assertNotNull(entry.getCreatedAt());
 
         JsonNode payload = objectMapper.readTree(entry.getPayload());
@@ -64,5 +57,42 @@ class AssetCommandServiceCommandLogDataTest {
         assertEquals("2024-01-01T00:00:00Z", payload.get("requestTime").asText());
     }
 
-    record LoggingOnlyCommand(String assetId, String data, Instant requestTime) implements AssetCommand<Void> { }
+    @Test
+    void execute_whenCommandReportsFailure_doesNotPersistLog() {
+        FailingCommand command = new FailingCommand("asset-456");
+
+        CommandResult<Void> result = service.execute(command);
+
+        assertNull(result.result());
+        assertEquals("asset-456", result.assetId());
+        assertFalse(result.success());
+
+        assertTrue(commandLogRepository.findAll().isEmpty(), "no command log entry should be persisted for failed command");
+    }
+
+    record LoggingOnlyCommand(String assetId, String data, Instant requestTime) implements AssetCommand<Void> {
+
+        @Override
+        public CommandResult<Void> accept(AssetCommandVisitor visitor) {
+            return CommandResult.noResult(assetId);
+        }
+
+        @Override
+        public String executedBy() {
+            return "auditor";
+        }
+    }
+
+    record FailingCommand(String assetId) implements AssetCommand<Void> {
+
+        @Override
+        public CommandResult<Void> accept(AssetCommandVisitor visitor) {
+            return CommandResult.failure(assetId);
+        }
+
+        @Override
+        public String executedBy() {
+            return "auditor";
+        }
+    }
 }

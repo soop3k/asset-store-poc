@@ -10,12 +10,17 @@ import java.time.Instant;
 @Builder
 public record DeleteAssetCommand(
         String assetId,
-        String deletedBy,
+        String executedBy,
         Instant requestTime
 ) implements AssetCommand<Void> {
 
     @Override
     public CommandResult<Void> accept(AssetCommandVisitor visitor) {
         return requireVisitor(visitor).visit(this);
+    }
+
+    @Override
+    public String executedBy() {
+        return executedBy;
     }
 }

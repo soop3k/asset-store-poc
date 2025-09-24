@@ -52,7 +52,8 @@ class AssetCommandFactoryRegistryTest {
                 2022,
                 "Command registry test",
                 "USD",
-                attributes
+                attributes,
+                "creator"
         );
 
         var command = registry.createCreateCommand(request);
@@ -63,6 +64,7 @@ class AssetCommandFactoryRegistryTest {
                 new AVDecimal("area", new BigDecimal("275.75")),
                 new AVBoolean("active", true)
         );
+        assertThat(command.executedBy()).isEqualTo("creator");
     }
 
     @Test
@@ -73,6 +75,7 @@ class AssetCommandFactoryRegistryTest {
                 .put("name", "Aurora")
                 .put("imo", 13579)
                 .put("active", false));
+        request.setExecutedBy("updater");
 
         var command = registry.createPatchCommand(AssetType.SHIP, "ship-11", request);
 
@@ -82,6 +85,7 @@ class AssetCommandFactoryRegistryTest {
                 new AVDecimal("imo", new BigDecimal("13579")),
                 new AVBoolean("active", false)
         );
+        assertThat(command.executedBy()).isEqualTo("updater");
     }
 
     @Test
@@ -90,6 +94,7 @@ class AssetCommandFactoryRegistryTest {
         request.setId("ship-22");
         request.setAttributes(objectMapper.createObjectNode()
                 .put("name", "Baltic Star"));
+        request.setExecutedBy("patcher");
 
         var command = registry.createPatchCommand(AssetType.SHIP, request);
 
@@ -97,12 +102,14 @@ class AssetCommandFactoryRegistryTest {
         assertThat(command.attributes()).containsExactly(
                 new AVString("name", "Baltic Star")
         );
+        assertThat(command.executedBy()).isEqualTo("patcher");
     }
 
     @Test
     void createPatchCommand_withoutId_throwsException() {
         AssetPatchRequest request = new AssetPatchRequest();
         request.setAttributes(objectMapper.createObjectNode());
+        request.setExecutedBy("tester");
 
         assertThatThrownBy(() -> registry.createPatchCommand(AssetType.CRE, request))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -116,7 +123,7 @@ class AssetCommandFactoryRegistryTest {
         var command = registry.createDeleteCommand("asset-33", request);
 
         assertThat(command.assetId()).isEqualTo("asset-33");
-        assertThat(command.deletedBy()).isEqualTo("tester");
+        assertThat(command.executedBy()).isEqualTo("tester");
 
         assertThatThrownBy(() -> registry.createDeleteCommand("asset-33", new AssetDeleteRequest("other", "tester")))
                 .isInstanceOf(IllegalArgumentException.class)

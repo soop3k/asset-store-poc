@@ -21,12 +21,17 @@ public record PatchAssetCommand(
         String description,
         String currency,
         @Singular("attribute") List<AttributeValue<?>> attributes,
-        String modifiedBy,
+        String executedBy,
         Instant requestTime
 ) implements AssetCommand<Void> {
 
     @Override
     public CommandResult<Void> accept(AssetCommandVisitor visitor) {
         return requireVisitor(visitor).visit(this);
+    }
+
+    @Override
+    public String executedBy() {
+        return executedBy;
     }
 }

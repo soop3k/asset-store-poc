@@ -27,6 +27,13 @@ public interface AssetCommand<R> {
     }
 
     /**
+     * Identifies the user or system that executed the command.
+     *
+     * @return executor identifier, may be {@code null} when unknown
+     */
+    String executedBy();
+
+    /**
      * Utility method for implementors to guard against null visitors.
      */
     default AssetCommandVisitor requireVisitor(AssetCommandVisitor visitor) {

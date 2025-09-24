@@ -5,6 +5,6 @@ package com.db.assetstore.infra.api.dto;
  */
 public record AssetDeleteRequest(
         String id,
-        String deletedBy
+        String executedBy
 ) {
 }

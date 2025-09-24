@@ -23,4 +23,6 @@ public class AssetPatchRequest {
     private String currency;
 
     private JsonNode attributes;
+
+    private String executedBy;
 }

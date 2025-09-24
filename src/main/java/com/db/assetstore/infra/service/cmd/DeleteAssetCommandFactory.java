@@ -22,10 +22,13 @@ public class DeleteAssetCommandFactory {
         if (!assetId.equals(request.id())) {
             throw new IllegalArgumentException("Delete request id must match path asset id");
         }
+        if (request.executedBy() == null || request.executedBy().isBlank()) {
+            throw new IllegalArgumentException("Delete request must include executedBy");
+        }
 
         return DeleteAssetCommand.builder()
                 .assetId(assetId)
-                .deletedBy(request.deletedBy())
+                .executedBy(request.executedBy())
                 .requestTime(Instant.now())
                 .build();
     }

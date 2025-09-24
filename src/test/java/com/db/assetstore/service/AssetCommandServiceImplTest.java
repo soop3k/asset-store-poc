@@ -64,7 +64,7 @@ class AssetCommandServiceImplTest {
                 .id("a-1").type(AssetType.CRE)
                 .attribute(new AVString("city", "Warsaw"))
                 .status("ACTIVE")
-                .createdBy("test")
+                .executedBy("test")
                 .requestTime(Instant.now())
                 .build();
 
@@ -87,6 +87,7 @@ class AssetCommandServiceImplTest {
         verify(commandLogRepository).save(logCaptor.capture());
         assertEquals("CreateAssetCommand", logCaptor.getValue().getCommandType());
         assertEquals("a-1", logCaptor.getValue().getAssetId());
+        assertEquals("test", logCaptor.getValue().getExecutedBy());
     }
 
     @Test
@@ -95,6 +96,7 @@ class AssetCommandServiceImplTest {
         CreateAssetCommand cmd = CreateAssetCommand.builder()
                 .id("a-2").type(AssetType.CRE)
                 .attribute(new AVString("city", "Gdansk"))
+                .executedBy("creator")
                 .build();
 
         // mapper returns entity with empty list -> triggers insertAllOnCreate
@@ -119,6 +121,7 @@ class AssetCommandServiceImplTest {
         verify(commandLogRepository).save(logCaptor.capture());
         assertEquals("CreateAssetCommand", logCaptor.getValue().getCommandType());
         assertEquals("a-2", logCaptor.getValue().getAssetId());
+        assertEquals("creator", logCaptor.getValue().getExecutedBy());
     }
 
     @Test
@@ -127,7 +130,7 @@ class AssetCommandServiceImplTest {
                 .id("exec-1")
                 .type(AssetType.CRE)
                 .attribute(new AVString("city", "Poznan"))
-                .createdBy("tester")
+                .executedBy("tester")
                 .build();
 
         AssetEntity entity = AssetEntity.builder().id("exec-1").type(AssetType.CRE).attributes(new java.util.ArrayList<>()).build();
@@ -143,6 +146,7 @@ class AssetCommandServiceImplTest {
         verify(commandLogRepository).save(logCaptor.capture());
         assertEquals("CreateAssetCommand", logCaptor.getValue().getCommandType());
         assertEquals("exec-1", logCaptor.getValue().getAssetId());
+        assertEquals("tester", logCaptor.getValue().getExecutedBy());
     }
 
     @Test
@@ -153,6 +157,7 @@ class AssetCommandServiceImplTest {
         PatchAssetCommand cmd = PatchAssetCommand.builder()
                 .assetId("a-3")
                 .status("INACTIVE")
+                .executedBy("updater")
                 .build();
 
         service.update(cmd);
@@ -165,6 +170,7 @@ class AssetCommandServiceImplTest {
         verify(commandLogRepository).save(logCaptor.capture());
         assertEquals("PatchAssetCommand", logCaptor.getValue().getCommandType());
         assertEquals("a-3", logCaptor.getValue().getAssetId());
+        assertEquals("updater", logCaptor.getValue().getExecutedBy());
     }
 
     @Test
@@ -179,6 +185,7 @@ class AssetCommandServiceImplTest {
         PatchAssetCommand cmd = PatchAssetCommand.builder()
                 .assetId("a-4")
                 .attributes(List.of(new AVString("city", "Warsaw")))
+                .executedBy("modifier")
                 .build();
 
         service.update(cmd);
@@ -191,6 +198,7 @@ class AssetCommandServiceImplTest {
         verify(commandLogRepository).save(logCaptor.capture());
         assertEquals("PatchAssetCommand", logCaptor.getValue().getCommandType());
         assertEquals("a-4", logCaptor.getValue().getAssetId());
+        assertEquals("modifier", logCaptor.getValue().getExecutedBy());
     }
 
     @Test
@@ -203,6 +211,7 @@ class AssetCommandServiceImplTest {
         PatchAssetCommand cmd = PatchAssetCommand.builder()
                 .assetId("a-5")
                 .attributes(List.of(new AVString("city", "Warsaw")))
+                .executedBy("modifier")
                 .build();
 
         service.update(cmd);
@@ -215,6 +224,7 @@ class AssetCommandServiceImplTest {
         verify(commandLogRepository).save(logCaptor.capture());
         assertEquals("PatchAssetCommand", logCaptor.getValue().getCommandType());
         assertEquals("a-5", logCaptor.getValue().getAssetId());
+        assertEquals("modifier", logCaptor.getValue().getExecutedBy());
     }
 
     @Test
@@ -222,7 +232,7 @@ class AssetCommandServiceImplTest {
         AssetEntity entity = AssetEntity.builder().id("a-6").type(AssetType.CRE).deleted(0).build();
         when(assetRepo.findByIdAndDeleted("a-6", 0)).thenReturn(Optional.of(entity));
 
-        service.delete(DeleteAssetCommand.builder().assetId("a-6").build());
+        service.delete(DeleteAssetCommand.builder().assetId("a-6").executedBy("deleter").build());
 
         assertEquals(1, entity.getDeleted());
         verify(assetRepo, times(1)).save(entity);
@@ -231,5 +241,6 @@ class AssetCommandServiceImplTest {
         verify(commandLogRepository).save(logCaptor.capture());
         assertEquals("DeleteAssetCommand", logCaptor.getValue().getCommandType());
         assertEquals("a-6", logCaptor.getValue().getAssetId());
+        assertEquals("deleter", logCaptor.getValue().getExecutedBy());
     }
 }
