@@ -11,6 +11,7 @@ import com.db.assetstore.infra.service.AssetQueryServiceImpl;
 import com.db.assetstore.infra.service.search.AssetSearchSpecificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.Instant;
@@ -35,7 +36,7 @@ class AssetQueryServiceImplLinkTest {
         assetLinkRepository = mock(AssetLinkRepository.class);
         specService = mock(AssetSearchSpecificationService.class);
         assetMapper = mock(AssetMapper.class);
-        assetLinkMapper = spy(new AssetLinkMapper());
+        assetLinkMapper = Mappers.getMapper(AssetLinkMapper.class);
         when(specService.buildSpec(any())).thenReturn((Specification<AssetEntity>) (root, query, cb) -> cb.conjunction());
         service = new AssetQueryServiceImpl(assetMapper, assetRepository, specService, assetLinkRepository, assetLinkMapper);
     }

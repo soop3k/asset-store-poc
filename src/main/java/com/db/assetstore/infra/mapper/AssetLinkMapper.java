@@ -2,45 +2,30 @@ package com.db.assetstore.infra.mapper;
 
 import com.db.assetstore.domain.model.link.AssetLink;
 import com.db.assetstore.infra.jpa.link.AssetLinkEntity;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-@Component
-public class AssetLinkMapper {
+/**
+ * MapStruct-backed mapper for converting asset link JPA entities into domain models.
+ */
+@Mapper(componentModel = "spring")
+public interface AssetLinkMapper {
 
-    public AssetLink toModel(AssetLinkEntity entity) {
-        if (entity == null) {
-            return null;
-        }
-        return AssetLink.builder()
-                .id(entity.getId())
-                .assetId(entity.getAssetId())
-                .linkCode(entity.getLinkCode())
-                .linkSubtype(entity.getLinkSubtype())
-                .entityType(entity.getEntityType())
-                .entityId(entity.getEntityId())
-                .active(entity.isActive())
-                .deleted(entity.isDeleted())
-                .validFrom(entity.getValidFrom())
-                .validTo(entity.getValidTo())
-                .createdAt(entity.getCreatedAt())
-                .createdBy(entity.getCreatedBy())
-                .modifiedAt(entity.getModifiedAt())
-                .modifiedBy(entity.getModifiedBy())
-                .build();
-    }
+    AssetLink toModel(AssetLinkEntity entity);
 
-    public List<AssetLink> toModels(Collection<AssetLinkEntity> entities) {
-        if (entities == null) {
+    default List<AssetLink> toModels(Collection<AssetLinkEntity> entities) {
+        if (entities == null || entities.isEmpty()) {
             return List.of();
         }
         return entities.stream()
                 .filter(Objects::nonNull)
                 .map(this::toModel)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 }
+

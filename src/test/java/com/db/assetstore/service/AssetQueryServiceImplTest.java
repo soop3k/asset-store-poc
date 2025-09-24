@@ -37,7 +37,7 @@ class AssetQueryServiceImplTest {
     AssetRepository assetRepo;
     AssetSearchSpecificationService specService;
     AssetLinkRepository assetLinkRepository;
-    AssetLinkMapper assetLinkMapper = new AssetLinkMapper();
+    AssetLinkMapper assetLinkMapper = Mappers.getMapper(AssetLinkMapper.class);
 
     AssetQueryServiceImpl service;
 
