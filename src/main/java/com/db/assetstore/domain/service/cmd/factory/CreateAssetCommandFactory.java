@@ -6,6 +6,7 @@ import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
@@ -15,15 +16,19 @@ public class CreateAssetCommandFactory {
     private final AttributeJsonReader attributeJsonReader;
 
     public CreateAssetCommandFactory(AttributeJsonReader attributeJsonReader) {
-        this.attributeJsonReader = attributeJsonReader;
+        this.attributeJsonReader = Objects.requireNonNull(attributeJsonReader, "attributeJsonReader");
     }
 
     public CreateAssetCommand createCommand(AssetCreateRequest request) {
         Objects.requireNonNull(request, "request");
 
+        if (request.executedBy() == null || request.executedBy().isBlank()) {
+            throw new IllegalArgumentException("Create request must include executedBy");
+        }
+
         List<AttributeValue<?>> attributes = request.attributes() == null
                 ? List.of()
-                : attributeJsonReader.read(request.type(), request.attributes());
+                : List.copyOf(attributeJsonReader.read(request.type(), request.attributes()));
 
         return CreateAssetCommand.builder()
                 .id(request.id())
@@ -35,6 +40,8 @@ public class CreateAssetCommandFactory {
                 .description(request.description())
                 .currency(request.currency())
                 .attributes(attributes)
+                .executedBy(request.executedBy())
+                .requestTime(Instant.now())
                 .build();
     }
 }

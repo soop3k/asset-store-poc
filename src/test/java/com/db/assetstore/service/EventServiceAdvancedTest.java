@@ -7,7 +7,6 @@ import com.db.assetstore.domain.model.type.AVBoolean;
 import com.db.assetstore.domain.model.type.AVDecimal;
 import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.domain.service.EventService;
-import com.db.assetstore.domain.service.validation.JsonSchemaValidator;
 import com.db.assetstore.infra.config.JsonMapperProvider;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,8 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * More comprehensive tests for EventService JSON generation using JSLT.
  */
 class EventServiceAdvancedTest {
-    private static final ObjectMapper mapper = new JsonMapperProvider().objectMapper();
-    private static final JsonSchemaValidator validator = new JsonSchemaValidator(mapper);
+    private static final ObjectMapper M = new JsonMapperProvider().objectMapper();
 
     @Test
     void generatesRichAssetUpsertedEvent_withVariousTypesAndNulls() throws Exception {
@@ -39,9 +37,9 @@ class EventServiceAdvancedTest {
                 AVDecimal.of("intAttr", 7),
                 AVDecimal.of("longAttr", 1234567890123L),
                 AVDecimal.of("dblAttr", 3.14159),
-                AVBoolean.of("boolAttr", true),
-                AVString.of("nullAttr", null),
-                AVString.of("tsAttr", created.toString())
+                new AVBoolean("boolAttr", true),
+                new AVString("nullAttr", null),
+                new AVString("tsAttr", created.toString())
         ));
         asset.setVersion(42L);
         asset.setStatus("ACTIVE");
@@ -59,22 +57,39 @@ class EventServiceAdvancedTest {
         asset.setDescription("desc");
         asset.setCurrency("PLN");
 
-        EventService svc = new EventService(new JsonTransformer(mapper, validator), new AssetCanonicalizer(mapper), mapper);
-        String eventJson = svc.generate("asset-cre", asset);
-        JsonNode e = mapper.readTree(eventJson);
+        EventService svc = new EventService(new JsonTransformer(M), new AssetCanonicalizer(M), M);
+        String eventJson = svc.generate("AssetUpserted", asset);
+        JsonNode e = M.readTree(eventJson);
 
+        assertEquals("AssetUpserted", e.get("eventName").asText());
+        assertDoesNotThrow(() -> Instant.parse(e.get("occurredAt").asText()));
         assertEquals("E-1", e.get("id").asText());
         assertEquals("CRE", e.get("type").asText());
-        assertEquals(1000000.00, e.get("notional_amount").asDouble(), 0.0001);
+        assertEquals(created.toString(), e.get("createdAt").asText());
+        assertEquals(42L, e.get("version").asLong());
+        assertEquals("ACTIVE", e.get("status").asText());
+        assertEquals("SUB", e.get("subtype").asText());
+        assertEquals("2024-02-02T03:04:05Z", e.get("statusEffectiveTime").asText());
+        assertEquals("2024-03-03T03:04:05Z", e.get("modifiedAt").asText());
+        assertEquals("system", e.get("modifiedBy").asText());
+        assertEquals("creator", e.get("createdBy").asText());
+        assertTrue(e.get("softDelete").asBoolean());
+        assertEquals(1000000.00, e.get("notionalAmount").asDouble(), 0.0001);
+        assertEquals(2025, e.get("year").asInt());
+        assertEquals("WH-1", e.get("wh").asText());
+        assertEquals("CRM", e.get("sourceSystemName").asText());
+        assertEquals("EXT-123", e.get("externalReference").asText());
+        assertEquals("desc", e.get("description").asText());
         assertEquals("PLN", e.get("currency").asText());
 
-        JsonNode attrs = e.get("payload");
+        JsonNode attrs = e.get("attributes");
         assertTrue(attrs.isObject());
         assertEquals(7, attrs.get("intAttr").asInt());
         assertEquals(1234567890123L, attrs.get("longAttr").asLong());
         assertEquals(3.14159, attrs.get("dblAttr").asDouble(), 0.000001);
         assertTrue(attrs.get("boolAttr").asBoolean());
         assertTrue(attrs.get("nullAttr").isNull());
+        // Non-scalar types are stringified by canonicalization
         assertEquals(created.toString(), attrs.get("tsAttr").asText());
     }
 }

@@ -5,6 +5,8 @@ import com.db.assetstore.domain.json.AttributeJsonReader;
 import com.db.assetstore.domain.model.type.AVBoolean;
 import com.db.assetstore.domain.model.type.AVDecimal;
 import com.db.assetstore.domain.model.type.AVString;
+import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
+import com.db.assetstore.domain.service.cmd.factory.CreateAssetCommandFactory;
 import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
 import com.db.assetstore.domain.schema.TypeSchemaRegistry;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;
@@ -31,7 +33,7 @@ class CreateAssetCommandFactoryTest {
     }
 
     @Test
-    void create_buildsCommandWithParsedAttributes() {
+    void createCommand_populatesCommandAndParsesAttributes() {
         ObjectNode attributes = objectMapper.createObjectNode();
         attributes.put("city", "Frankfurt");
         attributes.put("area", new BigDecimal("500.25"));
@@ -50,7 +52,7 @@ class CreateAssetCommandFactoryTest {
                 "creator"
         );
 
-        var command = factory.create(request);
+        CreateAssetCommand command = factory.createCommand(request);
 
         assertThat(command.id()).isEqualTo("asset-1");
         assertThat(command.type()).isEqualTo(AssetType.CRE);
@@ -70,7 +72,29 @@ class CreateAssetCommandFactoryTest {
     }
 
     @Test
-    void create_withoutExecutor_throwsException() {
+    void createCommand_withNullAttributes_usesEmptyList() {
+        AssetCreateRequest request = new AssetCreateRequest(
+                null,
+                AssetType.SHIP,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                "executor"
+        );
+
+        CreateAssetCommand command = factory.createCommand(request);
+
+        assertThat(command.attributes()).isEmpty();
+        assertThat(command.executedBy()).isEqualTo("executor");
+        assertThat(command.requestTime()).isNotNull();
+    }
+
+    @Test
+    void createCommand_withoutExecutor_throwsException() {
         AssetCreateRequest request = new AssetCreateRequest(
                 "asset-2",
                 AssetType.CRE,
@@ -84,7 +108,7 @@ class CreateAssetCommandFactoryTest {
                 ""
         );
 
-        assertThatThrownBy(() -> factory.create(request))
+        assertThatThrownBy(() -> factory.createCommand(request))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("executedBy");
     }

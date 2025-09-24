@@ -5,6 +5,13 @@ import com.db.assetstore.domain.json.AttributeJsonReader;
 import com.db.assetstore.domain.model.type.AVBoolean;
 import com.db.assetstore.domain.model.type.AVDecimal;
 import com.db.assetstore.domain.model.type.AVString;
+import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
+import com.db.assetstore.domain.service.cmd.DeleteAssetCommand;
+import com.db.assetstore.domain.service.cmd.PatchAssetCommand;
+import com.db.assetstore.domain.service.cmd.factory.AssetCommandFactoryRegistry;
+import com.db.assetstore.domain.service.cmd.factory.CreateAssetCommandFactory;
+import com.db.assetstore.domain.service.cmd.factory.DeleteAssetCommandFactory;
+import com.db.assetstore.domain.service.cmd.factory.PatchAssetCommandFactory;
 import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
 import com.db.assetstore.domain.schema.TypeSchemaRegistry;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;
@@ -26,6 +33,10 @@ class AssetCommandFactoryRegistryTest {
 
     private AssetCommandFactoryRegistry registry;
 
+    private AssetCreateRequest createRequest;
+
+    private AssetPatchRequest patchRequest;
+
     @BeforeEach
     void setUp() {
         AttributeJsonReader attributeJsonReader = createJsonReader();
@@ -34,101 +45,114 @@ class AssetCommandFactoryRegistryTest {
                 new PatchAssetCommandFactory(attributeJsonReader),
                 new DeleteAssetCommandFactory()
         );
-    }
 
-    @Test
-    void createCreateCommand_parsesAttributes() {
-        ObjectNode attributes = objectMapper.createObjectNode();
-        attributes.put("city", "Paris");
-        attributes.put("area", new BigDecimal("275.75"));
-        attributes.put("active", true);
-
-        AssetCreateRequest request = new AssetCreateRequest(
-                "asset-7",
+        ObjectNode createAttributes = objectMapper.createObjectNode();
+        createAttributes.put("city", "Frankfurt");
+        createAttributes.put("area", new BigDecimal("500.25"));
+        createAttributes.put("active", true);
+        createRequest = new AssetCreateRequest(
+                "asset-1",
                 AssetType.CRE,
                 "ACTIVE",
                 "OFFICE",
-                new BigDecimal("300.00"),
-                2022,
-                "Command registry test",
+                new BigDecimal("150.00"),
+                2024,
+                "Created",
                 "USD",
-                attributes,
+                createAttributes,
                 "creator"
         );
 
-        var command = registry.createCreateCommand(request);
+        ObjectNode patchAttributes = objectMapper.createObjectNode();
+        patchAttributes.put("name", "Sea Queen");
+        patchAttributes.put("imo", 9876543);
+        patchAttributes.put("active", false);
+        patchRequest = new AssetPatchRequest();
+        patchRequest.setStatus("INACTIVE");
+        patchRequest.setSubtype("FREIGHT");
+        patchRequest.setDescription("Patched");
+        patchRequest.setCurrency("EUR");
+        patchRequest.setAttributes(patchAttributes);
+        patchRequest.setExecutedBy("patcher");
+    }
 
-        assertThat(command.id()).isEqualTo("asset-7");
-        assertThat(command.attributes()).containsExactly(
-                new AVString("city", "Paris"),
-                new AVDecimal("area", new BigDecimal("275.75")),
+    @Test
+    void createCreateCommand_buildsCommandFromRegistry() {
+        CreateAssetCommand result = registry.createCreateCommand(createRequest);
+
+        assertThat(result.id()).isEqualTo("asset-1");
+        assertThat(result.type()).isEqualTo(AssetType.CRE);
+        assertThat(result.status()).isEqualTo("ACTIVE");
+        assertThat(result.subtype()).isEqualTo("OFFICE");
+        assertThat(result.notionalAmount()).isEqualTo(new BigDecimal("150.00"));
+        assertThat(result.year()).isEqualTo(2024);
+        assertThat(result.description()).isEqualTo("Created");
+        assertThat(result.currency()).isEqualTo("USD");
+        assertThat(result.attributes()).containsExactly(
+                new AVString("city", "Frankfurt"),
+                new AVDecimal("area", new BigDecimal("500.25")),
                 new AVBoolean("active", true)
         );
-        assertThat(command.executedBy()).isEqualTo("creator");
-        assertThat(command.requestTime()).isNotNull();
+        assertThat(result.executedBy()).isEqualTo("creator");
+        assertThat(result.requestTime()).isNotNull();
     }
 
     @Test
-    void createPatchCommand_withExplicitId_parsesAttributes() {
-        AssetPatchRequest request = new AssetPatchRequest();
-        request.setStatus("INACTIVE");
-        request.setAttributes(objectMapper.createObjectNode()
-                .put("name", "Aurora")
-                .put("imo", 13579)
-                .put("active", false));
-        request.setExecutedBy("updater");
+    void createPatchCommand_withExplicitId_parsesAttributesFromSchema() {
+        PatchAssetCommand result = registry.createPatchCommand(AssetType.SHIP, "asset-2", patchRequest);
 
-        var command = registry.createPatchCommand(AssetType.SHIP, "ship-11", request);
-
-        assertThat(command.assetId()).isEqualTo("ship-11");
-        assertThat(command.attributes()).containsExactly(
-                new AVString("name", "Aurora"),
-                new AVDecimal("imo", new BigDecimal("13579")),
+        assertThat(result.assetId()).isEqualTo("asset-2");
+        assertThat(result.status()).isEqualTo("INACTIVE");
+        assertThat(result.subtype()).isEqualTo("FREIGHT");
+        assertThat(result.description()).isEqualTo("Patched");
+        assertThat(result.currency()).isEqualTo("EUR");
+        assertThat(result.attributes()).containsExactly(
+                new AVString("name", "Sea Queen"),
+                new AVDecimal("imo", new BigDecimal("9876543")),
                 new AVBoolean("active", false)
         );
-        assertThat(command.executedBy()).isEqualTo("updater");
-        assertThat(command.requestTime()).isNotNull();
+        assertThat(result.executedBy()).isEqualTo("patcher");
+        assertThat(result.requestTime()).isNotNull();
     }
 
     @Test
-    void createPatchCommand_withIdInRequest_usesRequestValue() {
-        AssetPatchRequest request = new AssetPatchRequest();
-        request.setId("ship-22");
-        request.setAttributes(objectMapper.createObjectNode()
-                .put("name", "Baltic Star"));
-        request.setExecutedBy("patcher");
+    void createPatchCommand_usingRequestId_validatesPresence() {
+        patchRequest.setId("asset-3");
 
-        var command = registry.createPatchCommand(AssetType.SHIP, request);
+        PatchAssetCommand result = registry.createPatchCommand(AssetType.SHIP, patchRequest);
 
-        assertThat(command.assetId()).isEqualTo("ship-22");
-        assertThat(command.attributes()).containsExactly(
-                new AVString("name", "Baltic Star")
+        assertThat(result.assetId()).isEqualTo("asset-3");
+        assertThat(result.attributes()).containsExactly(
+                new AVString("name", "Sea Queen"),
+                new AVDecimal("imo", new BigDecimal("9876543")),
+                new AVBoolean("active", false)
         );
-        assertThat(command.executedBy()).isEqualTo("patcher");
-        assertThat(command.requestTime()).isNotNull();
+        assertThat(result.executedBy()).isEqualTo("patcher");
+        assertThat(result.requestTime()).isNotNull();
     }
 
     @Test
-    void createPatchCommand_withoutId_throwsException() {
-        AssetPatchRequest request = new AssetPatchRequest();
-        request.setAttributes(objectMapper.createObjectNode());
-        request.setExecutedBy("tester");
+    void createPatchCommand_withoutRequestId_throwsException() {
+        AssetPatchRequest withoutId = new AssetPatchRequest();
+        withoutId.setAttributes(objectMapper.createObjectNode());
+        withoutId.setExecutedBy("tester");
 
-        assertThatThrownBy(() -> registry.createPatchCommand(AssetType.CRE, request))
+        assertThatThrownBy(() -> registry.createPatchCommand(AssetType.CRE, withoutId))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("asset id");
     }
 
     @Test
     void createDeleteCommand_validatesIds() {
-        AssetDeleteRequest request = new AssetDeleteRequest("asset-33", "tester");
+        AssetDeleteRequest request = new AssetDeleteRequest("asset-33", "deleter");
 
-        var command = registry.createDeleteCommand("asset-33", request);
+        DeleteAssetCommand command = registry.createDeleteCommand("asset-33", request);
 
         assertThat(command.assetId()).isEqualTo("asset-33");
-        assertThat(command.executedBy()).isEqualTo("tester");
+        assertThat(command.executedBy()).isEqualTo("deleter");
+        assertThat(command.requestTime()).isNotNull();
 
-        assertThatThrownBy(() -> registry.createDeleteCommand("asset-33", new AssetDeleteRequest("other", "tester")))
+        assertThatThrownBy(() -> registry.createDeleteCommand("asset-33", new AssetDeleteRequest("other", "deleter")))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("match");
     }

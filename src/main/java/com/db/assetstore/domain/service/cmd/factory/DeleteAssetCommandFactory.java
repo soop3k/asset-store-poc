@@ -1,4 +1,4 @@
-package com.db.assetstore.infra.service.cmd;
+package com.db.assetstore.domain.service.cmd.factory;
 
 import com.db.assetstore.domain.service.cmd.DeleteAssetCommand;
 import com.db.assetstore.infra.api.dto.AssetDeleteRequest;
@@ -10,7 +10,7 @@ import java.util.Objects;
 @Component
 public class DeleteAssetCommandFactory {
 
-    public DeleteAssetCommand create(String assetId, AssetDeleteRequest request) {
+    public DeleteAssetCommand createCommand(String assetId, AssetDeleteRequest request) {
         Objects.requireNonNull(assetId, "assetId");
         if (assetId.isBlank()) {
             throw new IllegalArgumentException("assetId must not be blank");
