@@ -6,6 +6,7 @@ import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
@@ -40,6 +41,7 @@ public class CreateAssetCommandFactory {
                 .currency(request.currency())
                 .attributes(attributes)
                 .executedBy(request.executedBy())
+                .requestTime(Instant.now())
                 .build();
     }
 }

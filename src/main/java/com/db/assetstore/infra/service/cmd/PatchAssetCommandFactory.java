@@ -7,6 +7,7 @@ import com.db.assetstore.domain.service.cmd.PatchAssetCommand;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
@@ -44,6 +45,7 @@ public class PatchAssetCommandFactory {
                 .currency(request.getCurrency())
                 .attributes(attributes)
                 .executedBy(request.getExecutedBy())
+                .requestTime(Instant.now())
                 .build();
     }
 

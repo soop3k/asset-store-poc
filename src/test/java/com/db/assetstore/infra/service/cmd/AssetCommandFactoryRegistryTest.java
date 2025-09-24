@@ -65,6 +65,7 @@ class AssetCommandFactoryRegistryTest {
                 new AVBoolean("active", true)
         );
         assertThat(command.executedBy()).isEqualTo("creator");
+        assertThat(command.requestTime()).isNotNull();
     }
 
     @Test
@@ -86,6 +87,7 @@ class AssetCommandFactoryRegistryTest {
                 new AVBoolean("active", false)
         );
         assertThat(command.executedBy()).isEqualTo("updater");
+        assertThat(command.requestTime()).isNotNull();
     }
 
     @Test
@@ -103,6 +105,7 @@ class AssetCommandFactoryRegistryTest {
                 new AVString("name", "Baltic Star")
         );
         assertThat(command.executedBy()).isEqualTo("patcher");
+        assertThat(command.requestTime()).isNotNull();
     }
 
     @Test

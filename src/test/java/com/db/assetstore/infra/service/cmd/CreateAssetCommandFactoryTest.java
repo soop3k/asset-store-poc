@@ -66,6 +66,7 @@ class CreateAssetCommandFactoryTest {
                 new AVBoolean("active", true)
         );
         assertThat(command.executedBy()).isEqualTo("creator");
+        assertThat(command.requestTime()).isNotNull();
     }
 
     @Test

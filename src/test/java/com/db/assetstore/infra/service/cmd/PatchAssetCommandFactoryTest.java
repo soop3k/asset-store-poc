@@ -58,6 +58,7 @@ class PatchAssetCommandFactoryTest {
                 new AVBoolean("active", false)
         );
         assertThat(command.executedBy()).isEqualTo("updater");
+        assertThat(command.requestTime()).isNotNull();
     }
 
     @Test
