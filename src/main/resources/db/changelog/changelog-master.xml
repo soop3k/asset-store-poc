@@ -122,4 +122,132 @@
         </addColumn>
         <dropColumn tableName="asset_attribute_history" columnName="attr_value"/>
     </changeSet>
+
+    <changeSet id="7-link-definition" author="junie">
+        <createTable tableName="link_definition">
+            <column name="code" type="varchar(64)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="entity_type" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cardinality" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_enabled" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="8-link-subtype-definition" author="junie">
+        <createTable tableName="link_subtype_def">
+            <column name="code" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="subtype" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="link_subtype_def" columnNames="code, subtype" constraintName="pk_link_subtype_def"/>
+        <addForeignKeyConstraint baseTableName="link_subtype_def"
+                                 baseColumnNames="code"
+                                 referencedTableName="link_definition"
+                                 referencedColumnNames="code"
+                                 constraintName="fk_link_subtype_def"/>
+    </changeSet>
+
+    <changeSet id="9-asset-link" author="junie">
+        <createTable tableName="asset_link">
+            <column name="id" type="varchar(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="asset_id" type="varchar(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="link_code" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="link_subtype" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="entity_type" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="entity_id" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="active" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="deleted" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="valid_from" type="timestamp"/>
+            <column name="valid_to" type="timestamp"/>
+            <column name="created_at" type="timestamp"/>
+            <column name="created_by" type="varchar(64)"/>
+            <column name="modified_at" type="timestamp"/>
+            <column name="modified_by" type="varchar(64)"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="asset_link"
+                                 baseColumnNames="asset_id"
+                                 referencedTableName="assets"
+                                 referencedColumnNames="id"
+                                 constraintName="fk_asset_link_asset"/>
+        <addForeignKeyConstraint baseTableName="asset_link"
+                                 baseColumnNames="link_code"
+                                 referencedTableName="link_definition"
+                                 referencedColumnNames="code"
+                                 constraintName="fk_asset_link_definition"/>
+    </changeSet>
+
+    <changeSet id="10-link-definition-seed" author="junie">
+        <insert tableName="link_definition">
+            <column name="code" value="WORKFLOW"/>
+            <column name="entity_type" value="WORKFLOW"/>
+            <column name="cardinality" value="ONE_TO_ONE"/>
+            <column name="is_enabled" valueBoolean="true"/>
+        </insert>
+        <insert tableName="link_definition">
+            <column name="code" value="INSTRUMENT"/>
+            <column name="entity_type" value="INSTRUMENT"/>
+            <column name="cardinality" value="MANY_TO_ONE"/>
+            <column name="is_enabled" valueBoolean="true"/>
+        </insert>
+
+        <insert tableName="link_subtype_def">
+            <column name="code" value="WORKFLOW"/>
+            <column name="subtype" value="BULK"/>
+        </insert>
+        <insert tableName="link_subtype_def">
+            <column name="code" value="WORKFLOW"/>
+            <column name="subtype" value="MONITORING"/>
+        </insert>
+        <insert tableName="link_subtype_def">
+            <column name="code" value="WORKFLOW"/>
+            <column name="subtype" value="REVALUATION"/>
+        </insert>
+        <insert tableName="link_subtype_def">
+            <column name="code" value="WORKFLOW"/>
+            <column name="subtype" value="CHG"/>
+        </insert>
+
+        <insert tableName="link_subtype_def">
+            <column name="code" value="INSTRUMENT"/>
+            <column name="subtype" value="BULK"/>
+        </insert>
+        <insert tableName="link_subtype_def">
+            <column name="code" value="INSTRUMENT"/>
+            <column name="subtype" value="MONITORING"/>
+        </insert>
+        <insert tableName="link_subtype_def">
+            <column name="code" value="INSTRUMENT"/>
+            <column name="subtype" value="REVALUATION"/>
+        </insert>
+        <insert tableName="link_subtype_def">
+            <column name="code" value="INSTRUMENT"/>
+            <column name="subtype" value="CHG"/>
+        </insert>
+    </changeSet>
 </databaseChangeLog>

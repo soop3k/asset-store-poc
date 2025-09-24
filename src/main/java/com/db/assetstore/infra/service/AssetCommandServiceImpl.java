@@ -1,18 +1,27 @@
 package com.db.assetstore.infra.service;
 
-import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
-import com.db.assetstore.domain.service.cmd.PatchAssetCommand;
 import com.db.assetstore.domain.model.Asset;
 import com.db.assetstore.domain.model.AssetPatch;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.model.attribute.AttributesCollection;
+import com.db.assetstore.domain.model.link.LinkCardinality;
+import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
+import com.db.assetstore.domain.service.cmd.PatchAssetCommand;
+import com.db.assetstore.domain.service.link.cmd.CreateAssetLinkCommand;
+import com.db.assetstore.domain.service.link.cmd.DeleteAssetLinkCommand;
+import com.db.assetstore.domain.service.link.cmd.PatchAssetLinkCommand;
 import com.db.assetstore.domain.service.AssetCommandService;
 import com.db.assetstore.infra.jpa.AssetEntity;
 import com.db.assetstore.infra.jpa.AttributeEntity;
+import com.db.assetstore.infra.jpa.link.AssetLinkEntity;
+import com.db.assetstore.infra.jpa.link.LinkDefinitionEntity;
+import com.db.assetstore.infra.jpa.link.LinkSubtypeDefinitionEntity;
 import com.db.assetstore.infra.mapper.AssetMapper;
 import com.db.assetstore.infra.mapper.AttributeMapper;
 import com.db.assetstore.infra.repository.AssetRepository;
 import com.db.assetstore.infra.repository.AttributeRepository;
+import com.db.assetstore.infra.repository.link.AssetLinkRepository;
+import com.db.assetstore.infra.repository.link.LinkDefinitionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,6 +43,8 @@ public class AssetCommandServiceImpl implements AssetCommandService {
     private final AttributeMapper attributeMapper;
     private final AssetRepository assetRepo;
     private final AttributeRepository attributeRepo;
+    private final AssetLinkRepository assetLinkRepository;
+    private final LinkDefinitionRepository linkDefinitionRepository;
 
     @Override
     @Transactional
@@ -119,6 +130,87 @@ public class AssetCommandServiceImpl implements AssetCommandService {
         assetRepo.save(e);
     }
 
+    @Override
+    @Transactional
+    public String createLink(CreateAssetLinkCommand command) {
+        Objects.requireNonNull(command, "command");
+        AssetEntity asset = assetRepo.findByIdAndDeleted(command.assetId(), 0)
+                .orElseThrow(() -> new IllegalArgumentException("Asset not found: " + command.assetId()));
+
+        LinkDefinitionEntity definition = linkDefinitionRepository.findByCodeIgnoreCase(command.linkCode())
+                .orElseThrow(() -> new IllegalArgumentException("Unknown link code: " + command.linkCode()));
+
+        validateDefinition(definition, command);
+        if (command.shouldActivate()) {
+            validateCardinality(definition, command);
+        }
+
+        if (assetLinkRepository.existsByAssetIdAndEntityTypeAndEntityIdAndLinkCodeAndLinkSubtypeAndDeletedIsFalse(
+                asset.getId(), command.entityType(), command.entityId(), definition.getCode(), command.linkSubtype())) {
+            throw new IllegalStateException("Link already exists for asset %s and entity %s".formatted(asset.getId(), command.entityId()));
+        }
+
+        AssetLinkEntity entity = buildLinkEntity(asset.getId(), definition.getCode(), command);
+        assetLinkRepository.save(entity);
+        return entity.getId();
+    }
+
+    @Override
+    @Transactional
+    public void deleteLink(DeleteAssetLinkCommand command) {
+        Objects.requireNonNull(command, "command");
+        AssetLinkEntity entity = assetLinkRepository.findByIdAndDeletedIsFalse(command.linkId())
+                .orElseThrow(() -> new IllegalArgumentException("Asset link not found: " + command.linkId()));
+        if (!entity.getAssetId().equals(command.assetId())) {
+            throw new IllegalArgumentException("Link %s does not belong to asset %s".formatted(command.linkId(), command.assetId()));
+        }
+        Instant now = Optional.ofNullable(command.requestTime()).orElseGet(Instant::now);
+        entity.setActive(false);
+        entity.setDeleted(true);
+        entity.setValidTo(now);
+        entity.setModifiedAt(now);
+        entity.setModifiedBy(command.requestedBy());
+        assetLinkRepository.save(entity);
+    }
+
+    @Override
+    @Transactional
+    public void patchLink(PatchAssetLinkCommand command) {
+        Objects.requireNonNull(command, "command");
+
+        AssetLinkEntity entity = assetLinkRepository.findByIdAndDeletedIsFalse(command.linkId())
+                .orElseThrow(() -> new IllegalArgumentException("Asset link not found: " + command.linkId()));
+        if (!entity.getAssetId().equals(command.assetId())) {
+            throw new IllegalArgumentException("Link %s does not belong to asset %s".formatted(command.linkId(), command.assetId()));
+        }
+
+        Instant now = Optional.ofNullable(command.requestTime()).orElseGet(Instant::now);
+
+        if (command.hasActiveChange() && command.active() != entity.isActive()) {
+            if (Boolean.TRUE.equals(command.active())) {
+                LinkDefinitionEntity definition = linkDefinitionRepository.findByCodeIgnoreCase(entity.getLinkCode())
+                        .orElseThrow(() -> new IllegalStateException("Link definition not found for code: " + entity.getLinkCode()));
+                validateDefinition(definition, entity.getEntityType(), entity.getEntityId(), entity.getLinkSubtype());
+                validateCardinality(definition, entity.getAssetId(), entity.getEntityType(), entity.getEntityId(), entity.getLinkSubtype());
+                entity.setActive(true);
+                entity.setDeleted(false);
+            } else {
+                entity.setActive(false);
+            }
+        }
+
+        if (command.validFrom() != null) {
+            entity.setValidFrom(command.validFrom());
+        }
+        if (command.validTo() != null) {
+            entity.setValidTo(command.validTo());
+        }
+
+        entity.setModifiedAt(now);
+        entity.setModifiedBy(command.requestedBy());
+        assetLinkRepository.save(entity);
+    }
+
     private void updateAsset(AssetEntity asset, Collection<AttributeValue<?>> attributes) {
         Objects.requireNonNull(asset, "asset entity");
         Objects.requireNonNull(attributes, "attributes");
@@ -158,5 +250,90 @@ public class AssetCommandServiceImpl implements AssetCommandService {
             }
         }
         assetRepo.save(asset);
+    }
+
+    private void validateDefinition(LinkDefinitionEntity definition, CreateAssetLinkCommand command) {
+        validateDefinition(definition, command.entityType(), command.entityId(), command.linkSubtype());
+    }
+
+    private void validateDefinition(LinkDefinitionEntity definition, String entityType, String entityId, String linkSubtype) {
+        if (!definition.isEnabled()) {
+            throw new IllegalStateException("Link definition %s is disabled".formatted(definition.getCode()));
+        }
+        if (entityType == null || entityType.isBlank()) {
+            throw new IllegalArgumentException("Entity type must be provided");
+        }
+        if (entityId == null || entityId.isBlank()) {
+            throw new IllegalArgumentException("Entity id must be provided");
+        }
+        if (!definition.getEntityType().equalsIgnoreCase(entityType)) {
+            throw new IllegalArgumentException("Entity type %s not allowed for link %s".formatted(entityType, definition.getCode()));
+        }
+        if (linkSubtype == null || linkSubtype.isBlank()) {
+            throw new IllegalArgumentException("Link subtype must be provided");
+        }
+        var subtypes = definition.getSubtypes();
+        if (subtypes == null || subtypes.isEmpty()) {
+            throw new IllegalStateException("No subtypes configured for link %s".formatted(definition.getCode()));
+        }
+        boolean subtypeAllowed = subtypes.stream()
+                .map(LinkSubtypeDefinitionEntity::getId)
+                .map(id -> id.getSubtype().toUpperCase())
+                .anyMatch(code -> code.equalsIgnoreCase(linkSubtype));
+        if (!subtypeAllowed) {
+            throw new IllegalArgumentException("Subtype %s not allowed for link %s".formatted(linkSubtype, definition.getCode()));
+        }
+    }
+
+    private void validateCardinality(LinkDefinitionEntity definition, CreateAssetLinkCommand command) {
+        validateCardinality(definition, command.assetId(), command.entityType(), command.entityId(), command.linkSubtype());
+    }
+
+    private void validateCardinality(LinkDefinitionEntity definition, String assetId, String entityType, String entityId, String linkSubtype) {
+        LinkCardinality cardinality = definition.getCardinality();
+        long assetActive = assetLinkRepository.countByAssetIdAndLinkCodeAndLinkSubtypeAndActiveIsTrueAndDeletedIsFalse(
+                assetId, definition.getCode(), linkSubtype);
+        long entityActive = assetLinkRepository.countByEntityTypeAndEntityIdAndLinkCodeAndLinkSubtypeAndActiveIsTrueAndDeletedIsFalse(
+                entityType, entityId, definition.getCode(), linkSubtype);
+        switch (cardinality) {
+            case ONE_TO_ONE -> {
+                if (assetActive > 0 || entityActive > 0) {
+                    throw new IllegalStateException("ONE_TO_ONE link already exists for asset %s or entity %s".formatted(assetId, entityId));
+                }
+            }
+            case ONE_TO_MANY -> {
+                if (entityActive > 0) {
+                    throw new IllegalStateException("Entity %s already linked for ONE_TO_MANY".formatted(entityId));
+                }
+            }
+            case MANY_TO_ONE -> {
+                if (assetActive > 0) {
+                    throw new IllegalStateException("Asset %s already linked for MANY_TO_ONE".formatted(assetId));
+                }
+            }
+            default -> throw new IllegalStateException("Unsupported cardinality: " + cardinality);
+        }
+    }
+
+    private AssetLinkEntity buildLinkEntity(String assetId, String linkCode, CreateAssetLinkCommand command) {
+        Instant now = Optional.ofNullable(command.requestTime()).orElseGet(Instant::now);
+        Instant validFrom = Optional.ofNullable(command.validFrom()).orElse(now);
+        boolean active = command.shouldActivate();
+        return AssetLinkEntity.builder()
+                .id(UUID.randomUUID().toString())
+                .assetId(assetId)
+                .linkCode(linkCode)
+                .linkSubtype(command.linkSubtype())
+                .entityType(command.entityType())
+                .entityId(command.entityId())
+                .active(active)
+                .deleted(false)
+                .validFrom(validFrom)
+                .validTo(command.validTo())
+                .createdAt(now)
+                .createdBy(command.requestedBy())
+                .modifiedAt(now)
+                .modifiedBy(command.requestedBy())
+                .build();
     }
 }

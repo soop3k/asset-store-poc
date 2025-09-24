@@ -8,11 +8,13 @@ import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.domain.search.SearchCriteria;
 import com.db.assetstore.infra.jpa.AssetEntity;
 import com.db.assetstore.infra.jpa.AttributeEntity;
+import com.db.assetstore.infra.mapper.AssetLinkMapper;
 import com.db.assetstore.infra.mapper.AssetMapper;
 import com.db.assetstore.infra.mapper.AssetMapperImpl;
 import com.db.assetstore.infra.mapper.AttributesCollectionMapper;
 import com.db.assetstore.infra.repository.AssetRepository;
 import com.db.assetstore.infra.service.AssetQueryServiceImpl;
+import com.db.assetstore.infra.repository.link.AssetLinkRepository;
 import com.db.assetstore.infra.service.search.AssetSearchSpecificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,6 +36,8 @@ class AssetQueryServiceImplTest {
     AssetMapper assetMapper = new AssetMapperImpl(collectionMapper);
     AssetRepository assetRepo;
     AssetSearchSpecificationService specService;
+    AssetLinkRepository assetLinkRepository;
+    AssetLinkMapper assetLinkMapper = new AssetLinkMapper();
 
     AssetQueryServiceImpl service;
 
@@ -41,7 +45,8 @@ class AssetQueryServiceImplTest {
     void setUp() {
         assetRepo = mock(AssetRepository.class);
         specService = mock(AssetSearchSpecificationService.class);
-        service = new AssetQueryServiceImpl(assetMapper, assetRepo, specService);
+        assetLinkRepository = mock(AssetLinkRepository.class);
+        service = new AssetQueryServiceImpl(assetMapper, assetRepo, specService, assetLinkRepository, assetLinkMapper);
         when(specService.buildSpec(any())).thenReturn(
                 (Specification) (root, query, cb) -> cb.conjunction());
     }
