@@ -81,7 +81,7 @@ class AssetLinkCommandDataTest {
         linkDefinitionRepo.save(LinkDefinitionEntity.builder()
                 .entityType("WORKFLOW")
                 .entitySubtype("BULK")
-                .cardinality(LinkCardinality.ONE_TO_ONE)
+                .cardinality(LinkCardinality.ASSET_ONE_TARGET_ONE)
                 .active(true)
                 .build());
 
@@ -126,7 +126,7 @@ class AssetLinkCommandDataTest {
         linkDefinitionRepo.save(LinkDefinitionEntity.builder()
                 .entityType("WORKFLOW")
                 .entitySubtype("REVALUATION")
-                .cardinality(LinkCardinality.ONE_TO_ONE)
+                .cardinality(LinkCardinality.ASSET_ONE_TARGET_ONE)
                 .active(true)
                 .build());
 
@@ -165,7 +165,7 @@ class AssetLinkCommandDataTest {
         linkDefinitionRepo.save(LinkDefinitionEntity.builder()
                 .entityType("WORKFLOW")
                 .entitySubtype("MONITORING")
-                .cardinality(LinkCardinality.ONE_TO_MANY)
+                .cardinality(LinkCardinality.ASSET_MANY_TARGET_ONE)
                 .active(true)
                 .build());
 
@@ -199,7 +199,7 @@ class AssetLinkCommandDataTest {
         linkDefinitionRepo.save(LinkDefinitionEntity.builder()
                 .entityType("WORKFLOW")
                 .entitySubtype("CHG")
-                .cardinality(LinkCardinality.ONE_TO_MANY)
+                .cardinality(LinkCardinality.ASSET_MANY_TARGET_ONE)
                 .active(true)
                 .build());
 
@@ -234,7 +234,7 @@ class AssetLinkCommandDataTest {
         linkDefinitionRepo.save(LinkDefinitionEntity.builder()
                 .entityType("WORKFLOW")
                 .entitySubtype("BULK")
-                .cardinality(LinkCardinality.ONE_TO_ONE)
+                .cardinality(LinkCardinality.ASSET_ONE_TARGET_ONE)
                 .active(true)
                 .build());
 
@@ -281,7 +281,7 @@ class AssetLinkCommandDataTest {
         linkDefinitionRepo.save(LinkDefinitionEntity.builder()
                 .entityType("INSTRUMENT")
                 .entitySubtype("MONITORING")
-                .cardinality(LinkCardinality.MANY_TO_ONE)
+                .cardinality(LinkCardinality.ASSET_ONE_TARGET_MANY)
                 .active(true)
                 .build());
 
