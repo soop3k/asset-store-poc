@@ -1,16 +1,16 @@
 package com.db.assetstore.infra.service;
 
-import com.db.assetstore.domain.model.Asset;
 import com.db.assetstore.domain.model.link.LinkCardinality;
 import com.db.assetstore.domain.service.cmd.CommandResult;
 import com.db.assetstore.domain.service.link.cmd.CreateAssetLinkCommand;
 import com.db.assetstore.domain.service.link.cmd.DeleteAssetLinkCommand;
 import com.db.assetstore.infra.config.JsonMapperProvider;
-import com.db.assetstore.infra.jpa.AssetEntity;
 import com.db.assetstore.infra.jpa.AssetLinkEntity;
 import com.db.assetstore.infra.jpa.LinkDefinitionEntity;
 import com.db.assetstore.infra.mapper.AssetMapper;
+import com.db.assetstore.infra.mapper.AssetMapperImpl;
 import com.db.assetstore.infra.mapper.AttributeMapper;
+import com.db.assetstore.infra.mapper.AttributesCollectionMapper;
 import com.db.assetstore.infra.repository.AssetLinkRepo;
 import com.db.assetstore.infra.repository.AssetRepository;
 import com.db.assetstore.infra.repository.AttributeRepository;
@@ -20,6 +20,7 @@ import com.db.assetstore.infra.service.link.AssetLinkCommandValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
@@ -58,9 +59,13 @@ class AssetLinkCommandDataTest {
 
     @BeforeEach
     void setUp() {
+        AttributesCollectionMapper collectionMapper = Mappers.getMapper(AttributesCollectionMapper.class);
+        AssetMapper assetMapper = new AssetMapperImpl(collectionMapper);
+        AttributeMapper attributeMapper = Mappers.getMapper(AttributeMapper.class);
+
         service = new AssetCommandServiceImpl(
-                new SimpleAssetMapper(),
-                new AttributeMapper() {},
+                assetMapper,
+                attributeMapper,
                 assetRepository,
                 attributeRepository,
                 commandLogRepository,
@@ -320,25 +325,4 @@ class AssetLinkCommandDataTest {
                 .containsExactlyInAnyOrder("asset-1", "asset-2");
     }
 
-    private static final class SimpleAssetMapper implements AssetMapper {
-        @Override
-        public Asset toModel(AssetEntity entity) {
-            return null;
-        }
-
-        @Override
-        public AssetEntity toEntity(Asset asset) {
-            return null;
-        }
-
-        @Override
-        public List<Asset> toModelList(List<AssetEntity> entities) {
-            return List.of();
-        }
-
-        @Override
-        public List<AssetEntity> toEntityList(List<Asset> models) {
-            return List.of();
-        }
-    }
 }
