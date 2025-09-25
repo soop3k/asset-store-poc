@@ -17,7 +17,9 @@ public class AttributeDefinitionsProvider {
     private final TypeSchemaRegistry typeSchemaRegistry;
 
     public Map<String, AttributeDefEntity> resolve(AssetType type) {
-        if (type == null) return Collections.emptyMap();
+        if (type == null) {
+            return Collections.emptyMap();
+        }
 
         boolean hasSchema = typeSchemaRegistry.getSchemaPath(type).isPresent();
         if (hasSchema) {
@@ -33,13 +35,17 @@ public class AttributeDefinitionsProvider {
         }
         List<AttributeDefEntity> defs = defRepo.findAllByType(type);
         Map<String, AttributeDefEntity> map = new HashMap<>();
-        for (AttributeDefEntity d : defs) map.put(d.getName(), d);
+        for (AttributeDefEntity d : defs) {
+            map.put(d.getName(), d);
+        }
         return map;
     }
 
     private static AttributeType toAttrType(
             AttributeDefinitionRegistry.ValueType vt) {
-        if (vt == null) return AttributeType.STRING;
+        if (vt == null) {
+            return AttributeType.STRING;
+        }
         return switch (vt) {
             case STRING -> AttributeType.STRING;
             case DECIMAL -> AttributeType.DECIMAL;

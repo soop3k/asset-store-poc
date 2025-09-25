@@ -18,7 +18,9 @@ public final class AttributeUpdater {
     private AttributeUpdater() {}
 
     public static void apply(AttributeEntity e, AttributeValue<?> av) {
-        if (e == null || av == null) return;
+        if (e == null || av == null) {
+            return;
+        }
         e.addHistory(Instant.now());
         av.accept(new AttributeValueVisitor<>() {
             @Override public Void visitString(String v, String name) {

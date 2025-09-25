@@ -5,6 +5,7 @@ import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.service.type.TypeSchemaRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -17,21 +18,20 @@ public final class AssetTypeValidator {
     private final TypeSchemaRegistry registry;
     private final ObjectMapper objectMapper;
 
-    public void ensureSupported(AssetType type) {
-        Objects.requireNonNull(type, "type");
+    public void ensureSupported(@NonNull AssetType type) {
         Optional<String> schema = registry.getSchemaPath(type);
         if (schema.isEmpty()) {
             throw new IllegalArgumentException("Unsupported asset type: " + type + " - schema not found");
         }
     }
 
-    public void validateAttributes(AssetType type, Collection<AttributeValue<?>> attrs) {
-        Objects.requireNonNull(type, "type");
-        Objects.requireNonNull(attrs, "attrs");
+    public void validateAttributes(@NonNull AssetType type, @NonNull Collection<AttributeValue<?>> attrs) {
         String schemaPath = registry.getSchemaPath(type).orElse(null);
         Map<String, Object> map = new LinkedHashMap<>();
         for (AttributeValue<?> av : attrs) {
-            if (av == null) continue;
+            if (av == null) {
+                continue;
+            }
             map.put(av.name(), av.value());
         }
         try {

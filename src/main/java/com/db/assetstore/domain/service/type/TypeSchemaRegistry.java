@@ -43,7 +43,9 @@ public final class TypeSchemaRegistry {
         for (AssetType t : AssetType.values()) {
             String path = String.format(SCHEMA_PATH_PATTERN, t.name());
             try (InputStream is = cl.getResourceAsStream(path)) {
-                if (is == null) continue;
+                if (is == null) {
+                    continue;
+                }
                 JsonNode node = om.readTree(is);
                 JsonSchema compiled = factory.getSchema(node);
                 entries.put(t, new Entry(path, node, compiled));

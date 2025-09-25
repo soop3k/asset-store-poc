@@ -9,10 +9,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
-import java.util.Objects;
 
 /**
  * Service that generates event JSON from an Asset using JSLT templates.
@@ -33,9 +33,7 @@ public final class EventService {
     private final AssetCanonicalizer canonicalizer;
     private final ObjectMapper objectMapper;
 
-    public String generate(String eventName, Asset asset) throws JsonProcessingException {
-        Objects.requireNonNull(eventName, "eventName");
-        Objects.requireNonNull(asset, "asset");
+    public String generate(@NonNull String eventName, @NonNull Asset asset) throws JsonProcessingException {
         log.debug("Generating event '{}' for asset id={} type={}", eventName, asset.getId(), asset.getType());
         String canonical = canonicalizer.toCanonicalJson(asset);
 

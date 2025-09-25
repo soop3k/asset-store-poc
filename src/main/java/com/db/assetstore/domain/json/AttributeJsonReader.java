@@ -8,12 +8,11 @@ import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import static com.db.assetstore.domain.service.type.AttributeDefinitionRegistry.ValueType;
 
@@ -25,15 +24,21 @@ public final class AttributeJsonReader {
     private final AttributeDefinitionRegistry attributeDefinitionRegistry;
 
     public List<AttributeValue<?>> read(AssetType type, JsonNode obj) {
-        if (type == null || obj == null || !obj.isObject()) return List.of();
+        if (type == null || obj == null || !obj.isObject()) {
+            return List.of();
+        }
 
         var defs = attributeDefinitionRegistry.getDefinitions(type);
-        if (defs == null || defs.isEmpty()) return List.of();
+        if (defs == null || defs.isEmpty()) {
+            return List.of();
+        }
 
         var converted = new ArrayList<AttributeValue<?>>();
         for (var e : defs.entrySet()) {
             String name = e.getKey();
-            if (!obj.has(name)) continue;
+            if (!obj.has(name)) {
+                continue;
+            }
 
             JsonNode node = obj.get(name);
             ValueType vt = e.getValue().valueType();
@@ -49,7 +54,9 @@ public final class AttributeJsonReader {
     }
 
     private Object convert(JsonNode node, ValueType vt) {
-        if (node == null || node.isNull()) return null;
+        if (node == null || node.isNull()) {
+            return null;
+        }
         try {
             return switch (vt == null ? ValueType.STRING : vt) {
                 case STRING  -> mapper.convertValue(node, String.class);

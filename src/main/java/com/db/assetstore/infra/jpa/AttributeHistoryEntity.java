@@ -5,10 +5,10 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.lang.NonNull;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.Objects;
 
 
 @Entity
@@ -47,14 +47,14 @@ public class AttributeHistoryEntity {
     @Column(name = "changed_at", nullable = false)
     private Instant changedAt;
 
-    public AttributeHistoryEntity(AttributeEntity attribute, Instant when) {
-        this.attribute = Objects.requireNonNull(attribute);
+    public AttributeHistoryEntity(@NonNull AttributeEntity attribute, @NonNull Instant when) {
+        this.attribute = attribute;
         this.asset     = attribute.getAsset();
         this.name      = attribute.getName();
         this.valueType = attribute.getValueType();
         this.valueStr  = attribute.getValueStr();
         this.valueNum  = attribute.getValueNum();
         this.valueBool = attribute.getValueBool();
-        this.changedAt = Objects.requireNonNull(when);
+        this.changedAt = when;
     }
 }

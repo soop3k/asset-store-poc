@@ -12,7 +12,9 @@ import org.mapstruct.Mappings;
 public interface AttributeHistoryMapper {
 
     default AttributeHistory toModel(AttributeHistoryEntity e) {
-        if (e == null) return null;
+        if (e == null) {
+            return null;
+        }
         String assetId = e.getAsset() != null ? e.getAsset().getId() : null;
         return new AttributeHistory(
                 assetId,

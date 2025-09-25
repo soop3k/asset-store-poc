@@ -61,7 +61,9 @@ public class StartupInfoService {
                     names.add(r.getFilename());
                 }
             } catch (Exception ignored) {
-                if (r.getFilename() != null) names.add(r.getFilename());
+                if (r.getFilename() != null) {
+                    names.add(r.getFilename());
+                }
             }
         }
         return names;

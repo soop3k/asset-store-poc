@@ -33,12 +33,16 @@ public final class JsonSchemaValidator {
 
     public List<String> validate(JsonNode payload, JsonSchema compiled) {
         Set<ValidationMessage> v = compiled.validate(payload);
-        if (v == null || v.isEmpty()) return Collections.emptyList();
+        if (v == null || v.isEmpty()) {
+            return Collections.emptyList();
+        }
         return v.stream().map(ValidationMessage::getMessage).sorted().toList();
     }
 
     public void validateOrThrow(String json, String schemaRes) {
-        if (isBlank(schemaRes)) return;
+        if (isBlank(schemaRes)) {
+            return;
+        }
         log.info("Validating JSON against schema: {}", schemaRes);
         JsonNode payload = parse(json);
         JsonSchema compiled = compileSchema(schemaRes);
@@ -72,7 +76,9 @@ public final class JsonSchemaValidator {
     }
 
     private JsonNode parse(String json) {
-        if (isBlank(json)) throw new IllegalArgumentException("Payload JSON is null/blank");
+        if (isBlank(json)) {
+            throw new IllegalArgumentException("Payload JSON is null/blank");
+        }
         try {
             return mapper.readTree(json.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {

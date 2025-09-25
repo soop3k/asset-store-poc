@@ -7,9 +7,8 @@ import com.db.assetstore.domain.service.cmd.PatchAssetCommand;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;
 import com.db.assetstore.infra.api.dto.AssetDeleteRequest;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
-
-import java.util.Objects;
 
 @Component
 public class AssetCommandFactoryRegistry {
@@ -18,12 +17,12 @@ public class AssetCommandFactoryRegistry {
     private final PatchAssetCommandFactory patchFactory;
     private final DeleteAssetCommandFactory deleteFactory;
 
-    public AssetCommandFactoryRegistry(CreateAssetCommandFactory createFactory,
-                                       PatchAssetCommandFactory patchFactory,
-                                       DeleteAssetCommandFactory deleteFactory) {
-        this.createFactory = Objects.requireNonNull(createFactory, "createFactory");
-        this.patchFactory = Objects.requireNonNull(patchFactory, "patchFactory");
-        this.deleteFactory = Objects.requireNonNull(deleteFactory, "deleteFactory");
+    public AssetCommandFactoryRegistry(@NonNull CreateAssetCommandFactory createFactory,
+                                       @NonNull PatchAssetCommandFactory patchFactory,
+                                       @NonNull DeleteAssetCommandFactory deleteFactory) {
+        this.createFactory = createFactory;
+        this.patchFactory = patchFactory;
+        this.deleteFactory = deleteFactory;
     }
 
     public CreateAssetCommand createCreateCommand(AssetCreateRequest request) {
@@ -34,8 +33,7 @@ public class AssetCommandFactoryRegistry {
         return patchFactory.createCommand(type, id, request);
     }
 
-    public PatchAssetCommand createPatchCommand(AssetType type, AssetPatchRequest request) {
-        Objects.requireNonNull(request, "request");
+    public PatchAssetCommand createPatchCommand(AssetType type, @NonNull AssetPatchRequest request) {
         String id = request.getId();
         if (id == null || id.isBlank()) {
             throw new IllegalArgumentException("Patch request must contain an asset id");

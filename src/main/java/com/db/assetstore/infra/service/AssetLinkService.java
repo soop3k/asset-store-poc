@@ -10,10 +10,10 @@ import com.db.assetstore.infra.repository.LinkDefinitionRepo;
 import com.db.assetstore.infra.service.link.AssetLinkCommandValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
@@ -25,9 +25,7 @@ public class AssetLinkService {
     private final LinkDefinitionRepo linkDefinitionRepo;
     private final AssetLinkCommandValidator assetLinkCommandValidator;
 
-    public CommandResult<Long> create(CreateAssetLinkCommand command) {
-        Objects.requireNonNull(command, "command");
-
+    public CommandResult<Long> create(@NonNull CreateAssetLinkCommand command) {
         LinkDefinitionEntity definition = findActiveDefinition(command);
         assetLinkCommandValidator.validateCreate(command, definition);
 
@@ -39,9 +37,7 @@ public class AssetLinkService {
         return new CommandResult<>(result.entity().getId(), command.assetId());
     }
 
-    public CommandResult<Void> delete(DeleteAssetLinkCommand command) {
-        Objects.requireNonNull(command, "command");
-
+    public CommandResult<Void> delete(@NonNull DeleteAssetLinkCommand command) {
         AssetLinkEntity entity = requireActiveLink(command);
         deactivateLink(command, entity);
         log.info("Deactivated link id={} for asset {}", entity.getId(), command.assetId());

@@ -54,7 +54,9 @@ public final class Asset {
     @JsonProperty("attributes")
     public Map<String, AttributeValue<?>> getAttributesJson() {
         Map<String, AttributeValue<?>> out = new LinkedHashMap<>();
-        if (attributes == null || attributes.isEmpty()) return out;
+        if (attributes == null || attributes.isEmpty()) {
+            return out;
+        }
         attributes.asMapView().forEach((name, list) -> {
             if (list != null && !list.isEmpty()) {
                 out.put(name, list.get(0));
@@ -80,7 +82,9 @@ public final class Asset {
      * Append a single attribute value to the collection (non-destructive for other attributes).
      */
     public Asset setAttribute(AttributeValue<?> av) {
-        if (av == null) return this;
+        if (av == null) {
+            return this;
+        }
         this.attributes = this.attributes.add(av);
         return this;
     }
