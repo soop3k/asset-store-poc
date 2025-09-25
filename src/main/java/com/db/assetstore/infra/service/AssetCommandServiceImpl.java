@@ -148,7 +148,7 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
         Objects.requireNonNull(command, "command");
 
         AssetLinkEntity entity = assetLinkRepo
-                .findByAssetIdAndEntityTypeAndEntitySubtypeAndTargetCodeAndActiveTrue(
+                .findActive(
                         command.assetId(), command.entityType(), command.entitySubtype(), command.targetCode())
                 .orElseThrow(() -> new IllegalStateException(
                         "Active link not found for asset %s".formatted(command.assetId())));
