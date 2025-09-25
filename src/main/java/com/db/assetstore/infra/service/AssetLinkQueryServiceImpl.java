@@ -21,7 +21,7 @@ public class AssetLinkQueryServiceImpl implements AssetLinkQueryService {
     @Override
     @Transactional(readOnly = true)
     public List<AssetLink> findActiveLinks(String assetId) {
-        return toModelList(assetLinkRepo.findActiveByAssetId(assetId));
+        return toModelList(assetLinkRepo.activeForAssetId(assetId));
     }
 
     @Override
