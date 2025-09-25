@@ -262,4 +262,9 @@
             <column name="active" valueBoolean="true"/>
         </insert>
     </changeSet>
+
+    <changeSet id="11-drop-asset-link-unique" author="assistant">
+        <dropUniqueConstraint tableName="asset_link"
+                               constraintName="uk_asset_link_unique"/>
+    </changeSet>
 </databaseChangeLog>
