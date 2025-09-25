@@ -8,14 +8,18 @@ import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.domain.service.cmd.PatchAssetCommand;
 import com.db.assetstore.domain.service.cmd.factory.PatchAssetCommandFactory;
 import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
+import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry.AttributeDefinition;
 import com.db.assetstore.domain.service.type.TypeSchemaRegistry;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;
+import com.db.assetstore.infra.service.type.SchemaAttributeDefinitionLoader;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -84,10 +88,24 @@ class PatchAssetCommandFactoryTest {
         TypeSchemaRegistry typeSchemaRegistry = new TypeSchemaRegistry(objectMapper);
         typeSchemaRegistry.discover();
 
-        AttributeDefinitionRegistry attributeDefinitionRegistry =
-                new AttributeDefinitionRegistry(objectMapper, typeSchemaRegistry);
-        attributeDefinitionRegistry.rebuild();
+        SchemaAttributeDefinitionLoader schemaLoader = new SchemaAttributeDefinitionLoader(typeSchemaRegistry);
 
-        return new AttributeJsonReader(objectMapper, attributeDefinitionRegistry);
+        AttributeDefinitionRegistry registry = new AttributeDefinitionRegistry() {
+            private final Map<AssetType, Map<String, AttributeDefinition>> cache = new HashMap<>();
+
+            @Override
+            public Map<String, AttributeDefinition> getDefinitions(AssetType type) {
+                return cache.computeIfAbsent(type,
+                        t -> schemaLoader.load(t).orElseGet(Map::of));
+            }
+
+            @Override
+            public void refresh() {
+                cache.clear();
+            }
+        };
+        registry.refresh();
+
+        return new AttributeJsonReader(objectMapper, registry);
     }
 }
