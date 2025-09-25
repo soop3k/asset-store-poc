@@ -120,7 +120,7 @@ public class AssetService {
         if (patch.currency() != null) entity.setCurrency(patch.currency());
         entity.setModifiedBy(executedBy);
         entity.setModifiedAt(Instant.now());
-        assetRepo.save(entity);
+        entity = assetRepo.save(entity);
 
         if (patch.attributes() != null) {
             updateAsset(entity, patch.attributes());
@@ -160,10 +160,14 @@ public class AssetService {
                 attributeRepo.save(created);
                 existing.put(created.getName(), created);
             } else {
-                AttributeValue<?> currentValue = attributeMapper.toModel(current);
+                AttributeEntity managed = attributeRepo.findById(current.getId())
+                        .orElse(current);
+                existing.put(managed.getName(), managed);
+
+                AttributeValue<?> currentValue = attributeMapper.toModel(managed);
                 if (AttributeComparator.checkforUpdates(currentValue, incoming)) {
-                    AttributeUpdater.apply(current, incoming);
-                    attributeRepo.save(current);
+                    AttributeUpdater.apply(managed, incoming);
+                    attributeRepo.save(managed);
                 }
             }
         }
