@@ -129,7 +129,7 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
 
         assetLinkCommandValidator.validateCreate(command, definition);
 
-        Optional<AssetLinkEntity> existing = assetLinkRepo.any(
+        Optional<AssetLinkEntity> existing = assetLinkRepo.linkForAsset(
                 command.assetId(), command.entityType(), command.entitySubtype(), command.targetCode());
         boolean reactivated = existing.filter(link -> !link.isActive()).isPresent();
 
@@ -157,7 +157,7 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
         Objects.requireNonNull(command, "command");
 
         AssetLinkEntity entity = assetLinkRepo
-                .match(
+                .activeLinkForAsset(
                         command.assetId(), command.entityType(), command.entitySubtype(), command.targetCode())
                 .orElseThrow(() -> new IllegalStateException(
                         "Active link not found for asset %s".formatted(command.assetId())));
