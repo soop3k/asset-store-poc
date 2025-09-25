@@ -1,27 +1,32 @@
 package com.db.assetstore.infra.service;
 
 import com.db.assetstore.AssetType;
-import com.db.assetstore.domain.model.Asset;
 import com.db.assetstore.domain.model.type.AVDecimal;
 import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.domain.service.cmd.AssetCommand;
 import com.db.assetstore.domain.service.cmd.AssetCommandVisitor;
 import com.db.assetstore.domain.service.cmd.CommandResult;
 import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
+import com.db.assetstore.infra.config.JsonMapperProvider;
 import com.db.assetstore.infra.jpa.AssetEntity;
 import com.db.assetstore.infra.jpa.AttributeEntity;
-import com.db.assetstore.infra.config.JsonMapperProvider;
 import com.db.assetstore.infra.jpa.CommandLogEntity;
 import com.db.assetstore.infra.repository.CommandLogRepository;
 import com.db.assetstore.infra.repository.AssetRepository;
 import com.db.assetstore.infra.repository.AttributeRepository;
+import com.db.assetstore.infra.repository.AssetLinkRepo;
+import com.db.assetstore.infra.repository.LinkDefinitionRepo;
 import com.db.assetstore.infra.service.AssetCommandServiceImpl;
 import com.db.assetstore.infra.mapper.AssetMapper;
+import com.db.assetstore.infra.mapper.AssetMapperImpl;
 import com.db.assetstore.infra.mapper.AttributeMapper;
+import com.db.assetstore.infra.mapper.AttributesCollectionMapper;
+import com.db.assetstore.infra.service.link.AssetLinkCommandValidator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
@@ -44,19 +49,31 @@ class AssetCommandServiceCommandLogDataTest {
     @Autowired
     AttributeRepository attributeRepository;
 
+    @Autowired
+    AssetLinkRepo assetLinkRepo;
+
+    @Autowired
+    LinkDefinitionRepo linkDefinitionRepo;
+
     ObjectMapper objectMapper = new JsonMapperProvider().objectMapper();
 
     AssetCommandServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        AttributeMapper attributeMapper = new AttributeMapper() {};
+        AttributesCollectionMapper collectionMapper = Mappers.getMapper(AttributesCollectionMapper.class);
+        AssetMapper assetMapper = new AssetMapperImpl(collectionMapper);
+        AttributeMapper attributeMapper = Mappers.getMapper(AttributeMapper.class);
+        AssetLinkCommandValidator assetLinkCommandValidator = new AssetLinkCommandValidator(assetLinkRepo);
         service = new AssetCommandServiceImpl(
-                new SimpleAssetMapper(),
+                assetMapper,
                 attributeMapper,
                 assetRepository,
                 attributeRepository,
                 commandLogRepository,
+                assetLinkRepo,
+                linkDefinitionRepo,
+                assetLinkCommandValidator,
                 objectMapper
         );
     }
@@ -125,67 +142,4 @@ class AssetCommandServiceCommandLogDataTest {
         }
     }
 
-    private static final class SimpleAssetMapper implements AssetMapper {
-
-        @Override
-        public Asset toModel(AssetEntity entity) {
-            if (entity == null) {
-                return null;
-            }
-            Asset asset = Asset.builder()
-                    .id(entity.getId())
-                    .type(entity.getType())
-                    .status(entity.getStatus())
-                    .subtype(entity.getSubtype())
-                    .description(entity.getDescription())
-                    .currency(entity.getCurrency())
-                    .createdBy(entity.getCreatedBy())
-                    .modifiedBy(entity.getModifiedBy())
-                    .build();
-            if (entity.getAttributes() != null) {
-                asset.setAttributes(entity.getAttributes().stream()
-                        .map(a -> new AVString(a.getName(), a.getValueStr()))
-                        .collect(Collectors.toList()));
-            }
-            return asset;
-        }
-
-        @Override
-        public AssetEntity toEntity(Asset asset) {
-            if (asset == null) {
-                return null;
-            }
-            return AssetEntity.builder()
-                    .id(asset.getId())
-                    .type(asset.getType())
-                    .status(asset.getStatus())
-                    .subtype(asset.getSubtype())
-                    .description(asset.getDescription())
-                    .currency(asset.getCurrency())
-                    .createdBy(asset.getCreatedBy())
-                    .modifiedBy(asset.getModifiedBy())
-                    .createdAt(asset.getCreatedAt())
-                    .modifiedAt(asset.getModifiedAt())
-                    .notionalAmount(asset.getNotionalAmount())
-                    .year(asset.getYear())
-                    .attributes(new java.util.ArrayList<>())
-                    .build();
-        }
-
-        @Override
-        public List<Asset> toModelList(List<AssetEntity> entities) {
-            if (entities == null) {
-                return List.of();
-            }
-            return entities.stream().map(this::toModel).collect(Collectors.toList());
-        }
-
-        @Override
-        public List<AssetEntity> toEntityList(List<Asset> models) {
-            if (models == null) {
-                return List.of();
-            }
-            return models.stream().map(this::toEntity).collect(Collectors.toList());
-        }
-    }
 }
