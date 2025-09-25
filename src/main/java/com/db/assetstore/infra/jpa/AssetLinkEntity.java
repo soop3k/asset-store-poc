@@ -6,9 +6,7 @@ import lombok.*;
 import java.time.Instant;
 
 @Entity
-@Table(name = "asset_link",
-       uniqueConstraints = @UniqueConstraint(name = "uk_asset_link_unique",
-               columnNames = {"asset_id", "entity_type", "entity_subtype", "target_code"}))
+@Table(name = "asset_link")
 @Getter
 @Setter
 @NoArgsConstructor
