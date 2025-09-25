@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.util.List;
 
-
 @Component
 @RequiredArgsConstructor
 public final class AssetCanonicalizer {
@@ -20,25 +19,7 @@ public final class AssetCanonicalizer {
     private final ObjectMapper mapper;
 
     public String toCanonicalJson(Asset asset) {
-        ObjectNode root = mapper.createObjectNode();
-        put(root, "id", asset.getId());
-        put(root, "type", asset.getType());
-        put(root, "createdAt", asset.getCreatedAt());
-        put(root, "version", asset.getVersion());
-        put(root, "status", asset.getStatus());
-        put(root, "subtype", asset.getSubtype());
-        put(root, "statusEffectiveTime", asset.getStatusEffectiveTime());
-        put(root, "modifiedAt", asset.getModifiedAt());
-        put(root, "modifiedBy", asset.getModifiedBy());
-        put(root, "createdBy", asset.getCreatedBy());
-        root.put("softDelete", asset.isSoftDelete());
-        put(root, "notionalAmount", asset.getNotionalAmount());
-        put(root, "year", asset.getYear());
-        put(root, "wh", asset.getWh());
-        put(root, "sourceSystemName", asset.getSourceSystemName());
-        put(root, "externalReference", asset.getExternalReference());
-        put(root, "description", asset.getDescription());
-        put(root, "currency", asset.getCurrency());
+        ObjectNode root = mapper.valueToTree(asset);
 
         ObjectNode attrs = mapper.createObjectNode();
         AttributeNodeWriter writer = new AttributeNodeWriter(attrs);
@@ -54,27 +35,6 @@ public final class AssetCanonicalizer {
 
     private static AttributeValue<?> first(List<AttributeValue<?>> values) {
         return (values == null || values.isEmpty()) ? null : values.get(0);
-    }
-
-    private static void put(ObjectNode node, String field, Object value) {
-        if (value == null) {
-            return;
-        }
-        if (value instanceof String s) {
-            node.put(field, s);
-        } else if (value instanceof Integer i) {
-            node.put(field, i);
-        } else if (value instanceof Long l) {
-            node.put(field, l);
-        } else if (value instanceof BigDecimal bd) {
-            node.put(field, bd);
-        } else if (value instanceof Boolean b) {
-            node.put(field, b);
-        } else if (value instanceof Number n) {
-            node.put(field, n.doubleValue());
-        } else {
-            node.put(field, value.toString());
-        }
     }
 
     private static final class AttributeNodeWriter implements AttributeValueVisitor<Void> {
