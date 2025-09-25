@@ -4,7 +4,7 @@ import com.db.assetstore.domain.model.link.AssetLink;
 import com.db.assetstore.domain.service.link.AssetLinkQueryService;
 import com.db.assetstore.infra.jpa.AssetLinkEntity;
 import com.db.assetstore.infra.mapper.AssetLinkMapper;
-import com.db.assetstore.infra.repository.AssetLinkRepository;
+import com.db.assetstore.infra.repository.AssetLinkRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,20 +15,20 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AssetLinkQueryServiceImpl implements AssetLinkQueryService {
 
-    private final AssetLinkRepository assetLinkRepository;
+    private final AssetLinkRepo assetLinkRepo;
     private final AssetLinkMapper assetLinkMapper;
 
     @Override
     @Transactional(readOnly = true)
     public List<AssetLink> findActiveLinks(String assetId) {
-        return toModelList(assetLinkRepository.findByAssetIdAndActive(assetId, true));
+        return toModelList(assetLinkRepo.findByAssetIdAndActive(assetId, true));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<AssetLink> findLinks(String assetId, boolean includeInactive) {
         if (includeInactive) {
-            return toModelList(assetLinkRepository.findByAssetId(assetId));
+            return toModelList(assetLinkRepo.findByAssetId(assetId));
         }
         return findActiveLinks(assetId);
     }

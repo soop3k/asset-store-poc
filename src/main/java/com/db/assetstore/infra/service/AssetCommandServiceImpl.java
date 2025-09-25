@@ -19,11 +19,11 @@ import com.db.assetstore.infra.jpa.CommandLogEntity;
 import com.db.assetstore.infra.jpa.LinkDefinitionEntity;
 import com.db.assetstore.infra.mapper.AssetMapper;
 import com.db.assetstore.infra.mapper.AttributeMapper;
-import com.db.assetstore.infra.repository.AssetLinkRepository;
+import com.db.assetstore.infra.repository.AssetLinkRepo;
 import com.db.assetstore.infra.repository.AssetRepository;
 import com.db.assetstore.infra.repository.AttributeRepository;
 import com.db.assetstore.infra.repository.CommandLogRepository;
-import com.db.assetstore.infra.repository.LinkDefinitionRepository;
+import com.db.assetstore.infra.repository.LinkDefinitionRepo;
 import com.db.assetstore.infra.service.link.AssetLinkCommandValidator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -53,8 +53,8 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
     private final AssetRepository assetRepo;
     private final AttributeRepository attributeRepo;
     private final CommandLogRepository commandLogRepository;
-    private final AssetLinkRepository assetLinkRepository;
-    private final LinkDefinitionRepository linkDefinitionRepository;
+    private final AssetLinkRepo assetLinkRepo;
+    private final LinkDefinitionRepo linkDefinitionRepo;
     private final AssetLinkCommandValidator assetLinkCommandValidator;
     private final ObjectMapper objectMapper;
 
@@ -121,7 +121,7 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
     public CommandResult<Long> visit(CreateAssetLinkCommand command) {
         Objects.requireNonNull(command, "command");
 
-        LinkDefinitionEntity definition = linkDefinitionRepository
+        LinkDefinitionEntity definition = linkDefinitionRepo
                 .findByEntityTypeAndEntitySubtypeAndActiveTrue(command.entityType(), command.entitySubtype())
                 .orElseThrow(() -> new IllegalStateException(
                         "Link definition missing for %s/%s".formatted(command.entityType(), command.entitySubtype())));
@@ -138,7 +138,7 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
                 .createdBy(command.executedBy())
                 .build();
 
-        AssetLinkEntity saved = assetLinkRepository.save(entity);
+        AssetLinkEntity saved = assetLinkRepo.save(entity);
         log.info("Created link id={} for asset {}", saved.getId(), command.assetId());
         return new CommandResult<>(saved.getId(), command.assetId());
     }
@@ -147,7 +147,7 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
     public CommandResult<Void> visit(DeleteAssetLinkCommand command) {
         Objects.requireNonNull(command, "command");
 
-        AssetLinkEntity entity = assetLinkRepository
+        AssetLinkEntity entity = assetLinkRepo
                 .findByAssetIdAndEntityTypeAndEntitySubtypeAndTargetCodeAndActiveTrue(
                         command.assetId(), command.entityType(), command.entitySubtype(), command.targetCode())
                 .orElseThrow(() -> new IllegalStateException(
@@ -156,7 +156,7 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
         entity.setActive(false);
         entity.setDeactivatedAt(orNow(command.requestTime()));
         entity.setDeactivatedBy(command.executedBy());
-        assetLinkRepository.save(entity);
+        assetLinkRepo.save(entity);
         log.info("Deactivated link id={} for asset {}", entity.getId(), command.assetId());
         return CommandResult.noResult(command.assetId());
     }

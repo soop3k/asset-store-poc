@@ -4,7 +4,7 @@ import com.db.assetstore.domain.model.link.LinkCardinality;
 import com.db.assetstore.domain.service.link.cmd.CreateAssetLinkCommand;
 import com.db.assetstore.infra.jpa.AssetLinkEntity;
 import com.db.assetstore.infra.jpa.LinkDefinitionEntity;
-import com.db.assetstore.infra.repository.AssetLinkRepository;
+import com.db.assetstore.infra.repository.AssetLinkRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -14,7 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AssetLinkCommandValidator {
 
-    private final AssetLinkRepository assetLinkRepository;
+    private final AssetLinkRepo assetLinkRepo;
 
     public void validateCreate(CreateAssetLinkCommand command, LinkDefinitionEntity definition) {
         ensureDefinitionActive(definition);
@@ -31,7 +31,7 @@ public class AssetLinkCommandValidator {
     }
 
     private void ensureNoDuplicate(CreateAssetLinkCommand command) {
-        assetLinkRepository.findByAssetIdAndEntityTypeAndEntitySubtypeAndTargetCodeAndActiveTrue(
+        assetLinkRepo.findByAssetIdAndEntityTypeAndEntitySubtypeAndTargetCodeAndActiveTrue(
                         command.assetId(), command.entityType(), command.entitySubtype(), command.targetCode())
                 .ifPresent(existing -> {
                     throw new IllegalStateException(
@@ -41,10 +41,10 @@ public class AssetLinkCommandValidator {
     }
 
     private void ensureCardinality(LinkCardinality cardinality, CreateAssetLinkCommand command) {
-        List<AssetLinkEntity> assetLinks = assetLinkRepository
+        List<AssetLinkEntity> assetLinks = assetLinkRepo
                 .findByAssetIdAndEntityTypeAndEntitySubtypeAndActiveTrue(
                         command.assetId(), command.entityType(), command.entitySubtype());
-        List<AssetLinkEntity> targetLinks = assetLinkRepository
+        List<AssetLinkEntity> targetLinks = assetLinkRepo
                 .findByEntityTypeAndEntitySubtypeAndTargetCodeAndActiveTrue(
                         command.entityType(), command.entitySubtype(), command.targetCode());
 

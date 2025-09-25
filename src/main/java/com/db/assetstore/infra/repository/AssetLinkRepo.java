@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 
-public interface AssetLinkRepository extends JpaRepository<AssetLinkEntity, Long> {
+public interface AssetLinkRepo extends JpaRepository<AssetLinkEntity, Long> {
 
     List<AssetLinkEntity> findByAssetIdAndActive(String assetId, boolean active);
 
