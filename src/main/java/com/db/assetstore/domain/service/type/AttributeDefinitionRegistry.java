@@ -1,15 +1,20 @@
 package com.db.assetstore.domain.service.type;
 
 import com.db.assetstore.AssetType;
+import com.db.assetstore.domain.model.type.AttributeType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -115,5 +120,16 @@ public final class AttributeDefinitionRegistry {
 
     public record Def(String name, ValueType valueType, boolean required) {
         public boolean required() { return required; }
+    }
+
+    public static AttributeType toAttributeType(ValueType valueType) {
+        if (valueType == null) {
+            return AttributeType.STRING;
+        }
+        return switch (valueType) {
+            case STRING -> AttributeType.STRING;
+            case DECIMAL -> AttributeType.DECIMAL;
+            case BOOLEAN -> AttributeType.BOOLEAN;
+        };
     }
 }

@@ -1,16 +1,15 @@
 package com.db.assetstore.domain.service.startup;
 
 import com.db.assetstore.AssetType;
-import com.db.assetstore.domain.model.type.AttributeType;
-import com.db.assetstore.infra.jpa.AttributeDefEntity;
 import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
+import com.db.assetstore.domain.service.type.TypeSchemaRegistry;
+import com.db.assetstore.infra.jpa.AttributeDefEntity;
 import com.db.assetstore.infra.repository.AttributeDefRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.db.assetstore.domain.service.type.TypeSchemaRegistry;
 
 
 @Service
@@ -35,7 +34,7 @@ public class AttributeBootstrapService {
                     var e = new AttributeDefEntity(
                             t,
                             def.name(),
-                            toAttrType(def.valueType()),
+                            AttributeDefinitionRegistry.toAttributeType(def.valueType()),
                             def.required()
                     );
                     repository.save(e);
@@ -43,15 +42,6 @@ public class AttributeBootstrapService {
                 log.info("Bootstrapped attribute from schemas {type={}, count={}}", t, defs.size());
             }
         }
-    }
-
-    private static AttributeType toAttrType(AttributeDefinitionRegistry.ValueType vt) {
-        if (vt == null) return AttributeType.STRING;
-        return switch (vt) {
-            case STRING -> AttributeType.STRING;
-            case DECIMAL -> AttributeType.DECIMAL;
-            case BOOLEAN -> AttributeType.BOOLEAN;
-        };
     }
 }
 

@@ -112,12 +112,24 @@ public class AssetService {
         AssetEntity entity = assetRepo.findByIdAndDeleted(id, 0)
                 .orElseThrow(() -> new IllegalArgumentException("Asset not found: " + id));
 
-        if (patch.status() != null) entity.setStatus(patch.status());
-        if (patch.subtype() != null) entity.setSubtype(patch.subtype());
-        if (patch.notionalAmount() != null) entity.setNotionalAmount(patch.notionalAmount());
-        if (patch.year() != null) entity.setYear(patch.year());
-        if (patch.description() != null) entity.setDescription(patch.description());
-        if (patch.currency() != null) entity.setCurrency(patch.currency());
+        if (patch.status() != null) {
+            entity.setStatus(patch.status());
+        }
+        if (patch.subtype() != null) {
+            entity.setSubtype(patch.subtype());
+        }
+        if (patch.notionalAmount() != null) {
+            entity.setNotionalAmount(patch.notionalAmount());
+        }
+        if (patch.year() != null) {
+            entity.setYear(patch.year());
+        }
+        if (patch.description() != null) {
+            entity.setDescription(patch.description());
+        }
+        if (patch.currency() != null) {
+            entity.setCurrency(patch.currency());
+        }
         entity.setModifiedBy(executedBy);
         entity.setModifiedAt(Instant.now());
         entity = assetRepo.save(entity);

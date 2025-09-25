@@ -12,7 +12,7 @@ public final class AttributeUpdater {
     private AttributeUpdater() {}
 
     public static void apply(AttributeEntity e, AttributeValue<?> av) {
-        if (e == null || av == null){
+        if (e == null || av == null) {
             return;
         }
         e.addHistory(Instant.now());
