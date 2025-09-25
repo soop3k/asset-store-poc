@@ -4,24 +4,22 @@ import com.db.assetstore.domain.json.AttributeJsonReader;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;
+import lombok.NonNull;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Objects;
 
 @Component
 public class CreateAssetCommandFactory {
 
     private final AttributeJsonReader attributeJsonReader;
 
-    public CreateAssetCommandFactory(AttributeJsonReader attributeJsonReader) {
-        this.attributeJsonReader = Objects.requireNonNull(attributeJsonReader, "attributeJsonReader");
+    public CreateAssetCommandFactory(@NonNull AttributeJsonReader attributeJsonReader) {
+        this.attributeJsonReader = attributeJsonReader;
     }
 
-    public CreateAssetCommand createCommand(AssetCreateRequest request) {
-        Objects.requireNonNull(request, "request");
-
+    public CreateAssetCommand createCommand(@NonNull AssetCreateRequest request) {
         List<AttributeValue<?>> attributes = request.attributes() == null
                 ? List.of()
                 : List.copyOf(attributeJsonReader.read(request.type(), request.attributes()));

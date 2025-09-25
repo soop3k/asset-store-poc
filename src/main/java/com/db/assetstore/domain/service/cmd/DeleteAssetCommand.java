@@ -1,6 +1,7 @@
 package com.db.assetstore.domain.service.cmd;
 
 import lombok.Builder;
+import lombok.NonNull;
 
 import java.time.Instant;
 
@@ -9,7 +10,7 @@ import java.time.Instant;
  */
 @Builder
 public record DeleteAssetCommand(
-        String assetId,
+        @NonNull String assetId,
         String executedBy,
         Instant requestTime
 ) implements AssetCommand<Void> {

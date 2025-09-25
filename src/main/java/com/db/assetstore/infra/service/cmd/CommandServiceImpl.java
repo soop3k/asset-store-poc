@@ -11,12 +11,12 @@ import com.db.assetstore.domain.service.link.cmd.CreateAssetLinkCommand;
 import com.db.assetstore.domain.service.link.cmd.DeleteAssetLinkCommand;
 import com.db.assetstore.infra.service.link.AssetLinkService;
 import com.db.assetstore.infra.service.AssetService;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Objects;
 
 @Slf4j
 @Service
@@ -29,9 +29,7 @@ public class CommandServiceImpl implements AssetCommandService, AssetCommandVisi
 
     @Override
     @Transactional
-    public <R> CommandResult<R> execute(AssetCommand<R> command) {
-        Objects.requireNonNull(command, "command");
-
+    public <R> CommandResult<R> execute(@NonNull AssetCommand<R> command) {
         CommandResult<R> result = command.accept(this);
         if (result.success()) {
             commandLogService.record(result, command);

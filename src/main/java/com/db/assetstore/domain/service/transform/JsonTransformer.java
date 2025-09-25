@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.schibsted.spt.data.jslt.Expression;
 import com.schibsted.spt.data.jslt.Parser;
 import com.db.assetstore.domain.service.validation.JsonSchemaValidator;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -14,7 +15,6 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Objects;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,10 +29,7 @@ public final class JsonTransformer {
 
     private final ConcurrentHashMap<String, Expression> expressionCache = new ConcurrentHashMap<>();
 
-    public String transform(String transformName, String inputJson) {
-        Objects.requireNonNull(transformName, "transformName");
-        Objects.requireNonNull(inputJson, "inputJson");
-
+    public String transform(@NonNull String transformName, @NonNull String inputJson) {
         String templatePath = "transforms/events/" + transformName + ".jslt";
         if (!resourceExists(templatePath)) {
             log.error("Transform template not found: {}", templatePath);
