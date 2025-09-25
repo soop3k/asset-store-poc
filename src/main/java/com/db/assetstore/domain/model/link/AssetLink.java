@@ -2,11 +2,11 @@ package com.db.assetstore.domain.model.link;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Value;
 
 import java.time.Instant;
 
-@Getter
+@Value
 @Builder(toBuilder = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AssetLink {
