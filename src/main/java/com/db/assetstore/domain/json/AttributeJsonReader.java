@@ -5,6 +5,7 @@ import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.model.type.AVBoolean;
 import com.db.assetstore.domain.model.type.AVDecimal;
 import com.db.assetstore.domain.model.type.AVString;
+import com.db.assetstore.domain.model.type.AttributeType;
 import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,8 +15,6 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.db.assetstore.domain.service.type.AttributeDefinitionRegistry.ValueType;
 
 @Component
 @RequiredArgsConstructor
@@ -35,43 +34,45 @@ public final class AttributeJsonReader {
         }
 
         var converted = new ArrayList<AttributeValue<?>>();
-        for (var e : defs.entrySet()) {
-            String name = e.getKey();
+        for (var entry : defs.entrySet()) {
+            String name = entry.getKey();
             if (!obj.has(name)) {
                 continue;
             }
 
             JsonNode node = obj.get(name);
-            ValueType vt = e.getValue().valueType();
+            AttributeType attributeType = entry.getValue().attributeType();
             if (node.isArray()) {
                 for (JsonNode item : node) {
-                    converted.add(createAV(name, vt, convert(item, vt)));
+                    converted.add(createAV(name, attributeType, convert(item, attributeType)));
                 }
             } else {
-                converted.add(createAV(name, vt, convert(node, vt)));
+                converted.add(createAV(name, attributeType, convert(node, attributeType)));
             }
         }
         return converted;
     }
 
-    private Object convert(JsonNode node, ValueType vt) {
+    private Object convert(JsonNode node, AttributeType attributeType) {
         if (node == null || node.isNull()) {
             return null;
         }
         try {
-            return switch (vt == null ? ValueType.STRING : vt) {
+            AttributeType effectiveType = attributeType == null ? AttributeType.STRING : attributeType;
+            return switch (effectiveType) {
                 case STRING  -> mapper.convertValue(node, String.class);
                 case DECIMAL -> mapper.convertValue(node, BigDecimal.class);
                 case BOOLEAN -> mapper.convertValue(node, Boolean.class);
             };
         } catch (IllegalArgumentException ex) {
             String got = node.isTextual() ? "'" + node.asText() + "'" : node.getNodeType().name();
-            throw new IllegalArgumentException("Attribute expected " + vt + " but got " + got, ex);
+            throw new IllegalArgumentException("Attribute expected " + attributeType + " but got " + got, ex);
         }
     }
 
-    private AttributeValue<?> createAV(String name, ValueType vt, Object value) {
-        return switch (vt == null ? ValueType.STRING : vt) {
+    private AttributeValue<?> createAV(String name, AttributeType attributeType, Object value) {
+        AttributeType effectiveType = attributeType == null ? AttributeType.STRING : attributeType;
+        return switch (effectiveType) {
             case STRING  -> new AVString(name, (String) value);
             case DECIMAL -> new AVDecimal(name, (BigDecimal) value);
             case BOOLEAN -> new AVBoolean(name, (Boolean) value);
