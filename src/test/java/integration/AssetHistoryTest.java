@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("test")
 @Transactional
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-class IntegrationAssetHistoryTest {
+class AssetHistoryTest {
 
     @Autowired
     AssetCommandService commandService;

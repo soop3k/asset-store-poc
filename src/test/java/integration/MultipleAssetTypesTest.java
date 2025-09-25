@@ -9,7 +9,6 @@ import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,8 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(classes = com.db.assetstore.AssetStorePocApplication.class)
 @ActiveProfiles("test")
 @Transactional
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-class IntegrationMultipleAssetTypesTest {
+class MultipleAssetTypesTest {
 
     @Autowired
     AssetCommandService commandService;
@@ -29,11 +27,11 @@ class IntegrationMultipleAssetTypesTest {
     AssetQueryService queryService;
 
     @Test
-    void persistTwoDifferentAssetTypes_CRE_and_SHIP() {
+    void persistTwoDifferentAssetTypes() {
         var creCmd = CreateAssetCommand.builder()
                 .id("cre-int-2")
                 .type(AssetType.CRE)
-                .attributes(java.util.List.of(new AVString("city", "Lublin")))
+                .attributes(java.util.List.of(AVString.of("city", "Lublin")))
                 .build();
         String creId = commandService.create(creCmd);
         assertEquals("cre-int-2", creId);
@@ -42,8 +40,8 @@ class IntegrationMultipleAssetTypesTest {
                 .id("ship-int-1")
                 .type(AssetType.SHIP)
                 .attributes(java.util.List.of(
-                        new AVString("name", "Evergreen"),
-                        new AVDecimal("imo", new BigDecimal("1234567"))
+                        AVString.of("name", "Evergreen"),
+                        AVDecimal.of("imo", new BigDecimal("1234567"))
                 ))
                 .build();
         String shipId = commandService.create(shipCmd);

@@ -26,7 +26,6 @@ public final class AttributeDefinitionRegistry {
         return defsByType.getOrDefault(type, Collections.emptyMap());
     }
 
-    @PostConstruct
     public void rebuild() {
         for (AssetType t : typeSchemaRegistry.supportedTypes()) {
             String path = typeSchemaRegistry.getSchemaPath(t).orElse(null);

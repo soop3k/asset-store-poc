@@ -50,7 +50,7 @@ class PatchAssetCommandFactoryTest {
     }
 
     @Test
-    void createCommand_buildsCommandWithAttributes() {
+    void buildsCommandWithAttributes() {
         PatchAssetCommand command = factory.createCommand(AssetType.SHIP, "asset-2", request);
 
         assertThat(command.assetId()).isEqualTo("asset-2");
@@ -70,7 +70,7 @@ class PatchAssetCommandFactoryTest {
     }
 
     @Test
-    void createCommand_withNullAttributes_usesEmptyList() {
+    void buildCommandWithNullAttributes() {
         request.setAttributes(null);
 
         PatchAssetCommand command = factory.createCommand(AssetType.CRE, "asset-2", request);

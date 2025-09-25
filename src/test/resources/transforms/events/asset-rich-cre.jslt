@@ -1,0 +1,14 @@
+{
+  "id": .asset.id,
+  "type": .asset.type,
+  "currency": .asset.currency,
+  "notional_amount": .asset.notionalAmount,
+  "asset_status": .asset.status,
+  "payload":[
+         {
+           "intValue": .asset.attributes.intAttr,
+           "longValue": .asset.attributes.longAttr,
+           "doubleValue": .asset.attributes.dblAttr * 2,
+         }
+    ]
+}

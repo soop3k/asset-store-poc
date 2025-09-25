@@ -29,7 +29,7 @@ class AssetControllerTest {
     MockMvc mockMvc;
 
     @Test
-    void createSingleAsset_CRE_withAllFields_returnsIdAndVerifyData() throws Exception {
+    void createSingleAsset() throws Exception {
         String payload = """
                 {
                     "type": "CRE",
@@ -76,7 +76,7 @@ class AssetControllerTest {
     }
 
     @Test
-    void createSingleAsset_SHIP_withMinimalFields_handlesDefaults() throws Exception {
+    void createSingleAssetWithMinimalFields() throws Exception {
         String payload = """
                 {
                     "type": "SHIP",
@@ -106,7 +106,7 @@ class AssetControllerTest {
     }
 
     @Test
-    void createSingleAsset_withProvidedId_usesSpecifiedId() throws Exception {
+    void createSingleAssetWithProvidedId() throws Exception {
         String payload = """
                 {
                     "id": "custom-asset-123",
@@ -130,7 +130,7 @@ class AssetControllerTest {
     }
 
     @Test
-    void createSingleAsset_invalidJson_returnsBadRequest() throws Exception {
+    void createSingleAssetWithInvalidJson() throws Exception {
         String invalidPayload = """
                 {
                     "type": "CRE",
@@ -147,7 +147,7 @@ class AssetControllerTest {
     }
 
     @Test
-    void createBulkAssets_mixedTypes_returnsAllIds() throws Exception {
+    void createBulkAssets() throws Exception {
         String payload = """
                 [
                     {

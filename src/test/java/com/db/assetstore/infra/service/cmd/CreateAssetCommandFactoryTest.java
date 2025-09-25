@@ -32,7 +32,7 @@ class CreateAssetCommandFactoryTest {
     }
 
     @Test
-    void createCommand_populatesCommandAndParsesAttributes() {
+    void populatesCommandAndParsesAttributes() {
         ObjectNode attributes = objectMapper.createObjectNode();
         attributes.put("city", "Frankfurt");
         attributes.put("area", new BigDecimal("500.25"));
@@ -71,7 +71,7 @@ class CreateAssetCommandFactoryTest {
     }
 
     @Test
-    void createCommand_withNullAttributes_usesEmptyList() {
+    void buildCommandWithNullAttributes() {
         AssetCreateRequest request = new AssetCreateRequest(
                 null,
                 AssetType.SHIP,

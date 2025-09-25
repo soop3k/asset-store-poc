@@ -39,13 +39,13 @@ class AssetLinkControllerTest {
     }
 
     @Test
-    void listAssetLinks_assetNotFound_returns404() throws Exception {
+    void listNonExistingAssetLinks() throws Exception {
         mockMvc.perform(get("/assets/missing-asset/links"))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void listAssetLinks_noLinks_returnsEmptyArray() throws Exception {
+    void listAssetEmptyLinks() throws Exception {
         String assetId = createAsset();
 
         mockMvc.perform(get("/assets/" + assetId + "/links")
@@ -56,7 +56,7 @@ class AssetLinkControllerTest {
     }
 
     @Test
-    void listAssetLinks_includeInactiveFiltersResults() throws Exception {
+    void listAssetLinksInactive() throws Exception {
         String assetId = createAsset();
 
         assetLinkRepo.save(AssetLinkEntity.builder()

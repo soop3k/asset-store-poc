@@ -1,4 +1,4 @@
-package com.db.assetstore.infra.service;
+package com.db.assetstore.infra.service.cmd;
 
 import com.db.assetstore.domain.service.AssetCommandService;
 import com.db.assetstore.domain.service.cmd.AssetCommand;
@@ -9,6 +9,8 @@ import com.db.assetstore.domain.service.cmd.DeleteAssetCommand;
 import com.db.assetstore.domain.service.cmd.PatchAssetCommand;
 import com.db.assetstore.domain.service.link.cmd.CreateAssetLinkCommand;
 import com.db.assetstore.domain.service.link.cmd.DeleteAssetLinkCommand;
+import com.db.assetstore.infra.service.link.AssetLinkService;
+import com.db.assetstore.infra.service.AssetService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

@@ -1,4 +1,4 @@
-package com.db.assetstore.infra.service;
+package com.db.assetstore.infra.service.cmd;
 
 import com.db.assetstore.domain.service.cmd.AssetCommand;
 import com.db.assetstore.domain.service.cmd.CommandResult;

@@ -1,4 +1,4 @@
-package com.db.assetstore.infra.service;
+package com.db.assetstore.infra.service.link;
 
 import com.db.assetstore.domain.model.link.AssetLink;
 import com.db.assetstore.domain.service.link.AssetLinkQueryService;

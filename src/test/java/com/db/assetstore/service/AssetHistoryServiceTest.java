@@ -1,7 +1,6 @@
 package com.db.assetstore.service;
 
 import com.db.assetstore.domain.model.attribute.AttributeHistory;
-import com.db.assetstore.domain.model.type.AttributeType;
 import com.db.assetstore.infra.jpa.AssetEntity;
 import com.db.assetstore.infra.jpa.AttributeEntity;
 import com.db.assetstore.infra.jpa.AttributeHistoryEntity;
@@ -17,7 +16,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-class AssetHistoryServiceImplTest {
+class AssetHistoryServiceTest {
 
     AttributeHistoryRepository historyRepo;
     AttributeHistoryMapper historyMapper;

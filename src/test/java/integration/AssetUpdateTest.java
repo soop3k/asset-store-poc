@@ -17,24 +17,27 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest(classes = com.db.assetstore.AssetStorePocApplication.class)
 @AutoConfigureMockMvc
-class AssetCommonUpdateE2ETest {
+class AssetUpdateTest {
 
     @Autowired
     MockMvc mockMvc;
 
     @Test
-    void createAsset_update_common_fields_and_verify() throws Exception {
-        String payload = "{" +
-                "\"type\":\"CRE\"," +
-                "\"currency\":\"USD\"," +
-                "\"notionalAmount\":123.45," +
-                "\"status\":\"ACTIVE\"," +
-                "\"subtype\":\"OFFICE\"," +
-                "\"description\":\"Original CRE\"," +
-                "\"attributes\": {\"city\":\"Gdansk\", \"rooms\":5}" +
-                "}";
+    void createAssetAndUpdateFields() throws Exception {
+        String payload = """
+                {
+                    "type":"CRE",
+                    "currency":"USD",
+                    "notionalAmount":123.45,
+                    "status":"ACTIVE",
+                    "subtype":"OFFICE",
+                    "description":"Original CRE",
+                    "attributes": {
+                        "city":"Gdansk",
+                        "rooms":5
+                    }
+                }""";
 
-        // create
         MvcResult res = mockMvc.perform(post("/assets")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
@@ -42,20 +45,19 @@ class AssetCommonUpdateE2ETest {
                 .andReturn();
         String id = res.getResponse().getContentAsString();
 
-        // update common fields only
-        String update = "{" +
-                "\"status\":\"INACTIVE\"," +
-                "\"description\":\"Updated CRE\"," +
-                "\"currency\":\"EUR\"," +
-                "\"notionalAmount\":200.5" +
-                "}";
+        String update = """
+                {
+                    "status":"INACTIVE",
+                    "description":"Updated CRE",
+                    "currency":"EUR",
+                    "notionalAmount":200.5
+                }""";
 
         mockMvc.perform(put("/assets/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(update))
                 .andExpect(status().isNoContent());
 
-        // fetch and verify: common fields changed, attributes unchanged
         mockMvc.perform(get("/assets/" + id)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())

@@ -79,7 +79,7 @@ class AssetCommandFactoryRegistryTest {
     }
 
     @Test
-    void createCreateCommand_buildsCommandFromRegistry() {
+    void buildsCommandFromRegistry() {
         CreateAssetCommand result = registry.createCreateCommand(createRequest);
 
         assertThat(result.id()).isEqualTo("asset-1");
@@ -100,7 +100,7 @@ class AssetCommandFactoryRegistryTest {
     }
 
     @Test
-    void createPatchCommand_withExplicitId_parsesAttributesFromSchema() {
+    void buildCommandWithExplicitId() {
         PatchAssetCommand result = registry.createPatchCommand(AssetType.SHIP, "asset-2", patchRequest);
 
         assertThat(result.assetId()).isEqualTo("asset-2");
@@ -118,7 +118,7 @@ class AssetCommandFactoryRegistryTest {
     }
 
     @Test
-    void createPatchCommand_usingRequestId_validatesPresence() {
+    void createPatchCommand() {
         patchRequest.setId("asset-3");
 
         PatchAssetCommand result = registry.createPatchCommand(AssetType.SHIP, patchRequest);
@@ -134,7 +134,7 @@ class AssetCommandFactoryRegistryTest {
     }
 
     @Test
-    void createPatchCommand_withoutRequestId_throwsException() {
+    void createPatchCommandWithoutRequestId() {
         AssetPatchRequest withoutId = new AssetPatchRequest();
         withoutId.setAttributes(objectMapper.createObjectNode());
         withoutId.setExecutedBy("tester");
@@ -145,7 +145,7 @@ class AssetCommandFactoryRegistryTest {
     }
 
     @Test
-    void createDeleteCommand_validatesIds() {
+    void createDeleteCommand() {
         AssetDeleteRequest request = new AssetDeleteRequest("asset-33", "deleter");
 
         DeleteAssetCommand command = registry.createDeleteCommand("asset-33", request);

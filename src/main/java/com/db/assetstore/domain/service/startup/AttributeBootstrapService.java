@@ -15,8 +15,8 @@ import com.db.assetstore.domain.service.type.TypeSchemaRegistry;
 
 @Service
 @RequiredArgsConstructor
-public class AttributeDefinitionsBootstrapService {
-    private static final Logger log = LoggerFactory.getLogger(AttributeDefinitionsBootstrapService.class);
+public class AttributeBootstrapService {
+    private static final Logger log = LoggerFactory.getLogger(AttributeBootstrapService.class);
 
     private final AttributeDefRepository repository;
     private final AttributeDefinitionRegistry attributeDefinitionRegistry;
@@ -24,7 +24,8 @@ public class AttributeDefinitionsBootstrapService {
 
     @Transactional
     public void bootstrap() {
-        var types = typeSchemaRegistry.supportedTypes();
+        var types = typeSchemaRegistry.rebuild();
+        attributeDefinitionRegistry.rebuild();
 
         for (AssetType t : types) {
             var defs = attributeDefinitionRegistry.getDefinitions(t);
@@ -39,10 +40,9 @@ public class AttributeDefinitionsBootstrapService {
                     );
                     repository.save(e);
                 }
+                log.info("Bootstrapped attribute from schemas {type={}, count={}}", t, defs.size());
             }
         }
-
-        log.info("Bootstrapped attribute definitions from JSON Schemas to DB");
     }
 
     private static AttributeType toAttrType(AttributeDefinitionRegistry.ValueType vt) {

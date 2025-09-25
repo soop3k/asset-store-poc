@@ -7,10 +7,10 @@ import com.db.assetstore.domain.service.cmd.DeleteAssetCommand;
 import com.db.assetstore.domain.service.cmd.PatchAssetCommand;
 import com.db.assetstore.domain.service.link.cmd.CreateAssetLinkCommand;
 import com.db.assetstore.domain.service.link.cmd.DeleteAssetLinkCommand;
-import com.db.assetstore.infra.service.AssetLinkService;
+import com.db.assetstore.infra.service.link.AssetLinkService;
 import com.db.assetstore.infra.service.AssetService;
-import com.db.assetstore.infra.service.CommandLogService;
-import com.db.assetstore.infra.service.CommandServiceImpl;
+import com.db.assetstore.infra.service.cmd.CommandLogService;
+import com.db.assetstore.infra.service.cmd.CommandServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-class CommandServiceImplTest {
+class CommandServiceTest {
 
     AssetService assetService;
     AssetLinkService assetLinkService;
@@ -37,7 +37,7 @@ class CommandServiceImplTest {
     }
 
     @Test
-    void execute_createCommand_delegatesToAssetMutationAndRecordsLog() {
+    void executeCreateCommand() {
         CreateAssetCommand command = CreateAssetCommand.builder()
                 .id("asset-1")
                 .type(AssetType.CRE)
@@ -56,7 +56,7 @@ class CommandServiceImplTest {
     }
 
     @Test
-    void execute_patchCommand_delegatesAndLogs() {
+    void executePatchCommand() {
         PatchAssetCommand command = PatchAssetCommand.builder()
                 .assetId("asset-2")
                 .executedBy("tester")
@@ -73,7 +73,7 @@ class CommandServiceImplTest {
     }
 
     @Test
-    void execute_deleteCommand_delegatesAndLogs() {
+    void executeDeleteCommand() {
         DeleteAssetCommand command = DeleteAssetCommand.builder()
                 .assetId("asset-3")
                 .executedBy("tester")
@@ -90,7 +90,7 @@ class CommandServiceImplTest {
     }
 
     @Test
-    void execute_createLinkCommand_delegatesToLinkService() {
+    void executeCreateLinkCommand() {
         CreateAssetLinkCommand command = CreateAssetLinkCommand.builder()
                 .assetId("asset-4")
                 .entityType("WORKFLOW")
@@ -112,7 +112,7 @@ class CommandServiceImplTest {
     }
 
     @Test
-    void execute_deleteLinkCommand_delegatesToLinkService() {
+    void executeDeleteLinkCommand() {
         DeleteAssetLinkCommand command = DeleteAssetLinkCommand.builder()
                 .assetId("asset-5")
                 .entityType("WORKFLOW")
@@ -133,7 +133,7 @@ class CommandServiceImplTest {
     }
 
     @Test
-    void execute_whenCommandFails_doesNotRecordLog() {
+    void whenCommandFails() {
         CreateAssetCommand command = CreateAssetCommand.builder()
                 .id("asset-6")
                 .type(AssetType.CRE)

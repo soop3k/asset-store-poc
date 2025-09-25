@@ -18,11 +18,10 @@ import com.db.assetstore.infra.repository.AssetRepository;
 import com.db.assetstore.infra.repository.AttributeRepository;
 import com.db.assetstore.infra.repository.CommandLogRepository;
 import com.db.assetstore.infra.repository.LinkDefinitionRepo;
-import com.db.assetstore.infra.service.AssetLinkService;
-import com.db.assetstore.infra.service.AssetService;
-import com.db.assetstore.infra.service.CommandLogService;
-import com.db.assetstore.infra.service.CommandServiceImpl;
+import com.db.assetstore.infra.service.cmd.CommandLogService;
+import com.db.assetstore.infra.service.cmd.CommandServiceImpl;
 import com.db.assetstore.infra.service.link.AssetLinkCommandValidator;
+import com.db.assetstore.infra.service.link.AssetLinkService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,7 +31,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 
 import java.time.Instant;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -103,7 +101,7 @@ class AssetLinkServiceDataTest {
     }
 
     @Test
-    void createLink_reactivatesExistingRowInsteadOfInserting() {
+    void reactivatesExistingRowInsteadOfInserting() {
         linkDefinitionRepo.save(LinkDefinitionEntity.builder()
                 .entityType("WORKFLOW")
                 .entitySubtype("BULK")
@@ -148,7 +146,7 @@ class AssetLinkServiceDataTest {
     }
 
     @Test
-    void deleteLink_marksLinkInactive() {
+    void deleteLink() {
         linkDefinitionRepo.save(LinkDefinitionEntity.builder()
                 .entityType("WORKFLOW")
                 .entitySubtype("REVALUATION")
@@ -187,7 +185,7 @@ class AssetLinkServiceDataTest {
     }
 
     @Test
-    void createLink_respectsTargetSideCardinality() {
+    void createLinkSideCardinality() {
         linkDefinitionRepo.save(LinkDefinitionEntity.builder()
                 .entityType("WORKFLOW")
                 .entitySubtype("MONITORING")
@@ -221,7 +219,7 @@ class AssetLinkServiceDataTest {
     }
 
     @Test
-    void oneToMany_allowsMultipleLinksForAsset() {
+    void allowsMultipleLinksForAsset() {
         linkDefinitionRepo.save(LinkDefinitionEntity.builder()
                 .entityType("WORKFLOW")
                 .entitySubtype("CHG")
@@ -256,7 +254,7 @@ class AssetLinkServiceDataTest {
     }
 
     @Test
-    void oneToOne_limitsBothSides() {
+    void oneToOneLimitsBothSides() {
         linkDefinitionRepo.save(LinkDefinitionEntity.builder()
                 .entityType("WORKFLOW")
                 .entitySubtype("BULK")
@@ -303,7 +301,7 @@ class AssetLinkServiceDataTest {
     }
 
     @Test
-    void manyToOne_limitsAssetSideOnly() {
+    void limitsAssetSideOnly() {
         linkDefinitionRepo.save(LinkDefinitionEntity.builder()
                 .entityType("INSTRUMENT")
                 .entitySubtype("MONITORING")

@@ -15,13 +15,13 @@ import static org.hamcrest.Matchers.*;
 
 @SpringBootTest(classes = com.db.assetstore.AssetStorePocApplication.class)
 @AutoConfigureMockMvc
-class AssetEventE2ETest {
+class AssetEventTest {
 
     @Autowired
     MockMvc mockMvc;
 
     @Test
-    void createAsset_fetch_it_and_fetch_event() throws Exception {
+    void createAssetEvent() throws Exception {
        String payload = """
        {
          "type": "CRE",

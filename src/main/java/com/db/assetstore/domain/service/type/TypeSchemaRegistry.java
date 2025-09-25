@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
+import com.networknt.schema.SchemaValidatorsConfig;
 import com.networknt.schema.SpecVersion;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -32,27 +33,29 @@ public final class TypeSchemaRegistry {
 
     public record Entry(String path, JsonNode node, JsonSchema compiled) {}
 
-    @PostConstruct
     public void discover() { rebuild(); }
 
-    public void rebuild() {
+    public Set<AssetType> rebuild() {
         entries.clear();
-        int loaded = 0;
 
         ClassLoader cl = TypeSchemaRegistry.class.getClassLoader();
         for (AssetType t : AssetType.values()) {
             String path = String.format(SCHEMA_PATH_PATTERN, t.name());
             try (InputStream is = cl.getResourceAsStream(path)) {
-                if (is == null) continue;
+                if (is == null) {
+                    continue;
+                }
                 JsonNode node = om.readTree(is);
-                JsonSchema compiled = factory.getSchema(node);
+                JsonSchema compiled = factory.getSchema(node,
+                        SchemaValidatorsConfig.builder().failFast(true).typeLoose(true).build());
                 entries.put(t, new Entry(path, node, compiled));
-                loaded++;
             } catch (Exception e) {
                 log.warn("Failed to load/compile schema for {} from {}: {}", t, path, e.getMessage());
             }
         }
-        log.info("TypeSchemaRegistry: supported={} ({} schemas loaded)", entries.keySet(), loaded);
+        log.info("TypeSchemaRegistry: supported={}", entries.keySet());
+
+        return Collections.unmodifiableSet(entries.keySet());
     }
 
     public Set<AssetType> supportedTypes() {

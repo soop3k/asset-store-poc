@@ -20,8 +20,8 @@ class TypeSchemaRegistryTest {
 
         Set<AssetType> supported = reg.supportedTypes();
 
-        assertTrue(supported.contains(AssetType.CRE), "CRE should be supported (schema present)");
-        assertTrue(supported.contains(AssetType.SHIP), "SHIP should be supported after adding schema");
+        assertTrue(supported.contains(AssetType.CRE), "CRE should be supported");
+        assertTrue(supported.contains(AssetType.SHIP), "SHIP should be supported");
 
         assertFalse(supported.contains(AssetType.AV), "AV should not be supported without schema");
         assertFalse(supported.contains(AssetType.SPV), "SPV should not be supported without schema");

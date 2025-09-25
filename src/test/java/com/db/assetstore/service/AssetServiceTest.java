@@ -48,7 +48,7 @@ class AssetServiceTest {
     }
 
     @Test
-    void create_whenEntityAlreadyContainsAttributes_savesDirectlyAndReturnsId() {
+    void whenEntityAlreadyContainsAttributes() {
         CreateAssetCommand cmd = CreateAssetCommand.builder()
                 .id("a-1").type(AssetType.CRE)
                 .attributes(List.of(new AVString("city", "Warsaw")))
@@ -73,7 +73,7 @@ class AssetServiceTest {
     }
 
     @Test
-    void create_whenEntityHasNoAttributes_insertsAllOnCreateAndSaves() {
+    void whenEntityHasNoAttributes() {
         CreateAssetCommand cmd = CreateAssetCommand.builder()
                 .id("a-2").type(AssetType.CRE)
                 .attributes(List.of(new AVString("city", "Gdansk")))
@@ -98,7 +98,7 @@ class AssetServiceTest {
     }
 
     @Test
-    void patch_commonFieldsOnly_persistsChanges() {
+    void patchCommonFieldsOnly() {
         AssetEntity entity = AssetEntity.builder().id("a-3").type(AssetType.CRE).status("ACTIVE").build();
         when(assetRepo.findByIdAndDeleted("a-3", 0)).thenReturn(Optional.of(entity));
 
@@ -118,7 +118,7 @@ class AssetServiceTest {
     }
 
     @Test
-    void patch_attributeChanged_updatesAttributeAndSavesIt() {
+    void updatesAttributeAndSavesIt() {
         AssetEntity parent = AssetEntity.builder().id("a-4").type(AssetType.CRE).attributes(new java.util.ArrayList<>()).build();
         AttributeEntity existing = new AttributeEntity(parent, "city", "Gdansk", Instant.now());
         parent.getAttributes().add(existing);
@@ -137,7 +137,7 @@ class AssetServiceTest {
     }
 
     @Test
-    void patch_attributeSameValue_doesNotSaveAttribute() {
+    void doesNotSaveAttribute() {
         AssetEntity parent = AssetEntity.builder().id("a-5").type(AssetType.CRE).attributes(new java.util.ArrayList<>()).build();
         AttributeEntity existing = new AttributeEntity(parent, "city", "Warsaw", Instant.now());
         parent.getAttributes().add(existing);
@@ -156,7 +156,7 @@ class AssetServiceTest {
     }
 
     @Test
-    void delete_marksEntityDeletedAndSaves() {
+    void marksEntityDeletedAndSaves() {
         AssetEntity entity = AssetEntity.builder().id("a-6").type(AssetType.CRE).deleted(0).build();
         when(assetRepo.findByIdAndDeleted("a-6", 0)).thenReturn(Optional.of(entity));
 

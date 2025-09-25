@@ -16,15 +16,14 @@ import com.db.assetstore.infra.repository.AssetRepository;
 import com.db.assetstore.infra.repository.AttributeRepository;
 import com.db.assetstore.infra.repository.AssetLinkRepo;
 import com.db.assetstore.infra.repository.LinkDefinitionRepo;
-import com.db.assetstore.infra.service.AssetLinkService;
-import com.db.assetstore.infra.service.AssetService;
-import com.db.assetstore.infra.service.CommandLogService;
-import com.db.assetstore.infra.service.CommandServiceImpl;
+import com.db.assetstore.infra.service.cmd.CommandLogService;
+import com.db.assetstore.infra.service.cmd.CommandServiceImpl;
 import com.db.assetstore.infra.mapper.AssetMapper;
 import com.db.assetstore.infra.mapper.AssetMapperImpl;
 import com.db.assetstore.infra.mapper.AttributeMapper;
 import com.db.assetstore.infra.mapper.AttributesCollectionMapper;
 import com.db.assetstore.infra.service.link.AssetLinkCommandValidator;
+import com.db.assetstore.infra.service.link.AssetLinkService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -83,7 +82,7 @@ class AssetCommandServiceCommandLogDataTest {
     }
 
     @Test
-    void execute_createCommand_persistsAssetAndCommandLogEntry() throws Exception {
+    void persistsAssetAndCommandLogEntry() throws Exception {
         CreateAssetCommand command = CreateAssetCommand.builder()
                 .id("asset-123")
                 .type(AssetType.CRE)
@@ -126,7 +125,7 @@ class AssetCommandServiceCommandLogDataTest {
     }
 
     @Test
-    void execute_whenCommandReportsFailure_doesNotPersistLog() {
+    void commandReportsFailure() {
         FailingCommand command = new FailingCommand("asset-456", "auditor");
 
         CommandResult<Void> result = service.execute(command);

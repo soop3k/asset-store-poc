@@ -1,4 +1,4 @@
-package com.db.assetstore.infra.service;
+package com.db.assetstore.infra.service.link;
 
 import com.db.assetstore.domain.service.cmd.CommandResult;
 import com.db.assetstore.domain.service.link.cmd.CreateAssetLinkCommand;
@@ -7,7 +7,6 @@ import com.db.assetstore.infra.jpa.AssetLinkEntity;
 import com.db.assetstore.infra.jpa.LinkDefinitionEntity;
 import com.db.assetstore.infra.repository.AssetLinkRepo;
 import com.db.assetstore.infra.repository.LinkDefinitionRepo;
-import com.db.assetstore.infra.service.link.AssetLinkCommandValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

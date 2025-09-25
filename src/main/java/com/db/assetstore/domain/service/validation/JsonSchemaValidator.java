@@ -22,15 +22,6 @@ public final class JsonSchemaValidator {
     private final JsonSchemaFactory factory =
             JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7);
 
-    public void validateOrThrow(JsonNode payload, JsonSchema compiled, String schemaNameForLogs) {
-        log.info("Validating JSON against schema: {}", schemaNameForLogs);
-        List<String> errors = validate(payload, compiled);
-        if (!errors.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "JSON schema validation failed (" + schemaNameForLogs + "): " + String.join("; ", errors));
-        }
-    }
-
     public List<String> validate(JsonNode payload, JsonSchema compiled) {
         Set<ValidationMessage> v = compiled.validate(payload);
         if (v == null || v.isEmpty()) return Collections.emptyList();
@@ -56,7 +47,7 @@ public final class JsonSchemaValidator {
     private JsonSchema compileSchema(String schemaRes) {
         try (InputStream is = JsonSchemaValidator.class.getClassLoader().getResourceAsStream(schemaRes)) {
             if (is == null) {
-                throw new IllegalArgumentException("Schema not found: " + schemaRes);
+                return null;
             }
 
             JsonNode node = mapper.readTree(is);
