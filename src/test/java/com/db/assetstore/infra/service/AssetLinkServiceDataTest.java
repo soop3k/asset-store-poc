@@ -16,6 +16,10 @@ import com.db.assetstore.infra.repository.AssetRepository;
 import com.db.assetstore.infra.repository.AttributeRepository;
 import com.db.assetstore.infra.repository.CommandLogRepository;
 import com.db.assetstore.infra.repository.LinkDefinitionRepo;
+import com.db.assetstore.infra.service.AssetLinkService;
+import com.db.assetstore.infra.service.AssetService;
+import com.db.assetstore.infra.service.CommandLogService;
+import com.db.assetstore.infra.service.CommandServiceImpl;
 import com.db.assetstore.infra.service.link.AssetLinkCommandValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +37,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
 @Import(AssetLinkCommandValidator.class)
-class AssetLinkCommandDataTest {
+class AssetLinkServiceDataTest {
 
     @Autowired
     AssetLinkRepo assetLinkRepo;
@@ -53,7 +57,7 @@ class AssetLinkCommandDataTest {
     @Autowired
     AssetLinkCommandValidator assetLinkCommandValidator;
 
-    AssetCommandServiceImpl service;
+    CommandServiceImpl service;
 
     ObjectMapper objectMapper = new JsonMapperProvider().objectMapper();
 
@@ -63,17 +67,18 @@ class AssetLinkCommandDataTest {
         AssetMapper assetMapper = new AssetMapperImpl(collectionMapper);
         AttributeMapper attributeMapper = Mappers.getMapper(AttributeMapper.class);
 
-        service = new AssetCommandServiceImpl(
+        AssetService assetService = new AssetService(
                 assetMapper,
                 attributeMapper,
                 assetRepository,
-                attributeRepository,
-                commandLogRepository,
+                attributeRepository);
+        AssetLinkService assetLinkService = new AssetLinkService(
                 assetLinkRepo,
                 linkDefinitionRepo,
-                assetLinkCommandValidator,
-                objectMapper
-        );
+                assetLinkCommandValidator);
+        CommandLogService commandLogService = new CommandLogService(commandLogRepository, objectMapper);
+
+        service = new CommandServiceImpl(assetService, assetLinkService, commandLogService);
     }
 
     @Test

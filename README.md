@@ -19,7 +19,7 @@ This separation keeps the domain independent from framework concerns and simplif
 
 * **AssetController** – Exposes the `/assets` endpoints for create, bulk create, search, read, update, patch, bulk patch, and delete requests.
 * **EventController** – Loads an asset, selects the right JSLT template, and returns the generated event payload.
-* **AssetCommandServiceImpl** – Handles create, patch, delete, and link management while keeping a log and applying soft deletes.
+* **CommandServiceImpl** – Routes asset commands to **AssetService** and link commands to **AssetLinkService** while recording the audit log of executed commands.
 * **AttributeDefinitionsBootstrapService** – Stores missing attribute definitions at startup so attributes can be introduced through schema files or database seeding.
 * **AssetQueryServiceImpl** – Reads assets by id or by search criteria that translate into JPA specifications.
 * **TypeSchemaRegistry** – Scans classpath schemas, compiles them, and records which asset types provide schema files.

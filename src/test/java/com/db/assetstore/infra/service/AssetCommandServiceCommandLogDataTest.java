@@ -16,7 +16,10 @@ import com.db.assetstore.infra.repository.AssetRepository;
 import com.db.assetstore.infra.repository.AttributeRepository;
 import com.db.assetstore.infra.repository.AssetLinkRepo;
 import com.db.assetstore.infra.repository.LinkDefinitionRepo;
-import com.db.assetstore.infra.service.AssetCommandServiceImpl;
+import com.db.assetstore.infra.service.AssetLinkService;
+import com.db.assetstore.infra.service.AssetService;
+import com.db.assetstore.infra.service.CommandLogService;
+import com.db.assetstore.infra.service.CommandServiceImpl;
 import com.db.assetstore.infra.mapper.AssetMapper;
 import com.db.assetstore.infra.mapper.AssetMapperImpl;
 import com.db.assetstore.infra.mapper.AttributeMapper;
@@ -57,7 +60,7 @@ class AssetCommandServiceCommandLogDataTest {
 
     ObjectMapper objectMapper = new JsonMapperProvider().objectMapper();
 
-    AssetCommandServiceImpl service;
+    CommandServiceImpl service;
 
     @BeforeEach
     void setUp() {
@@ -65,17 +68,18 @@ class AssetCommandServiceCommandLogDataTest {
         AssetMapper assetMapper = new AssetMapperImpl(collectionMapper);
         AttributeMapper attributeMapper = Mappers.getMapper(AttributeMapper.class);
         AssetLinkCommandValidator assetLinkCommandValidator = new AssetLinkCommandValidator(assetLinkRepo);
-        service = new AssetCommandServiceImpl(
+        AssetService assetService = new AssetService(
                 assetMapper,
                 attributeMapper,
                 assetRepository,
-                attributeRepository,
-                commandLogRepository,
+                attributeRepository);
+        AssetLinkService assetLinkService = new AssetLinkService(
                 assetLinkRepo,
                 linkDefinitionRepo,
-                assetLinkCommandValidator,
-                objectMapper
-        );
+                assetLinkCommandValidator);
+        CommandLogService commandLogService = new CommandLogService(commandLogRepository, objectMapper);
+
+        service = new CommandServiceImpl(assetService, assetLinkService, commandLogService);
     }
 
     @Test
