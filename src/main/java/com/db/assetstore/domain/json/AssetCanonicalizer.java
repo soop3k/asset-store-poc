@@ -57,14 +57,24 @@ public final class AssetCanonicalizer {
     }
 
     private static void put(ObjectNode node, String field, Object value) {
-        if (value == null) return;
-        if (value instanceof String s) node.put(field, s);
-        else if (value instanceof Integer i) node.put(field, i);
-        else if (value instanceof Long l) node.put(field, l);
-        else if (value instanceof BigDecimal bd) node.put(field, bd);
-        else if (value instanceof Boolean b) node.put(field, b);
-        else if (value instanceof Number n) node.put(field, n.doubleValue());
-        else node.put(field, value.toString());
+        if (value == null) {
+            return;
+        }
+        if (value instanceof String s) {
+            node.put(field, s);
+        } else if (value instanceof Integer i) {
+            node.put(field, i);
+        } else if (value instanceof Long l) {
+            node.put(field, l);
+        } else if (value instanceof BigDecimal bd) {
+            node.put(field, bd);
+        } else if (value instanceof Boolean b) {
+            node.put(field, b);
+        } else if (value instanceof Number n) {
+            node.put(field, n.doubleValue());
+        } else {
+            node.put(field, value.toString());
+        }
     }
 
     private static final class AttributeNodeWriter implements AttributeValueVisitor<Void> {
@@ -85,20 +95,29 @@ public final class AssetCanonicalizer {
         }
 
         @Override public Void visitString(String value, String ignored) {
-            if (value == null) target.putNull(field);
-            else target.put(field, value);
+            if (value == null) {
+                target.putNull(field);
+            } else {
+                target.put(field, value);
+            }
             return null;
         }
 
         @Override public Void visitDecimal(BigDecimal value, String ignored) {
-            if (value == null) target.putNull(field);
-            else target.put(field, value);
+            if (value == null) {
+                target.putNull(field);
+            } else {
+                target.put(field, value);
+            }
             return null;
         }
 
         @Override public Void visitBoolean(Boolean value, String ignored) {
-            if (value == null) target.putNull(field);
-            else target.put(field, value);
+            if (value == null) {
+                target.putNull(field);
+            } else {
+                target.put(field, value);
+            }
             return null;
         }
     }

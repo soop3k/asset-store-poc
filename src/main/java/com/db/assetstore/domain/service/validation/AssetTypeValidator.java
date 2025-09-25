@@ -7,7 +7,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -31,7 +35,9 @@ public final class AssetTypeValidator {
         String schemaPath = registry.getSchemaPath(type).orElse(null);
         Map<String, Object> map = new LinkedHashMap<>();
         for (AttributeValue<?> av : attrs) {
-            if (av == null) continue;
+            if (av == null) {
+                continue;
+            }
             map.put(av.name(), av.value());
         }
         try {

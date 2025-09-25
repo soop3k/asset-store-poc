@@ -61,7 +61,9 @@ public final class AttributePredicateVisitor {
     }
 
     private static String ensureLikePattern(String s) {
-        if (s == null) return null;
+        if (s == null) {
+            return null;
+        }
         String norm = s.toLowerCase();
         return (norm.indexOf('%') >= 0 || norm.indexOf('_') >= 0) ? norm : "%" + norm + "%";
     }

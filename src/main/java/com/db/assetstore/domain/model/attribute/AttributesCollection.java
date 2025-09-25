@@ -7,10 +7,16 @@ import com.db.assetstore.domain.model.type.AttributeType;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 public final class AttributesCollection {
@@ -22,20 +28,28 @@ public final class AttributesCollection {
     }
 
     public static AttributesCollection fromFlat(Collection<AttributeValue<?>> flat) {
-        if (flat == null || flat.isEmpty()) return empty();
+        if (flat == null || flat.isEmpty()) {
+            return empty();
+        }
         LinkedHashMap<String, List<AttributeValue<?>>> map = new LinkedHashMap<>();
         for (AttributeValue<?> av : flat) {
-            if (av == null) continue;
+            if (av == null) {
+                continue;
+            }
             map.computeIfAbsent(av.name(), k -> new ArrayList<>()).add(av);
         }
         return new AttributesCollection(map);
     }
 
     public static AttributesCollection fromMap(Map<String, List<AttributeValue<?>>> map) {
-        if (map == null || map.isEmpty()) return empty();
+        if (map == null || map.isEmpty()) {
+            return empty();
+        }
         LinkedHashMap<String, List<AttributeValue<?>>> copy = new LinkedHashMap<>();
         map.forEach((k, v) -> {
-            if (k == null || v == null || v.isEmpty()) return;
+            if (k == null || v == null || v.isEmpty()) {
+                return;
+            }
             copy.put(k, new ArrayList<>(v));
         });
         return new AttributesCollection(copy);
@@ -82,11 +96,15 @@ public final class AttributesCollection {
 
     public <T> List<T> getMany(String name, Class<T> type) {
         var vs = data.get(name);
-        if (vs == null || vs.isEmpty()) return List.of();
+        if (vs == null || vs.isEmpty()) {
+            return List.of();
+        }
         ArrayList<T> out = new ArrayList<>(vs.size());
         for (var av : vs) {
             Object v = av.value();
-            if (v != null) out.add(type.cast(v));
+            if (v != null) {
+                out.add(type.cast(v));
+            }
         }
         return Collections.unmodifiableList(out);
     }
@@ -123,7 +141,9 @@ public final class AttributesCollection {
     }
 
     private AttributesCollection append(AttributeValue<?> av) {
-        if (av == null) return this;
+        if (av == null) {
+            return this;
+        }
         LinkedHashMap<String, List<AttributeValue<?>>> copy = copyData();
         copy.computeIfAbsent(av.name(), k -> new ArrayList<>()).add(av);
         return new AttributesCollection(copy);
