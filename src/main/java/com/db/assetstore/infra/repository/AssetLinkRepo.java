@@ -25,6 +25,11 @@ public interface AssetLinkRepo extends JpaRepository<AssetLinkEntity, Long> {
                                                                                                        String entitySubtype,
                                                                                                        String targetCode);
 
+    Optional<AssetLinkEntity> findFirstByAssetIdAndEntityTypeAndEntitySubtypeAndTargetCode(String assetId,
+                                                                                           String entityType,
+                                                                                           String entitySubtype,
+                                                                                           String targetCode);
+
     default List<AssetLinkEntity> active(String assetId) {
         return findAllByAssetIdAndActiveTrue(assetId);
     }
@@ -46,5 +51,12 @@ public interface AssetLinkRepo extends JpaRepository<AssetLinkEntity, Long> {
                                             String entitySubtype,
                                             String targetCode) {
         return findFirstByAssetIdAndEntityTypeAndEntitySubtypeAndTargetCodeAndActiveTrue(assetId, entityType, entitySubtype, targetCode);
+    }
+
+    default Optional<AssetLinkEntity> any(String assetId,
+                                          String entityType,
+                                          String entitySubtype,
+                                          String targetCode) {
+        return findFirstByAssetIdAndEntityTypeAndEntitySubtypeAndTargetCode(assetId, entityType, entitySubtype, targetCode);
     }
 }

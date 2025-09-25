@@ -37,6 +37,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -128,18 +129,26 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
 
         assetLinkCommandValidator.validateCreate(command, definition);
 
-        AssetLinkEntity entity = AssetLinkEntity.builder()
-                .assetId(command.assetId())
-                .entityType(command.entityType())
-                .entitySubtype(command.entitySubtype())
-                .targetCode(command.targetCode())
-                .active(true)
-                .createdAt(orNow(command.requestTime()))
-                .createdBy(command.executedBy())
-                .build();
+        Optional<AssetLinkEntity> existing = assetLinkRepo.any(
+                command.assetId(), command.entityType(), command.entitySubtype(), command.targetCode());
+        boolean reactivated = existing.filter(link -> !link.isActive()).isPresent();
+
+        AssetLinkEntity entity = existing
+                .map(existingLink -> reactivate(existingLink, command))
+                .orElseGet(() -> AssetLinkEntity.builder()
+                        .assetId(command.assetId())
+                        .entityType(command.entityType())
+                        .entitySubtype(command.entitySubtype())
+                        .targetCode(command.targetCode())
+                        .active(true)
+                        .createdAt(orNow(command.requestTime()))
+                        .createdBy(command.executedBy())
+                        .build());
 
         AssetLinkEntity saved = assetLinkRepo.save(entity);
-        log.info("Created link id={} for asset {}", saved.getId(), command.assetId());
+        log.info("{} link id={} for asset {}",
+                reactivated ? "Reactivated" : "Created",
+                saved.getId(), command.assetId());
         return new CommandResult<>(saved.getId(), command.assetId());
     }
 
@@ -274,6 +283,20 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
 
     private Instant orNow(Instant instant) {
         return instant != null ? instant : Instant.now();
+    }
+
+    private AssetLinkEntity reactivate(AssetLinkEntity entity, CreateAssetLinkCommand command) {
+        if (entity.isActive()) {
+            throw new IllegalStateException(
+                    "Active link already exists for asset %s and target %s".formatted(
+                            command.assetId(), command.targetCode()));
+        }
+        entity.setActive(true);
+        entity.setCreatedAt(orNow(command.requestTime()));
+        entity.setCreatedBy(command.executedBy());
+        entity.setDeactivatedAt(null);
+        entity.setDeactivatedBy(null);
+        return entity;
     }
 
 }
