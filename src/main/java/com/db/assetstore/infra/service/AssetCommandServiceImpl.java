@@ -122,50 +122,22 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
     public CommandResult<Long> visit(CreateAssetLinkCommand command) {
         Objects.requireNonNull(command, "command");
 
-        LinkDefinitionEntity definition = linkDefinitionRepo
-                .findByEntityTypeAndEntitySubtypeAndActiveTrue(command.entityType(), command.entitySubtype())
-                .orElseThrow(() -> new IllegalStateException(
-                        "Link definition missing for %s/%s".formatted(command.entityType(), command.entitySubtype())));
-
+        LinkDefinitionEntity definition = findActiveDefinition(command);
         assetLinkCommandValidator.validateCreate(command, definition);
 
-        Optional<AssetLinkEntity> existing = assetLinkRepo.link(
-                command.assetId(), command.entityType(), command.entitySubtype(), command.targetCode());
-        boolean reactivated = existing.filter(link -> !link.isActive()).isPresent();
-
-        AssetLinkEntity entity = existing
-                .map(existingLink -> reactivate(existingLink, command))
-                .orElseGet(() -> AssetLinkEntity.builder()
-                        .assetId(command.assetId())
-                        .entityType(command.entityType())
-                        .entitySubtype(command.entitySubtype())
-                        .targetCode(command.targetCode())
-                        .active(true)
-                        .createdAt(orNow(command.requestTime()))
-                        .createdBy(command.executedBy())
-                        .build());
-
-        AssetLinkEntity saved = assetLinkRepo.save(entity);
+        LinkPersistenceResult result = persistLink(command);
         log.info("{} link id={} for asset {}",
-                reactivated ? "Reactivated" : "Created",
-                saved.getId(), command.assetId());
-        return new CommandResult<>(saved.getId(), command.assetId());
+                result.reactivated() ? "Reactivated" : "Created",
+                result.entity().getId(), command.assetId());
+        return new CommandResult<>(result.entity().getId(), command.assetId());
     }
 
     @Override
     public CommandResult<Void> visit(DeleteAssetLinkCommand command) {
         Objects.requireNonNull(command, "command");
 
-        AssetLinkEntity entity = assetLinkRepo
-                .activeLink(
-                        command.assetId(), command.entityType(), command.entitySubtype(), command.targetCode())
-                .orElseThrow(() -> new IllegalStateException(
-                        "Active link not found for asset %s".formatted(command.assetId())));
-
-        entity.setActive(false);
-        entity.setDeactivatedAt(orNow(command.requestTime()));
-        entity.setDeactivatedBy(command.executedBy());
-        assetLinkRepo.save(entity);
+        AssetLinkEntity entity = requireActiveLink(command);
+        deactivateLink(command, entity);
         log.info("Deactivated link id={} for asset {}", entity.getId(), command.assetId());
         return CommandResult.noResult(command.assetId());
     }
@@ -283,6 +255,56 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
 
     private Instant orNow(Instant instant) {
         return instant != null ? instant : Instant.now();
+    }
+
+    private LinkDefinitionEntity findActiveDefinition(CreateAssetLinkCommand command) {
+        return linkDefinitionRepo
+                .findByEntityTypeAndEntitySubtypeAndActiveTrue(command.entityType(), command.entitySubtype())
+                .orElseThrow(() -> new IllegalStateException(
+                        "Link definition missing for %s/%s".formatted(command.entityType(), command.entitySubtype())));
+    }
+
+    private LinkPersistenceResult persistLink(CreateAssetLinkCommand command) {
+        Optional<AssetLinkEntity> existing = assetLinkRepo.link(
+                command.assetId(), command.entityType(), command.entitySubtype(), command.targetCode());
+        boolean reactivated = existing.filter(link -> !link.isActive()).isPresent();
+
+        AssetLinkEntity entity = existing
+                .map(existingLink -> reactivate(existingLink, command))
+                .orElseGet(() -> newAssetLink(command));
+
+        AssetLinkEntity saved = assetLinkRepo.save(entity);
+        return new LinkPersistenceResult(saved, reactivated);
+    }
+
+    private AssetLinkEntity newAssetLink(CreateAssetLinkCommand command) {
+        return AssetLinkEntity.builder()
+                .assetId(command.assetId())
+                .entityType(command.entityType())
+                .entitySubtype(command.entitySubtype())
+                .targetCode(command.targetCode())
+                .active(true)
+                .createdAt(orNow(command.requestTime()))
+                .createdBy(command.executedBy())
+                .build();
+    }
+
+    private AssetLinkEntity requireActiveLink(DeleteAssetLinkCommand command) {
+        return assetLinkRepo
+                .activeLink(
+                        command.assetId(), command.entityType(), command.entitySubtype(), command.targetCode())
+                .orElseThrow(() -> new IllegalStateException(
+                        "Active link not found for asset %s".formatted(command.assetId())));
+    }
+
+    private void deactivateLink(DeleteAssetLinkCommand command, AssetLinkEntity entity) {
+        entity.setActive(false);
+        entity.setDeactivatedAt(orNow(command.requestTime()));
+        entity.setDeactivatedBy(command.executedBy());
+        assetLinkRepo.save(entity);
+    }
+
+    private record LinkPersistenceResult(AssetLinkEntity entity, boolean reactivated) {
     }
 
     private AssetLinkEntity reactivate(AssetLinkEntity entity, CreateAssetLinkCommand command) {
