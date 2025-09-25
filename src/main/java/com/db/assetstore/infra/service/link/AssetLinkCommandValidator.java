@@ -31,7 +31,7 @@ public class AssetLinkCommandValidator {
     }
 
     private void ensureNoDuplicate(CreateAssetLinkCommand command) {
-        assetLinkRepo.activeMatch(
+        assetLinkRepo.match(
                         command.assetId(), command.entityType(), command.entitySubtype(), command.targetCode())
                 .ifPresent(existing -> {
                     throw new IllegalStateException(
@@ -42,9 +42,9 @@ public class AssetLinkCommandValidator {
 
     private void ensureCardinality(LinkCardinality cardinality, CreateAssetLinkCommand command) {
         List<AssetLinkEntity> assetLinks = assetLinkRepo
-                .activeAssetType(command.assetId(), command.entityType(), command.entitySubtype());
+                .active(command.assetId(), command.entityType(), command.entitySubtype());
         List<AssetLinkEntity> targetLinks = assetLinkRepo
-                .activeTarget(command.entityType(), command.entitySubtype(), command.targetCode());
+                .target(command.entityType(), command.entitySubtype(), command.targetCode());
 
         if (cardinality.limitsAssetSide() && !assetLinks.isEmpty()) {
             throw new IllegalStateException(
