@@ -1,10 +1,12 @@
 package com.db.assetstore.infra.service;
 
+import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.model.link.LinkCardinality;
 import com.db.assetstore.domain.service.cmd.CommandResult;
 import com.db.assetstore.domain.service.link.cmd.CreateAssetLinkCommand;
 import com.db.assetstore.domain.service.link.cmd.DeleteAssetLinkCommand;
 import com.db.assetstore.infra.config.JsonMapperProvider;
+import com.db.assetstore.infra.jpa.AssetEntity;
 import com.db.assetstore.infra.jpa.AssetLinkEntity;
 import com.db.assetstore.infra.jpa.LinkDefinitionEntity;
 import com.db.assetstore.infra.mapper.AssetMapper;
@@ -63,6 +65,9 @@ class AssetLinkServiceDataTest {
 
     @BeforeEach
     void setUp() {
+        assetLinkRepo.deleteAll();
+        assetRepository.deleteAll();
+
         AttributesCollectionMapper collectionMapper = Mappers.getMapper(AttributesCollectionMapper.class);
         AssetMapper assetMapper = new AssetMapperImpl(collectionMapper);
         AttributeMapper attributeMapper = Mappers.getMapper(AttributeMapper.class);
@@ -79,6 +84,20 @@ class AssetLinkServiceDataTest {
         CommandLogService commandLogService = new CommandLogService(commandLogRepository, objectMapper);
 
         service = new CommandServiceImpl(assetService, assetLinkService, commandLogService);
+
+        assetRepository.save(AssetEntity.builder()
+                .id("asset-1")
+                .type(AssetType.CRE)
+                .createdAt(Instant.parse("2023-12-31T00:00:00Z"))
+                .createdBy("tester")
+                .build());
+
+        assetRepository.save(AssetEntity.builder()
+                .id("asset-2")
+                .type(AssetType.CRE)
+                .createdAt(Instant.parse("2023-12-31T00:00:00Z"))
+                .createdBy("tester")
+                .build());
     }
 
     @Test
