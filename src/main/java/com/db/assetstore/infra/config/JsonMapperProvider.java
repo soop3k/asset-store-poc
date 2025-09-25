@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.StdScalarSerializer;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.json.JsonMapper;
@@ -37,6 +38,7 @@ public class JsonMapperProvider {
         JsonMapper.Builder b = JsonMapper.builder()
                 .addModule(new JavaTimeModule())
                 .addModule(numbers)
+                .addModule(new Jdk8Module())
                 .enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)
                 .enable(DeserializationFeature.USE_BIG_INTEGER_FOR_INTS)
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)

@@ -165,9 +165,6 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <addUniqueConstraint tableName="link_definition"
-                             columnNames="entity_type,entity_subtype"
-                             constraintName="uk_link_definition_type_subtype"/>
     </changeSet>
 
     <changeSet id="9-asset-link" author="assistant">
@@ -195,9 +192,6 @@
             <column name="deactivated_at" type="timestamp"/>
             <column name="deactivated_by" type="varchar(64)"/>
         </createTable>
-        <addUniqueConstraint tableName="asset_link"
-                             columnNames="asset_id,entity_type,entity_subtype,target_code"
-                             constraintName="uk_asset_link_unique"/>
         <addForeignKeyConstraint baseTableName="asset_link" baseColumnNames="asset_id"
                                   referencedTableName="assets" referencedColumnNames="id"
                                   constraintName="fk_asset_link_asset"/>

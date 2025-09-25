@@ -8,9 +8,7 @@ import lombok.Setter;
 import com.db.assetstore.AssetType;
 
 @Entity
-@Table(name = "asset_attribute_def", uniqueConstraints = {
-        @UniqueConstraint(name = "uk_attr_def_type_name", columnNames = {"type", "name"})
-})
+@Table(name = "asset_attribute_def")
 @Getter
 @Setter
 @NoArgsConstructor

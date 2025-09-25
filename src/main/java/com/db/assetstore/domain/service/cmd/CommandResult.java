@@ -21,7 +21,7 @@ public record CommandResult<T>(T result, String assetId, boolean success) {
         return new CommandResult<>(null, assetId, true);
     }
 
-    public static CommandResult<Void> failure(String assetId) {
+    public static <T> CommandResult<T> failure(String assetId) {
         return new CommandResult<>(null, assetId, false);
     }
 }

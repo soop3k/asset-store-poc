@@ -5,9 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "link_definition",
-       uniqueConstraints = @UniqueConstraint(name = "uk_link_definition_type_subtype",
-               columnNames = {"entity_type", "entity_subtype"}))
+@Table(name = "link_definition")
 @Getter
 @Setter
 @NoArgsConstructor

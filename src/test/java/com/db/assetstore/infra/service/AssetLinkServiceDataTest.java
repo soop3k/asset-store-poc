@@ -65,8 +65,10 @@ class AssetLinkServiceDataTest {
 
     @BeforeEach
     void setUp() {
+
         assetLinkRepo.deleteAll();
         assetRepository.deleteAll();
+        linkDefinitionRepo.deleteAll();
 
         AttributesCollectionMapper collectionMapper = Mappers.getMapper(AttributesCollectionMapper.class);
         AssetMapper assetMapper = new AssetMapperImpl(collectionMapper);

@@ -160,14 +160,12 @@ public class AssetService {
                 attributeRepo.save(created);
                 existing.put(created.getName(), created);
             } else {
-                AttributeEntity managed = attributeRepo.findById(current.getId())
-                        .orElse(current);
-                existing.put(managed.getName(), managed);
+                existing.put(current.getName(), current);
 
-                AttributeValue<?> currentValue = attributeMapper.toModel(managed);
+                AttributeValue<?> currentValue = attributeMapper.toModel(current);
                 if (AttributeComparator.checkforUpdates(currentValue, incoming)) {
-                    AttributeUpdater.apply(managed, incoming);
-                    attributeRepo.save(managed);
+                    AttributeUpdater.apply(current, incoming);
+                    attributeRepo.save(current);
                 }
             }
         }
