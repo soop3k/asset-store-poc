@@ -117,6 +117,45 @@ class AssetLinkCommandDataTest {
     }
 
     @Test
+    void deleteLink_marksLinkInactive() {
+        linkDefinitionRepo.save(LinkDefinitionEntity.builder()
+                .entityType("WORKFLOW")
+                .entitySubtype("REVALUATION")
+                .cardinality(LinkCardinality.ONE_TO_ONE)
+                .active(true)
+                .build());
+
+        CreateAssetLinkCommand create = CreateAssetLinkCommand.builder()
+                .assetId("asset-1")
+                .entityType("WORKFLOW")
+                .entitySubtype("REVALUATION")
+                .targetCode("WF-77")
+                .executedBy("tester")
+                .requestTime(Instant.parse("2024-01-05T00:00:00Z"))
+                .build();
+
+        CommandResult<Long> result = service.execute(create);
+        assertThat(result.success()).isTrue();
+
+        DeleteAssetLinkCommand delete = DeleteAssetLinkCommand.builder()
+                .assetId("asset-1")
+                .entityType("WORKFLOW")
+                .entitySubtype("REVALUATION")
+                .targetCode("WF-77")
+                .executedBy("auditor")
+                .requestTime(Instant.parse("2024-01-06T00:00:00Z"))
+                .build();
+
+        CommandResult<Void> deleteResult = service.execute(delete);
+        assertThat(deleteResult.success()).isTrue();
+
+        AssetLinkEntity entity = assetLinkRepo.findById(result.result()).orElseThrow();
+        assertThat(entity.isActive()).isFalse();
+        assertThat(entity.getDeactivatedBy()).isEqualTo("auditor");
+        assertThat(entity.getDeactivatedAt()).isEqualTo(Instant.parse("2024-01-06T00:00:00Z"));
+    }
+
+    @Test
     void createLink_respectsTargetSideCardinality() {
         linkDefinitionRepo.save(LinkDefinitionEntity.builder()
                 .entityType("WORKFLOW")
@@ -148,6 +187,137 @@ class AssetLinkCommandDataTest {
         assertThatThrownBy(() -> service.execute(second))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Target WF-99 already linked");
+    }
+
+    @Test
+    void oneToMany_allowsMultipleLinksForAsset() {
+        linkDefinitionRepo.save(LinkDefinitionEntity.builder()
+                .entityType("WORKFLOW")
+                .entitySubtype("CHG")
+                .cardinality(LinkCardinality.ONE_TO_MANY)
+                .active(true)
+                .build());
+
+        CreateAssetLinkCommand first = CreateAssetLinkCommand.builder()
+                .assetId("asset-1")
+                .entityType("WORKFLOW")
+                .entitySubtype("CHG")
+                .targetCode("WF-101")
+                .executedBy("tester")
+                .requestTime(Instant.parse("2024-01-07T00:00:00Z"))
+                .build();
+
+        CreateAssetLinkCommand second = CreateAssetLinkCommand.builder()
+                .assetId("asset-1")
+                .entityType("WORKFLOW")
+                .entitySubtype("CHG")
+                .targetCode("WF-102")
+                .executedBy("tester")
+                .requestTime(Instant.parse("2024-01-08T00:00:00Z"))
+                .build();
+
+        assertThat(service.execute(first).success()).isTrue();
+        assertThat(service.execute(second).success()).isTrue();
+
+        assertThat(assetLinkRepo.activeForAssetType("asset-1", "WORKFLOW", "CHG"))
+                .extracting(AssetLinkEntity::getTargetCode)
+                .containsExactlyInAnyOrder("WF-101", "WF-102");
+    }
+
+    @Test
+    void oneToOne_limitsBothSides() {
+        linkDefinitionRepo.save(LinkDefinitionEntity.builder()
+                .entityType("WORKFLOW")
+                .entitySubtype("BULK")
+                .cardinality(LinkCardinality.ONE_TO_ONE)
+                .active(true)
+                .build());
+
+        CreateAssetLinkCommand first = CreateAssetLinkCommand.builder()
+                .assetId("asset-1")
+                .entityType("WORKFLOW")
+                .entitySubtype("BULK")
+                .targetCode("WF-1")
+                .executedBy("tester")
+                .requestTime(Instant.parse("2024-01-09T00:00:00Z"))
+                .build();
+
+        assertThat(service.execute(first).success()).isTrue();
+
+        CreateAssetLinkCommand second = CreateAssetLinkCommand.builder()
+                .assetId("asset-1")
+                .entityType("WORKFLOW")
+                .entitySubtype("BULK")
+                .targetCode("WF-2")
+                .executedBy("tester")
+                .requestTime(Instant.parse("2024-01-10T00:00:00Z"))
+                .build();
+
+        assertThatThrownBy(() -> service.execute(second))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Asset asset-1 already has an active link for WORKFLOW/BULK");
+
+        CreateAssetLinkCommand third = CreateAssetLinkCommand.builder()
+                .assetId("asset-2")
+                .entityType("WORKFLOW")
+                .entitySubtype("BULK")
+                .targetCode("WF-1")
+                .executedBy("tester")
+                .requestTime(Instant.parse("2024-01-11T00:00:00Z"))
+                .build();
+
+        assertThatThrownBy(() -> service.execute(third))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Target WF-1 already linked for WORKFLOW/BULK");
+    }
+
+    @Test
+    void manyToOne_limitsAssetSideOnly() {
+        linkDefinitionRepo.save(LinkDefinitionEntity.builder()
+                .entityType("INSTRUMENT")
+                .entitySubtype("MONITORING")
+                .cardinality(LinkCardinality.MANY_TO_ONE)
+                .active(true)
+                .build());
+
+        CreateAssetLinkCommand first = CreateAssetLinkCommand.builder()
+                .assetId("asset-1")
+                .entityType("INSTRUMENT")
+                .entitySubtype("MONITORING")
+                .targetCode("INST-1")
+                .executedBy("tester")
+                .requestTime(Instant.parse("2024-01-12T00:00:00Z"))
+                .build();
+
+        assertThat(service.execute(first).success()).isTrue();
+
+        CreateAssetLinkCommand second = CreateAssetLinkCommand.builder()
+                .assetId("asset-1")
+                .entityType("INSTRUMENT")
+                .entitySubtype("MONITORING")
+                .targetCode("INST-2")
+                .executedBy("tester")
+                .requestTime(Instant.parse("2024-01-13T00:00:00Z"))
+                .build();
+
+        assertThatThrownBy(() -> service.execute(second))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Asset asset-1 already has an active link for INSTRUMENT/MONITORING");
+
+        CreateAssetLinkCommand third = CreateAssetLinkCommand.builder()
+                .assetId("asset-2")
+                .entityType("INSTRUMENT")
+                .entitySubtype("MONITORING")
+                .targetCode("INST-1")
+                .executedBy("tester")
+                .requestTime(Instant.parse("2024-01-14T00:00:00Z"))
+                .build();
+
+        assertThat(service.execute(third).success()).isTrue();
+
+        assertThat(assetLinkRepo.activeForTarget("INSTRUMENT", "MONITORING", "INST-1"))
+                .extracting(AssetLinkEntity::getAssetId)
+                .containsExactlyInAnyOrder("asset-1", "asset-2");
     }
 
     private static final class SimpleAssetMapper implements AssetMapper {
