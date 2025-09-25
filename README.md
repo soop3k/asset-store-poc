@@ -1,8 +1,8 @@
 # Asset Store PoC
 
 This proof of concept demonstrates how to store, validate, and publish structured "assets" (for example CRE or SHIP deals).
-It is a Spring Boot service that leans heavily on JSON Schema and JSLT so that new asset types and event payloads can be
-introduced by dropping files on the classpath instead of shipping new Java code.
+It is a service that leans heavily on JSON Schema and JSLT so that new asset types and event payloads can be
+introduced by dropping files on the classpath or definig asset structure in DB with minimal needs to shipping new Java code.
 
 ## Architectural overview
 
