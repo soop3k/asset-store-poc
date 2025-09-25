@@ -5,10 +5,11 @@ import lombok.Builder;
 import lombok.Value;
 
 import java.time.Instant;
+import java.util.Optional;
 
 @Value
 @Builder(toBuilder = true)
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_ABSENT)
 public class AssetLink {
     private final Long id;
     private final String assetId;
@@ -18,6 +19,7 @@ public class AssetLink {
     private final boolean active;
     private final Instant createdAt;
     private final String createdBy;
-    private final Instant deactivatedAt;
+    @Builder.Default
+    private final Optional<Instant> deactivatedAt = Optional.empty();
     private final String deactivatedBy;
 }
