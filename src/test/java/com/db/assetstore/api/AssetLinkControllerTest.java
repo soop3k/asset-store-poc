@@ -109,7 +109,7 @@ class AssetLinkControllerTest {
         MvcResult result = mockMvc.perform(post("/assets")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andReturn();
 
         return result.getResponse().getContentAsString();

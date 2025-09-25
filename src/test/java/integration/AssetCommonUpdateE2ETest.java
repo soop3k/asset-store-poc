@@ -38,7 +38,7 @@ class AssetCommonUpdateE2ETest {
         MvcResult res = mockMvc.perform(post("/assets")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andReturn();
         String id = res.getResponse().getContentAsString();
 

@@ -1,5 +1,7 @@
 package com.db.assetstore.domain.service.cmd;
 
+import com.db.assetstore.domain.exception.command.CommandException;
+
 import java.util.Objects;
 
 /**
@@ -14,7 +16,7 @@ public interface AssetCommand<R> {
      * @param visitor visitor handling the execution for the command type
      * @return command result produced by the visitor
      */
-    CommandResult<R> accept(AssetCommandVisitor visitor);
+    CommandResult<R> accept(AssetCommandVisitor visitor) throws CommandException;
 
     /**
      * Returns the logical name of the command.

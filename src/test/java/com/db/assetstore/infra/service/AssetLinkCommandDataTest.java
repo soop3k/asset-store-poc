@@ -1,5 +1,6 @@
 package com.db.assetstore.infra.service;
 
+import com.db.assetstore.domain.exception.link.LinkCardinalityViolationException;
 import com.db.assetstore.domain.model.link.LinkCardinality;
 import com.db.assetstore.domain.service.cmd.CommandResult;
 import com.db.assetstore.domain.service.link.cmd.CreateAssetLinkCommand;
@@ -77,7 +78,7 @@ class AssetLinkCommandDataTest {
     }
 
     @Test
-    void createLink_reactivatesExistingRowInsteadOfInserting() {
+    void createLink_reactivatesExistingRowInsteadOfInserting() throws Exception {
         linkDefinitionRepo.save(LinkDefinitionEntity.builder()
                 .entityType("WORKFLOW")
                 .entitySubtype("BULK")
@@ -122,7 +123,7 @@ class AssetLinkCommandDataTest {
     }
 
     @Test
-    void deleteLink_marksLinkInactive() {
+    void deleteLink_marksLinkInactive() throws Exception {
         linkDefinitionRepo.save(LinkDefinitionEntity.builder()
                 .entityType("WORKFLOW")
                 .entitySubtype("REVALUATION")
@@ -161,7 +162,7 @@ class AssetLinkCommandDataTest {
     }
 
     @Test
-    void createLink_respectsTargetSideCardinality() {
+    void createLink_respectsTargetSideCardinality() throws Exception {
         linkDefinitionRepo.save(LinkDefinitionEntity.builder()
                 .entityType("WORKFLOW")
                 .entitySubtype("MONITORING")
@@ -190,12 +191,12 @@ class AssetLinkCommandDataTest {
         assertThat(service.execute(first).success()).isTrue();
 
         assertThatThrownBy(() -> service.execute(second))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(LinkCardinalityViolationException.class)
                 .hasMessageContaining("Target WF-99 already linked");
     }
 
     @Test
-    void oneToMany_allowsMultipleLinksForAsset() {
+    void oneToMany_allowsMultipleLinksForAsset() throws Exception {
         linkDefinitionRepo.save(LinkDefinitionEntity.builder()
                 .entityType("WORKFLOW")
                 .entitySubtype("CHG")
@@ -230,7 +231,7 @@ class AssetLinkCommandDataTest {
     }
 
     @Test
-    void oneToOne_limitsBothSides() {
+    void oneToOne_limitsBothSides() throws Exception {
         linkDefinitionRepo.save(LinkDefinitionEntity.builder()
                 .entityType("WORKFLOW")
                 .entitySubtype("BULK")
@@ -259,7 +260,7 @@ class AssetLinkCommandDataTest {
                 .build();
 
         assertThatThrownBy(() -> service.execute(second))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(LinkCardinalityViolationException.class)
                 .hasMessageContaining("Asset asset-1 already has an active link for WORKFLOW/BULK");
 
         CreateAssetLinkCommand third = CreateAssetLinkCommand.builder()
@@ -272,12 +273,12 @@ class AssetLinkCommandDataTest {
                 .build();
 
         assertThatThrownBy(() -> service.execute(third))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(LinkCardinalityViolationException.class)
                 .hasMessageContaining("Target WF-1 already linked for WORKFLOW/BULK");
     }
 
     @Test
-    void manyToOne_limitsAssetSideOnly() {
+    void manyToOne_limitsAssetSideOnly() throws Exception {
         linkDefinitionRepo.save(LinkDefinitionEntity.builder()
                 .entityType("INSTRUMENT")
                 .entitySubtype("MONITORING")
@@ -306,7 +307,7 @@ class AssetLinkCommandDataTest {
                 .build();
 
         assertThatThrownBy(() -> service.execute(second))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(LinkCardinalityViolationException.class)
                 .hasMessageContaining("Asset asset-1 already has an active link for INSTRUMENT/MONITORING");
 
         CreateAssetLinkCommand third = CreateAssetLinkCommand.builder()

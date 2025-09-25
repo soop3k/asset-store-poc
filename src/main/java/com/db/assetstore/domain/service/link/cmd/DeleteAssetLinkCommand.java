@@ -1,5 +1,6 @@
 package com.db.assetstore.domain.service.link.cmd;
 
+import com.db.assetstore.domain.exception.command.CommandException;
 import com.db.assetstore.domain.service.cmd.AssetCommand;
 import com.db.assetstore.domain.service.cmd.AssetCommandVisitor;
 import com.db.assetstore.domain.service.cmd.CommandResult;
@@ -18,7 +19,7 @@ public record DeleteAssetLinkCommand(
 ) implements AssetCommand<Void> {
 
     @Override
-    public CommandResult<Void> accept(AssetCommandVisitor visitor) {
+    public CommandResult<Void> accept(AssetCommandVisitor visitor) throws CommandException {
         return AssetCommand.super.requireVisitor(visitor).visit(this);
     }
 }

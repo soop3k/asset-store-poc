@@ -1,5 +1,8 @@
 package com.db.assetstore.domain.service;
 
+import com.db.assetstore.domain.exception.CanonicalizationException;
+import com.db.assetstore.domain.exception.EventGenerationException;
+import com.db.assetstore.domain.exception.JsonTransformException;
 import com.db.assetstore.domain.json.AssetCanonicalizer;
 import com.db.assetstore.domain.model.Asset;
 import com.db.assetstore.domain.service.transform.JsonTransformer;
@@ -33,7 +36,8 @@ public final class EventService {
     private final AssetCanonicalizer canonicalizer;
     private final ObjectMapper objectMapper;
 
-    public String generate(String eventName, Asset asset) throws JsonProcessingException {
+    public String generate(String eventName, Asset asset)
+            throws CanonicalizationException, JsonTransformException, EventGenerationException {
         Objects.requireNonNull(eventName, "eventName");
         Objects.requireNonNull(asset, "asset");
         log.debug("Generating event '{}' for asset id={} type={}", eventName, asset.getId(), asset.getType());
@@ -45,15 +49,18 @@ public final class EventService {
         try {
             ctx.set("asset", objectMapper.readTree(canonical));
         } catch (JsonProcessingException e) {
-            log.error("Failed to parse canonical asset JSON: {}", e.getMessage(), e);
-            throw new IllegalStateException("Failed to parse canonical asset JSON", e);
+            log.error("Failed to parse canonical asset JSON for asset {}: {}", asset.getId(), e.getMessage(), e);
+            throw new EventGenerationException(
+                    "Failed to parse canonical asset JSON for asset " + asset.getId(), e);
         }
         String inputForTransform;
         try {
             inputForTransform = objectMapper.writeValueAsString(ctx);
         } catch (JsonProcessingException e) {
-            log.error("Failed to serialize transform input: {}", e.getMessage(), e);
-            throw new IllegalStateException("Failed to serialize transform input", e);
+            log.error("Failed to serialize transform input for event {} and asset {}: {}",
+                    eventName, asset.getId(), e.getMessage(), e);
+            throw new EventGenerationException(
+                    "Failed to serialize transform input for event %s and asset %s".formatted(eventName, asset.getId()), e);
         }
 
         String transformed = transformer.transform(eventName, inputForTransform);

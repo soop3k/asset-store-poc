@@ -37,7 +37,7 @@ class IntegrationAssetHistoryTest {
     AssetHistoryService historyService;
 
     @Test
-    void multipleUpdatesProduceHistoryAndFinalState() {
+    void multipleUpdatesProduceHistoryAndFinalState() throws Exception {
         CreateAssetCommand createCmd = CreateAssetCommand.builder()
                 .id("cre-int-hist")
                 .type(AssetType.CRE)

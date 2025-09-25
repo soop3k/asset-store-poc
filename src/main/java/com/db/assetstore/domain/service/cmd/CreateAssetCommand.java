@@ -1,6 +1,7 @@
 package com.db.assetstore.domain.service.cmd;
 
 import com.db.assetstore.AssetType;
+import com.db.assetstore.domain.exception.command.CommandException;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import lombok.Builder;
 
@@ -28,7 +29,7 @@ public record CreateAssetCommand(
 ) implements AssetCommand<String> {
 
     @Override
-    public CommandResult<String> accept(AssetCommandVisitor visitor) {
+    public CommandResult<String> accept(AssetCommandVisitor visitor) throws CommandException {
         return requireVisitor(visitor).visit(this);
     }
 

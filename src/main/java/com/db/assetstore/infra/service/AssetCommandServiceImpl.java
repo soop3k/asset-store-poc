@@ -1,5 +1,10 @@
 package com.db.assetstore.infra.service;
 
+import com.db.assetstore.domain.exception.command.CommandException;
+import com.db.assetstore.domain.exception.link.ActiveLinkNotFoundException;
+import com.db.assetstore.domain.exception.link.LinkAlreadyExistsException;
+import com.db.assetstore.domain.exception.link.LinkDefinitionNotFoundException;
+import com.db.assetstore.domain.exception.link.LinkException;
 import com.db.assetstore.domain.service.cmd.AssetCommand;
 import com.db.assetstore.domain.service.cmd.AssetCommandVisitor;
 import com.db.assetstore.domain.service.cmd.CommandResult;
@@ -61,7 +66,7 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
 
     @Override
     @Transactional
-    public <R> CommandResult<R> execute(AssetCommand<R> command) {
+    public <R> CommandResult<R> execute(AssetCommand<R> command) throws CommandException {
         Objects.requireNonNull(command, "command");
         CommandResult<R> result = command.accept(this);
         if (result.success()) {
@@ -119,7 +124,7 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
     }
 
     @Override
-    public CommandResult<Long> visit(CreateAssetLinkCommand command) {
+    public CommandResult<Long> visit(CreateAssetLinkCommand command) throws LinkException {
         Objects.requireNonNull(command, "command");
 
         LinkDefinitionEntity definition = findActiveDefinition(command);
@@ -133,7 +138,7 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
     }
 
     @Override
-    public CommandResult<Void> visit(DeleteAssetLinkCommand command) {
+    public CommandResult<Void> visit(DeleteAssetLinkCommand command) throws LinkException {
         Objects.requireNonNull(command, "command");
 
         AssetLinkEntity entity = requireActiveLink(command);
@@ -257,11 +262,12 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
         return instant != null ? instant : Instant.now();
     }
 
-    private LinkDefinitionEntity findActiveDefinition(CreateAssetLinkCommand command) {
+    private LinkDefinitionEntity findActiveDefinition(CreateAssetLinkCommand command)
+            throws LinkDefinitionNotFoundException {
         return linkDefinitionRepo
                 .findByEntityTypeAndEntitySubtypeAndActiveTrue(command.entityType(), command.entitySubtype())
-                .orElseThrow(() -> new IllegalStateException(
-                        "Link definition missing for %s/%s".formatted(command.entityType(), command.entitySubtype())));
+                .orElseThrow(() -> new LinkDefinitionNotFoundException(
+                        command.entityType(), command.entitySubtype()));
     }
 
     private LinkPersistenceResult persistLink(CreateAssetLinkCommand command) {
@@ -289,12 +295,11 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
                 .build();
     }
 
-    private AssetLinkEntity requireActiveLink(DeleteAssetLinkCommand command) {
+    private AssetLinkEntity requireActiveLink(DeleteAssetLinkCommand command) throws ActiveLinkNotFoundException {
         return assetLinkRepo
                 .activeLink(
                         command.assetId(), command.entityType(), command.entitySubtype(), command.targetCode())
-                .orElseThrow(() -> new IllegalStateException(
-                        "Active link not found for asset %s".formatted(command.assetId())));
+                .orElseThrow(() -> new ActiveLinkNotFoundException(command.assetId()));
     }
 
     private void deactivateLink(DeleteAssetLinkCommand command, AssetLinkEntity entity) {
@@ -307,11 +312,10 @@ public class AssetCommandServiceImpl implements AssetCommandService, AssetComman
     private record LinkPersistenceResult(AssetLinkEntity entity, boolean reactivated) {
     }
 
-    private AssetLinkEntity reactivate(AssetLinkEntity entity, CreateAssetLinkCommand command) {
+    private AssetLinkEntity reactivate(AssetLinkEntity entity, CreateAssetLinkCommand command)
+            throws LinkAlreadyExistsException {
         if (entity.isActive()) {
-            throw new IllegalStateException(
-                    "Active link already exists for asset %s and target %s".formatted(
-                            command.assetId(), command.targetCode()));
+            throw new LinkAlreadyExistsException(command.assetId(), command.targetCode());
         }
         entity.setActive(true);
         entity.setCreatedAt(orNow(command.requestTime()));

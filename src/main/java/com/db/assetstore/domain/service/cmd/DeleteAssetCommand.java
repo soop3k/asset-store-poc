@@ -1,5 +1,6 @@
 package com.db.assetstore.domain.service.cmd;
 
+import com.db.assetstore.domain.exception.command.CommandException;
 import lombok.Builder;
 
 import java.time.Instant;
@@ -15,7 +16,7 @@ public record DeleteAssetCommand(
 ) implements AssetCommand<Void> {
 
     @Override
-    public CommandResult<Void> accept(AssetCommandVisitor visitor) {
+    public CommandResult<Void> accept(AssetCommandVisitor visitor) throws CommandException {
         return requireVisitor(visitor).visit(this);
     }
 

@@ -12,6 +12,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.emptyString;
+import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -52,7 +53,8 @@ class AssetControllerTest {
         MvcResult result = mockMvc.perform(post("/assets")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location", not(emptyString())))
                 .andExpect(content().string(not(emptyString())))
                 .andReturn();
 
@@ -91,7 +93,7 @@ class AssetControllerTest {
         MvcResult result = mockMvc.perform(post("/assets")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andReturn();
 
         String assetId = result.getResponse().getContentAsString();
@@ -121,7 +123,8 @@ class AssetControllerTest {
         mockMvc.perform(post("/assets")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location", endsWith("/custom-asset-123")))
                 .andExpect(content().string("custom-asset-123"));
 
         mockMvc.perform(get("/assets/custom-asset-123"))
@@ -176,7 +179,7 @@ class AssetControllerTest {
         mockMvc.perform(post("/assets/bulk")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0]", is("bulk-cre-1")))
                 .andExpect(jsonPath("$[1]", is("bulk-ship-1")));
@@ -197,7 +200,7 @@ class AssetControllerTest {
         mockMvc.perform(post("/assets/bulk")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("[]"))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$", hasSize(0)));
     }
 
@@ -229,9 +232,9 @@ class AssetControllerTest {
                 """;
 
         mockMvc.perform(post("/assets").contentType(MediaType.APPLICATION_JSON).content(cre))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
         mockMvc.perform(post("/assets").contentType(MediaType.APPLICATION_JSON).content(ship))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         mockMvc.perform(get("/assets")
                         .accept(MediaType.APPLICATION_JSON))
@@ -271,7 +274,7 @@ class AssetControllerTest {
                 """;
 
         mockMvc.perform(post("/assets").contentType(MediaType.APPLICATION_JSON).content(payload))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         mockMvc.perform(get("/assets/get-test-1"))
                 .andExpect(status().isOk())
@@ -308,7 +311,7 @@ class AssetControllerTest {
                 """;
 
         mockMvc.perform(post("/assets").contentType(MediaType.APPLICATION_JSON).content(initialPayload))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         String updatePayload = """
                 {
@@ -373,7 +376,7 @@ class AssetControllerTest {
                 """;
 
         mockMvc.perform(post("/assets").contentType(MediaType.APPLICATION_JSON).content(initialPayload))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         String patchPayload = """
                 {
@@ -430,8 +433,8 @@ class AssetControllerTest {
                 }
                 """;
 
-        mockMvc.perform(post("/assets").contentType(MediaType.APPLICATION_JSON).content(asset1)).andExpect(status().isOk());
-        mockMvc.perform(post("/assets").contentType(MediaType.APPLICATION_JSON).content(asset2)).andExpect(status().isOk());
+        mockMvc.perform(post("/assets").contentType(MediaType.APPLICATION_JSON).content(asset1)).andExpect(status().isCreated());
+        mockMvc.perform(post("/assets").contentType(MediaType.APPLICATION_JSON).content(asset2)).andExpect(status().isCreated());
 
         String bulkPatchPayload = """
                 [
@@ -514,7 +517,7 @@ class AssetControllerTest {
         MvcResult result = mockMvc.perform(post("/assets")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andReturn();
 
         String assetId = result.getResponse().getContentAsString();
@@ -544,7 +547,7 @@ class AssetControllerTest {
         MvcResult result = mockMvc.perform(post("/assets")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andReturn();
 
         String assetId = result.getResponse().getContentAsString();
@@ -572,7 +575,7 @@ class AssetControllerTest {
         MvcResult result = mockMvc.perform(post("/assets")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andReturn();
 
         String assetId = result.getResponse().getContentAsString();

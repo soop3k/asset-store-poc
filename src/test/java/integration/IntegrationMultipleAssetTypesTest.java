@@ -29,7 +29,7 @@ class IntegrationMultipleAssetTypesTest {
     AssetQueryService queryService;
 
     @Test
-    void persistTwoDifferentAssetTypes_CRE_and_SHIP() {
+    void persistTwoDifferentAssetTypes_CRE_and_SHIP() throws Exception {
         var creCmd = CreateAssetCommand.builder()
                 .id("cre-int-2")
                 .type(AssetType.CRE)

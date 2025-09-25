@@ -1,5 +1,6 @@
 package com.db.assetstore.domain.service.cmd;
 
+import com.db.assetstore.domain.exception.command.CommandException;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import lombok.Builder;
 
@@ -25,7 +26,7 @@ public record PatchAssetCommand(
 ) implements AssetCommand<Void> {
 
     @Override
-    public CommandResult<Void> accept(AssetCommandVisitor visitor) {
+    public CommandResult<Void> accept(AssetCommandVisitor visitor) throws CommandException {
         return requireVisitor(visitor).visit(this);
     }
 

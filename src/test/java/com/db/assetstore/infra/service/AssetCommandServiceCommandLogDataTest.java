@@ -3,6 +3,7 @@ package com.db.assetstore.infra.service;
 import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.model.type.AVDecimal;
 import com.db.assetstore.domain.model.type.AVString;
+import com.db.assetstore.domain.exception.command.CommandException;
 import com.db.assetstore.domain.service.cmd.AssetCommand;
 import com.db.assetstore.domain.service.cmd.AssetCommandVisitor;
 import com.db.assetstore.domain.service.cmd.CommandResult;
@@ -122,7 +123,7 @@ class AssetCommandServiceCommandLogDataTest {
     }
 
     @Test
-    void execute_whenCommandReportsFailure_doesNotPersistLog() {
+    void execute_whenCommandReportsFailure_doesNotPersistLog() throws Exception {
         FailingCommand command = new FailingCommand("asset-456", "auditor");
 
         CommandResult<Void> result = service.execute(command);
@@ -137,7 +138,7 @@ class AssetCommandServiceCommandLogDataTest {
     record FailingCommand(String assetId, String executedBy) implements AssetCommand<Void> {
 
         @Override
-        public CommandResult<Void> accept(AssetCommandVisitor visitor) {
+        public CommandResult<Void> accept(AssetCommandVisitor visitor) throws CommandException {
             return CommandResult.failure(assetId);
         }
     }

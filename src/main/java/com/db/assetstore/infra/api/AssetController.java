@@ -1,5 +1,6 @@
 package com.db.assetstore.infra.api;
 
+import com.db.assetstore.domain.exception.command.CommandException;
 import com.db.assetstore.domain.model.Asset;
 import com.db.assetstore.domain.search.SearchCriteria;
 import com.db.assetstore.domain.service.AssetCommandService;
@@ -15,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.List;
 
@@ -35,25 +37,29 @@ public class AssetController {
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> addAsset(@RequestBody AssetCreateRequest request) {
+    public ResponseEntity<String> addAsset(@RequestBody AssetCreateRequest request) throws CommandException {
         log.info("Creating asset");
         String id = commandService.create(commandFactoryRegistry.createCreateCommand(request));
         log.debug("Created asset id={}", id);
-        return ResponseEntity.ok(id);
+        var location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(id)
+                .toUri();
+        return ResponseEntity.created(location).body(id);
     }
 
     @PostMapping(path = "/bulk", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<String>> addAssetsBulk(@RequestBody List<AssetCreateRequest> requests) {
+    public ResponseEntity<List<String>> addAssetsBulk(@RequestBody List<AssetCreateRequest> requests) throws CommandException {
         log.info("HTTP POST /assets/bulk - creating {} assets", requests == null ? 0 : requests.size());
         if (requests == null || requests.isEmpty()) {
-            return ResponseEntity.ok(List.of());
+            return ResponseEntity.status(HttpStatus.CREATED).body(List.of());
         }
-        List<String> ids = requests.stream()
-                .map(commandFactoryRegistry::createCreateCommand)
-                .map(commandService::create)
-                .toList();
+        List<String> ids = new java.util.ArrayList<>(requests.size());
+        for (AssetCreateRequest req : requests) {
+            ids.add(commandService.create(commandFactoryRegistry.createCreateCommand(req)));
+        }
         log.debug("Created {} assets", ids.size());
-        return ResponseEntity.ok(ids);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ids);
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -74,7 +80,8 @@ public class AssetController {
 
     // Unified asset update: updates both common fields and type-specific attributes
     @PutMapping(path = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> updateAsset(@PathVariable("id") String id, @RequestBody AssetPatchRequest request) {
+    public ResponseEntity<Void> updateAsset(@PathVariable("id") String id, @RequestBody AssetPatchRequest request)
+            throws CommandException {
         log.info("HTTP PUT /assets/{} - updating asset", id);
         var current = assetQueryService.get(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Asset %s not found".formatted(id)));
@@ -85,7 +92,8 @@ public class AssetController {
     }
 
     @PatchMapping(path = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> patchAsset(@PathVariable("id") String id, @RequestBody AssetPatchRequest request) {
+    public ResponseEntity<Void> patchAsset(@PathVariable("id") String id, @RequestBody AssetPatchRequest request)
+            throws CommandException {
         log.info("HTTP PATCH /assets/{} - patch asset", id);
         var current = assetQueryService.get(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Asset %s not found".formatted(id)));
@@ -95,7 +103,7 @@ public class AssetController {
     }
 
     @PatchMapping(path = "/bulk", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> patchAssetsBulk(@RequestBody List<AssetPatchRequest> requests) {
+    public ResponseEntity<Void> patchAssetsBulk(@RequestBody List<AssetPatchRequest> requests) throws CommandException {
         log.info("HTTP PATCH /assets/bulk - patch {} assets", requests == null ? 0 : requests.size());
         if (requests == null || requests.isEmpty()) {
             return ResponseEntity.noContent().build();
@@ -111,7 +119,7 @@ public class AssetController {
 
     @DeleteMapping(path = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> deleteAsset(@PathVariable("id") String id,
-                                            @RequestBody AssetDeleteRequest request) {
+                                            @RequestBody AssetDeleteRequest request) throws CommandException {
         log.info("HTTP DELETE /assets/{} - delete asset", id);
         var cmd = commandFactoryRegistry.createDeleteCommand(id, request);
         commandService.delete(cmd);

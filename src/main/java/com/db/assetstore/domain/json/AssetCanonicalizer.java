@@ -1,5 +1,6 @@
 package com.db.assetstore.domain.json;
 
+import com.db.assetstore.domain.exception.CanonicalizationException;
 import com.db.assetstore.domain.model.Asset;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.model.attribute.AttributeValueVisitor;
@@ -19,7 +20,7 @@ public final class AssetCanonicalizer {
 
     private final ObjectMapper mapper;
 
-    public String toCanonicalJson(Asset asset) {
+    public String toCanonicalJson(Asset asset) throws CanonicalizationException {
         ObjectNode root = mapper.createObjectNode();
         put(root, "id", asset.getId());
         put(root, "type", asset.getType());
@@ -48,7 +49,8 @@ public final class AssetCanonicalizer {
         try {
             return mapper.writeValueAsString(root);
         } catch (JsonProcessingException e) {
-            throw new IllegalStateException("Failed to serialize canonical asset JSON", e);
+            throw new CanonicalizationException(
+                    "Failed to serialize canonical asset JSON for asset " + asset.getId(), e);
         }
     }
 

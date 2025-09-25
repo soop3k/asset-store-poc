@@ -1,9 +1,9 @@
 package com.db.assetstore.infra.api;
 
+import com.db.assetstore.domain.exception.JsonException;
 import com.db.assetstore.domain.model.Asset;
 import com.db.assetstore.domain.service.AssetQueryService;
 import com.db.assetstore.domain.service.EventService;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -27,7 +27,7 @@ public class EventController {
 
     @GetMapping(path = "/{assetId}/{eventName}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> generateEvent(@PathVariable("assetId") String assetId,
-                                                @PathVariable("eventName") String eventName) {
+                                                @PathVariable("eventName") String eventName) throws JsonException {
         log.info("HTTP GET /events/{}/{} - generating event", assetId, eventName);
         Optional<Asset> assetOpt = assetQueryService.get(assetId);
 
@@ -35,12 +35,8 @@ public class EventController {
             return ResponseEntity.notFound().build();
         }
 
-        try {
-            var json = eventService.generate(eventName, assetOpt.get());
-            return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(json);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        var json = eventService.generate(eventName, assetOpt.get());
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(json);
 
     }
 }

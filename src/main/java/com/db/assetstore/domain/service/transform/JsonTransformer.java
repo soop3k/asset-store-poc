@@ -1,5 +1,8 @@
 package com.db.assetstore.domain.service.transform;
 
+import com.db.assetstore.domain.exception.JsonTransformException;
+import com.db.assetstore.domain.exception.TransformSchemaValidationException;
+import com.db.assetstore.domain.exception.TransformTemplateNotFoundException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.schibsted.spt.data.jslt.Expression;
@@ -7,16 +10,12 @@ import com.schibsted.spt.data.jslt.Parser;
 import com.db.assetstore.domain.service.validation.JsonSchemaValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
-import java.util.List;
-import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -29,60 +28,72 @@ public final class JsonTransformer {
 
     private final ConcurrentHashMap<String, Expression> expressionCache = new ConcurrentHashMap<>();
 
-    public String transform(String transformName, String inputJson) {
+    public String transform(String transformName, String inputJson) throws JsonTransformException {
         Objects.requireNonNull(transformName, "transformName");
         Objects.requireNonNull(inputJson, "inputJson");
 
         String templatePath = "transforms/events/" + transformName + ".jslt";
-        if (!resourceExists(templatePath)) {
-            log.error("Transform template not found: {}", templatePath);
-            throw new IllegalArgumentException("Transform template not found: " + templatePath);
-        }
+        Expression expr = loadExpression(templatePath);
 
         try {
-            Expression expr = expressionCache.computeIfAbsent(templatePath, k -> {
-                try {
-                    String template = readResourceAsString(k);
-                    return Parser.compileString(template);
-                } catch (Exception e) {
-                    throw new RuntimeException("Failed to load or compile template: " + k, e);
-                }
-            });
-
             JsonNode inputNode = objectMapper.readTree(inputJson);
             JsonNode resultNode = expr.apply(inputNode);
             String result = objectMapper.writeValueAsString(resultNode);
 
             try {
-                List.of(
-                    "schemas/events/" + transformName + ".schema.json"
-                ).forEach(schemaPath -> {
-                    validator.validateOrThrow(result, schemaPath);
-                });
+                String schemaPath = "schemas/events/" + transformName + ".schema.json";
+                validator.validateOrThrow(result, schemaPath);
             } catch (IllegalArgumentException iae) {
                 log.error("Transform '{}' produced JSON failing schema validation: {}", transformName, iae.getMessage());
-                throw iae;
+                throw new TransformSchemaValidationException(
+                        "Transform '" + transformName + "' produced invalid payload: " + iae.getMessage());
             }
 
             log.info("Successfully applied transform '{}'", transformName);
             return result;
+        } catch (JsonTransformException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Transformation failed for '{}': {}", transformName, e.getMessage(), e);
-            throw new IllegalArgumentException("Failed to transform JSON: " + e.getMessage(), e);
+            throw new JsonTransformException("Failed to transform JSON for transform '" + transformName + "'", e);
         }
     }
 
-    private static boolean resourceExists(String path) {
-        return JsonTransformer.class.getClassLoader().getResource(path) != null;
+    private Expression loadExpression(String templatePath) throws JsonTransformException {
+        Expression cached = expressionCache.get(templatePath);
+        if (cached != null) {
+            return cached;
+        }
+
+        Expression compiled = compileTemplate(templatePath);
+        Expression existing = expressionCache.putIfAbsent(templatePath, compiled);
+        return existing != null ? existing : compiled;
     }
 
-    private static String readResourceAsString(String path) throws IOException {
+    private Expression compileTemplate(String templatePath) throws JsonTransformException {
+        try {
+            String template = readResourceAsString(templatePath);
+            return Parser.compileString(template);
+        } catch (TransformTemplateNotFoundException e) {
+            log.error("Transform template not found: {}", templatePath);
+            throw e;
+        } catch (JsonTransformException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Failed to load or compile template {}: {}", templatePath, e.getMessage());
+            throw new JsonTransformException("Failed to load or compile template: " + templatePath, e);
+        }
+    }
+
+    private String readResourceAsString(String path) throws JsonTransformException {
         ClassLoader cl = JsonTransformer.class.getClassLoader();
         try (InputStream is = cl.getResourceAsStream(path)) {
             if (is == null) {
-                throw new IllegalArgumentException("Transform template not found: " + path);
+                throw new TransformTemplateNotFoundException(path);
             }
             return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new JsonTransformException("Failed to read template: " + path, e);
         }
     }
 }

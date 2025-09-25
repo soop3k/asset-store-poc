@@ -15,7 +15,10 @@ import com.db.assetstore.infra.mapper.AttributeMapper;
 import com.db.assetstore.infra.repository.AssetRepository;
 import com.db.assetstore.infra.repository.AttributeRepository;
 import com.db.assetstore.infra.repository.CommandLogRepository;
+import com.db.assetstore.infra.repository.AssetLinkRepo;
+import com.db.assetstore.infra.repository.LinkDefinitionRepo;
 import com.db.assetstore.infra.service.AssetCommandServiceImpl;
+import com.db.assetstore.infra.service.link.AssetLinkCommandValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,6 +40,9 @@ class AssetCommandServiceImplTest {
     AssetRepository assetRepo;
     AttributeRepository attributeRepo;
     CommandLogRepository commandLogRepository;
+    AssetLinkRepo assetLinkRepo;
+    LinkDefinitionRepo linkDefinitionRepo;
+    AssetLinkCommandValidator assetLinkCommandValidator;
     ObjectMapper objectMapper;
 
     AssetCommandServiceImpl service;
@@ -48,9 +54,21 @@ class AssetCommandServiceImplTest {
         assetRepo = mock(AssetRepository.class);
         attributeRepo = mock(AttributeRepository.class);
         commandLogRepository = mock(CommandLogRepository.class);
+        assetLinkRepo = mock(AssetLinkRepo.class);
+        linkDefinitionRepo = mock(LinkDefinitionRepo.class);
+        assetLinkCommandValidator = mock(AssetLinkCommandValidator.class);
         objectMapper = new JsonMapperProvider().objectMapper();
         when(commandLogRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-        service = new AssetCommandServiceImpl(assetMapper, attributeMapper, assetRepo, attributeRepo, commandLogRepository, objectMapper);
+        service = new AssetCommandServiceImpl(
+                assetMapper,
+                attributeMapper,
+                assetRepo,
+                attributeRepo,
+                commandLogRepository,
+                assetLinkRepo,
+                linkDefinitionRepo,
+                assetLinkCommandValidator,
+                objectMapper);
 
         // Default behavior for save to echo the entity
         when(assetRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
@@ -58,7 +76,7 @@ class AssetCommandServiceImplTest {
     }
 
     @Test
-    void create_whenEntityAlreadyContainsAttributes_savesDirectlyAndReturnsId() {
+    void create_whenEntityAlreadyContainsAttributes_savesDirectlyAndReturnsId() throws Exception {
         // given command with attributes
         CreateAssetCommand cmd = CreateAssetCommand.builder()
                 .id("a-1").type(AssetType.CRE)
@@ -90,7 +108,7 @@ class AssetCommandServiceImplTest {
     }
 
     @Test
-    void create_whenEntityHasNoAttributes_insertsAllOnCreateAndSaves() {
+    void create_whenEntityHasNoAttributes_insertsAllOnCreateAndSaves() throws Exception {
         // given command with a single attribute
         CreateAssetCommand cmd = CreateAssetCommand.builder()
                 .id("a-2").type(AssetType.CRE)
@@ -123,7 +141,7 @@ class AssetCommandServiceImplTest {
     }
 
     @Test
-    void execute_withCreateCommand_dispatchesThroughVisitorAndRecordsLog() {
+    void execute_withCreateCommand_dispatchesThroughVisitorAndRecordsLog() throws Exception {
         CreateAssetCommand cmd = CreateAssetCommand.builder()
                 .id("exec-1")
                 .type(AssetType.CRE)
@@ -147,7 +165,7 @@ class AssetCommandServiceImplTest {
     }
 
     @Test
-    void update_commonFieldsOnly_persistsChanges() {
+    void update_commonFieldsOnly_persistsChanges() throws Exception {
         AssetEntity entity = AssetEntity.builder().id("a-3").type(AssetType.CRE).status("ACTIVE").build();
         when(assetRepo.findByIdAndDeleted("a-3", 0)).thenReturn(Optional.of(entity));
 
@@ -170,7 +188,7 @@ class AssetCommandServiceImplTest {
     }
 
     @Test
-    void update_attributeChanged_updatesAttributeAndSavesIt() {
+    void update_attributeChanged_updatesAttributeAndSavesIt() throws Exception {
         // existing entity with attribute city="Gdansk"
         AssetEntity parent = AssetEntity.builder().id("a-4").type(AssetType.CRE).attributes(new java.util.ArrayList<>()).build();
         AttributeEntity existing = new AttributeEntity(parent, "city", "Gdansk", Instant.now());
@@ -197,7 +215,7 @@ class AssetCommandServiceImplTest {
     }
 
     @Test
-    void update_attributeSameValue_doesNotSaveAttribute() {
+    void update_attributeSameValue_doesNotSaveAttribute() throws Exception {
         AssetEntity parent = AssetEntity.builder().id("a-5").type(AssetType.CRE).attributes(new java.util.ArrayList<>()).build();
         AttributeEntity existing = new AttributeEntity(parent, "city", "Warsaw", Instant.now());
         parent.getAttributes().add(existing);
@@ -222,7 +240,7 @@ class AssetCommandServiceImplTest {
     }
 
     @Test
-    void delete_marksEntityDeletedAndSaves() {
+    void delete_marksEntityDeletedAndSaves() throws Exception {
         AssetEntity entity = AssetEntity.builder().id("a-6").type(AssetType.CRE).deleted(0).build();
         when(assetRepo.findByIdAndDeleted("a-6", 0)).thenReturn(Optional.of(entity));
 

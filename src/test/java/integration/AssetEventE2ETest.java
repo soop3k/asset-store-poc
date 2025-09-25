@@ -37,7 +37,7 @@ class AssetEventE2ETest {
         MvcResult res = mockMvc.perform(post("/assets")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andReturn();
         String id = res.getResponse().getContentAsString();
 
@@ -61,5 +61,30 @@ class AssetEventE2ETest {
                 .andExpect(jsonPath("$.currency", is("USD")))
                 .andExpect(jsonPath("$.notional_amount", is(closeTo(123.45, 0.0001))))
                 .andExpect(jsonPath("$.asset_status", is("ACTIVE")));
+    }
+
+    @Test
+    void generateEvent_whenTemplateMissing_returns404() throws Exception {
+        String payload = """
+        {
+          "type": "CRE",
+          "currency": "USD",
+          "notionalAmount": 123.45,
+          "status": "ACTIVE"
+        }""";
+
+        String id = mockMvc.perform(post("/assets")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        mockMvc.perform(get("/events/" + id + "/missing-template")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status", is(404)))
+                .andExpect(jsonPath("$.message", containsString("Transform template not found")));
     }
 }
