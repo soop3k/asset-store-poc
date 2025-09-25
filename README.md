@@ -1,5 +1,60 @@
 # Asset Store PoC
 
+## English Summary
+
+This project provides a proof-of-concept for an asset management system using JSLT (Schibsted) for JSON transformations. The system supports dynamic asset types with schema-based validation and provides REST APIs for asset operations.
+
+### Key Features
+- **Dynamic Asset Types**: Asset types are determined by JSON schemas in `src/main/resources/schemas/*.schema.json`
+- **JSLT Transformations**: JSON-to-JSON transformations using JSLT templates under `src/main/resources/transforms/**/*.jslt`
+- **Schema Validation**: Automatic validation against JSON schemas with graceful handling of unknown properties
+- **Event Generation**: Generate events from assets using JSLT templates
+- **REST API**: Full CRUD operations with type-specific endpoints
+- **Attribute Management**: Flexible attribute system with typed values and history tracking
+
+### Quick Start
+```bash
+# Run tests
+mvn clean test
+
+# Start the application
+mvn spring-boot:run
+```
+
+### API Examples
+```bash
+# Create an asset with envelope format
+POST /assets
+{
+  "type": "CRE",
+  "id": "asset-123",
+  "attributes": {
+    "city": "Warsaw",
+    "rooms": 3
+  }
+}
+
+# Create an asset with type-specific endpoint
+POST /assets/cre
+{
+  "city": "Warsaw", 
+  "rooms": 3
+}
+
+# List assets
+GET /assets
+```
+
+### Architecture Overview
+- **Domain Layer**: Asset models, services, and business logic
+- **Infrastructure Layer**: JPA repositories, REST controllers, database mapping
+- **Transformation Layer**: JSLT-based JSON transformations with caching
+- **Validation Layer**: JSON schema validation with type discovery
+
+---
+
+## Opis po Polsku
+
 This project now uses JSLT (Schibsted) exclusively for JSON->JSON transforms. JSONata templates and any custom transformer code have been removed. At runtime the app logs supported asset types (based on present JSON Schemas) and all discovered JSLT templates, so you can immediately see what is active.
 
 What changed visibly:

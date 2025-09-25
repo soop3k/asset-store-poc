@@ -71,13 +71,32 @@ public final class AttributesCollection {
         return (vs == null || vs.isEmpty()) ? Optional.empty() : Optional.of(vs.get(0));
     }
 
-    // Backward-compatible convenience alias used by tests
+    /**
+     * Backward-compatible convenience alias used by tests.
+     * @deprecated Use {@link #getFirst(String)} instead for clearer semantics.
+     */
+    @Deprecated
     public Optional<AttributeValue<?>> getFirstByName(String name) {
         return getFirst(name);
     }
 
+    /**
+     * Gets the first attribute value for the given name and casts it to the specified type.
+     * Validates type compatibility before casting to prevent ClassCastException.
+     * 
+     * @param name the attribute name
+     * @param type the expected type class
+     * @return Optional containing the typed value, or empty if not found or type incompatible
+     * @throws IllegalArgumentException if type is null
+     */
     public <T> Optional<T> getOne(String name, Class<T> type) {
-        return getFirst(name).map(AttributeValue::value).map(type::cast);
+        if (type == null) {
+            throw new IllegalArgumentException("type cannot be null");
+        }
+        return getFirst(name)
+            .map(AttributeValue::value)
+            .filter(value -> value == null || type.isInstance(value))
+            .map(type::cast);
     }
 
     public <T> List<T> getMany(String name, Class<T> type) {

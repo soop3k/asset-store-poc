@@ -1,6 +1,7 @@
 package com.db.assetstore.json;
 
 import com.db.assetstore.domain.service.validation.JsonSchemaValidator;
+import com.db.assetstore.domain.service.transform.TemplateLoadingException;
 import org.junit.jupiter.api.Test;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,5 +41,41 @@ class JsonTransformerTest {
         JsonTransformer tr = new JsonTransformer(mapper, validator);
         String input = "{\"x\":1}";
         assertThrows(IllegalArgumentException.class, () -> tr.transform("non-existing", input));
+    }
+
+    @Test
+    void throwsIllegalArgumentExceptionOnMalformedJson() {
+        JsonTransformer tr = new JsonTransformer(mapper, validator);
+        String malformedJson = "{\"x\":1"; // Missing closing brace
+        
+        IllegalArgumentException exception = assertThrows(
+            IllegalArgumentException.class, 
+            () -> tr.transform("asset-cre", malformedJson)
+        );
+        
+        assertTrue(exception.getMessage().contains("Invalid JSON input"));
+    }
+
+    @Test
+    void throwsIllegalArgumentExceptionOnNullJson() {
+        JsonTransformer tr = new JsonTransformer(mapper, validator);
+        
+        assertThrows(
+            NullPointerException.class, 
+            () -> tr.transform("asset-cre", null)
+        );
+    }
+
+    @Test
+    void throwsIllegalArgumentExceptionOnInvalidJsonStructure() {
+        JsonTransformer tr = new JsonTransformer(mapper, validator);
+        String invalidJson = "not a json at all";
+        
+        IllegalArgumentException exception = assertThrows(
+            IllegalArgumentException.class, 
+            () -> tr.transform("asset-cre", invalidJson)
+        );
+        
+        assertTrue(exception.getMessage().contains("Invalid JSON input"));
     }
 }

@@ -1,5 +1,6 @@
 package com.db.assetstore.domain.service.transform;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.schibsted.spt.data.jslt.Expression;
@@ -27,11 +28,15 @@ public final class JsonTransformer {
     private final ObjectMapper objectMapper;
     private final JsonSchemaValidator validator;
 
+    // TODO: Consider adding cache invalidation or reload support for template cache if templates change on disk
     private final ConcurrentHashMap<String, Expression> expressionCache = new ConcurrentHashMap<>();
 
     public String transform(String transformName, String inputJson) {
         Objects.requireNonNull(transformName, "transformName");
         Objects.requireNonNull(inputJson, "inputJson");
+
+        // Pre-validate input JSON to provide clear error for malformed input
+        validateInputJson(inputJson);
 
         String templatePath = "transforms/events/" + transformName + ".jslt";
         if (!resourceExists(templatePath)) {
@@ -45,7 +50,7 @@ public final class JsonTransformer {
                     String template = readResourceAsString(k);
                     return Parser.compileString(template);
                 } catch (Exception e) {
-                    throw new RuntimeException("Failed to load or compile template: " + k, e);
+                    throw new TemplateLoadingException("Failed to load or compile template: " + k, e);
                 }
             });
 
@@ -69,6 +74,17 @@ public final class JsonTransformer {
         } catch (Exception e) {
             log.error("Transformation failed for '{}': {}", transformName, e.getMessage(), e);
             throw new IllegalArgumentException("Failed to transform JSON: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Pre-validates input JSON to provide clear error if input is malformed.
+     */
+    private void validateInputJson(String inputJson) {
+        try {
+            objectMapper.readTree(inputJson);
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException("Invalid JSON input: " + e.getMessage(), e);
         }
     }
 
