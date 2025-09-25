@@ -6,6 +6,7 @@ import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.domain.model.type.AttributeType;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
@@ -15,7 +16,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -126,8 +126,8 @@ public final class AttributesCollection {
     }
     public AttributesCollection add(AttributeValue<?> av)       { return append(av); }
 
-    public AttributesCollection clear(String name, AttributeType type) {
-        return switch (Objects.requireNonNull(type)) {
+    public AttributesCollection clear(String name, @NonNull AttributeType type) {
+        return switch (type) {
             case STRING  -> set(name, (String) null);
             case DECIMAL -> set(name, (BigDecimal) null);
             case BOOLEAN -> set(name, (Boolean) null);
@@ -155,5 +155,5 @@ public final class AttributesCollection {
         return copy;
     }
 
-    private static String req(String n) { return Objects.requireNonNull(n, "name"); }
+    private static String req(@NonNull String n) { return n; }
 }

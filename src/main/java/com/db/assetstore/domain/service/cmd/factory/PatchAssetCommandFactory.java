@@ -5,26 +5,23 @@ import com.db.assetstore.domain.json.AttributeJsonReader;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.service.cmd.PatchAssetCommand;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;
+import lombok.NonNull;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Objects;
 
 @Component
 public class PatchAssetCommandFactory {
 
     private final AttributeJsonReader attributeJsonReader;
 
-    public PatchAssetCommandFactory(AttributeJsonReader attributeJsonReader) {
-        this.attributeJsonReader = Objects.requireNonNull(attributeJsonReader, "attributeJsonReader");
+    public PatchAssetCommandFactory(@NonNull AttributeJsonReader attributeJsonReader) {
+        this.attributeJsonReader = attributeJsonReader;
     }
 
-    public PatchAssetCommand createCommand(AssetType assetType, String assetId, AssetPatchRequest request) {
-        Objects.requireNonNull(assetType, "assetType");
-        Objects.requireNonNull(assetId, "assetId");
-        Objects.requireNonNull(request, "request");
-
+    public PatchAssetCommand createCommand(@NonNull AssetType assetType, @NonNull String assetId,
+                                           @NonNull AssetPatchRequest request) {
         if (assetId.isBlank()) {
             throw new IllegalArgumentException("assetId must not be blank");
         }

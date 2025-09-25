@@ -1,17 +1,16 @@
 package com.db.assetstore.domain.search;
 
 import com.db.assetstore.domain.model.attribute.AttributeValue;
-
-import java.util.Objects;
+import lombok.NonNull;
 
 public final class Condition<T> {
     private final String attribute;
     private final Operator operator;
     private final AttributeValue<T> value;
 
-    public Condition(String attribute, Operator operator, AttributeValue<T> value) {
-        this.attribute = Objects.requireNonNull(attribute);
-        this.operator = Objects.requireNonNull(operator);
+    public Condition(@NonNull String attribute, @NonNull Operator operator, AttributeValue<T> value) {
+        this.attribute = attribute;
+        this.operator = operator;
         this.value = value;
     }
 

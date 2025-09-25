@@ -1,6 +1,6 @@
 package com.db.assetstore.domain.service.cmd;
 
-import java.util.Objects;
+import lombok.NonNull;
 
 /**
  * Marker interface for commands executed by the {@link com.db.assetstore.domain.service.AssetCommandService}.
@@ -29,7 +29,7 @@ public interface AssetCommand<R> {
     /**
      * Utility method for implementors to guard against null visitors.
      */
-    default AssetCommandVisitor requireVisitor(AssetCommandVisitor visitor) {
-        return Objects.requireNonNull(visitor, "visitor");
+    default AssetCommandVisitor requireVisitor(@NonNull AssetCommandVisitor visitor) {
+        return visitor;
     }
 }
