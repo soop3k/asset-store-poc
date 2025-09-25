@@ -21,11 +21,11 @@ public class AssetQueryServiceImpl implements AssetQueryService {
     private final AssetMapper assetMapper;
     private final AssetRepository assetRepo;
     private final AssetSearchSpecificationService specService;
-
     @Override
     @Transactional(readOnly = true)
     public Optional<Asset> get(String id) {
-        return assetRepo.findByIdAndDeleted(id, 0).map(assetMapper::toModel);
+        return assetRepo.findByIdAndDeleted(id, 0)
+                .map(assetMapper::toModel);
     }
 
     @Override
@@ -38,4 +38,5 @@ public class AssetQueryServiceImpl implements AssetQueryService {
     private List<AssetEntity> searchEntities(SearchCriteria criteria) {
         return assetRepo.findAll(specService.buildSpec(criteria));
     }
+
 }
