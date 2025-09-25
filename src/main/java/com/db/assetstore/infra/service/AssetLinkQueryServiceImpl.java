@@ -1,0 +1,40 @@
+package com.db.assetstore.infra.service;
+
+import com.db.assetstore.domain.model.link.AssetLink;
+import com.db.assetstore.domain.service.link.AssetLinkQueryService;
+import com.db.assetstore.infra.jpa.AssetLinkEntity;
+import com.db.assetstore.infra.mapper.AssetLinkMapper;
+import com.db.assetstore.infra.repository.AssetLinkRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class AssetLinkQueryServiceImpl implements AssetLinkQueryService {
+
+    private final AssetLinkRepository assetLinkRepository;
+    private final AssetLinkMapper assetLinkMapper;
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AssetLink> findActiveLinks(String assetId) {
+        return toModelList(assetLinkRepository.findByAssetIdAndActive(assetId, true));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AssetLink> findLinks(String assetId, boolean includeInactive) {
+        if (includeInactive) {
+            return toModelList(assetLinkRepository.findByAssetId(assetId));
+        }
+        return findActiveLinks(assetId);
+    }
+
+    private List<AssetLink> toModelList(List<AssetLinkEntity> entities) {
+        List<AssetLink> mapped = assetLinkMapper.toModelList(entities);
+        return mapped == null ? List.of() : List.copyOf(mapped);
+    }
+}

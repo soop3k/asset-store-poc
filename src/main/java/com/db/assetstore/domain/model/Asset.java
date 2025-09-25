@@ -3,6 +3,7 @@ package com.db.assetstore.domain.model;
 import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.model.attribute.AttributesCollection;
+import com.db.assetstore.domain.model.link.AssetLink;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -43,6 +44,9 @@ public final class Asset {
     @JsonIgnore
     private AttributesCollection attributes;
 
+    @Setter
+    private List<AssetLink> links;
+
     @JsonIgnore
     public List<AttributeValue<?>> getAttributesFlat() {
         return attributes.asListView();
@@ -58,6 +62,11 @@ public final class Asset {
             }
         });
         return out;
+    }
+
+    @JsonProperty("links")
+    public List<AssetLink> getLinksJson() {
+        return links == null ? List.of() : List.copyOf(links);
     }
 
     @JsonIgnore
