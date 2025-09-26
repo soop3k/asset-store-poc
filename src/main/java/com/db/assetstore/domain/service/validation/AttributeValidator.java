@@ -41,8 +41,8 @@ public class AttributeValidator {
     private void validateInternal(AssetType type,
                                   AttributesCollection attributes,
                                   ValidationMode mode) {
-        var definitionMap = attributeDefinitionRegistry.safeDefinitions(type);
-        var constraintMap = attributeDefinitionRegistry.safeConstraints(type);
+        var definitionMap = attributeDefinitionRegistry.getDefinitions(type);
+        var constraintMap = attributeDefinitionRegistry.getConstraints(type);
 
         var provided = attributes == null ? AttributesCollection.empty() : attributes;
         var values = provided.asMapView();
