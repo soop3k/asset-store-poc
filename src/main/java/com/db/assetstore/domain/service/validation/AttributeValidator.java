@@ -11,6 +11,7 @@ import com.db.assetstore.domain.service.validation.rule.AttributeValidationExcep
 import com.db.assetstore.domain.service.validation.rule.RuleViolationException;
 import com.db.assetstore.domain.service.validation.rule.ValidationRule;
 import com.db.assetstore.domain.service.validation.rule.ValidationRuleFactory;
+import lombok.NonNull;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -28,31 +29,30 @@ public class AttributeValidator {
         this.validationRuleFactory = validationRuleFactory;
     }
 
-    public void validate(AssetType type,
-                         AttributesCollection attributes,
-                         ValidationMode mode) {
+    public void validate(@NonNull AssetType type,
+                         @NonNull AttributesCollection attributes,
+                         @NonNull ValidationMode mode) {
         validateInternal(type, attributes, mode);
     }
 
-    public void validate(AssetType type, AttributesCollection attributes) {
+    public void validate(@NonNull AssetType type, @NonNull AttributesCollection attributes) {
         validate(type, attributes, ValidationMode.FULL);
     }
 
-    private void validateInternal(AssetType type,
-                                  AttributesCollection attributes,
-                                  ValidationMode mode) {
+    private void validateInternal(@NonNull AssetType type,
+                                  @NonNull AttributesCollection attributes,
+                                  @NonNull ValidationMode mode) {
         var definitionMap = attributeDefinitionRegistry.getDefinitions(type);
         var constraintMap = attributeDefinitionRegistry.getConstraints(type);
 
-        var provided = attributes == null ? AttributesCollection.empty() : attributes;
-        var values = provided.asMapView();
+        var values = attributes.asMapView();
         enforceKnownAttributes(mode, definitionMap, values);
 
         for (var definition : definitionMap.values()) {
             var providedValues = values.get(definition.name());
             var attributeProvided = providedValues != null && !providedValues.isEmpty();
 
-            var context = new AttributeValidationContext(type, definition, provided);
+            var context = new AttributeValidationContext(type, definition, attributes);
 
             var constraints = constraintMap.getOrDefault(definition.name(), List.of());
             var rules = validationRuleFactory.build(definition, constraints);

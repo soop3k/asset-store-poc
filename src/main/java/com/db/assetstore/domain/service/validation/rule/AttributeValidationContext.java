@@ -15,10 +15,10 @@ public final class AttributeValidationContext {
     private final AttributesCollection attributes;
     public AttributeValidationContext(@NonNull AssetType assetType,
                                       @NonNull AttributeDefinition definition,
-                                      AttributesCollection attributes) {
+                                      @NonNull AttributesCollection attributes) {
         this.assetType = assetType;
         this.definition = definition;
-        this.attributes = attributes == null ? AttributesCollection.empty() : attributes;
+        this.attributes = attributes;
     }
 
     public AssetType assetType() {

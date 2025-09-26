@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -27,39 +28,35 @@ public final class AttributesCollection {
         return new AttributesCollection(new LinkedHashMap<>());
     }
 
-    public static AttributesCollection fromFlat(Collection<AttributeValue<?>> flat) {
-        if (flat == null || flat.isEmpty()) {
+    public static AttributesCollection fromFlat(@NonNull Collection<AttributeValue<?>> flat) {
+        if (flat.isEmpty()) {
             return empty();
         }
         var map = new LinkedHashMap<String, List<AttributeValue<?>>>();
         for (var av : flat) {
-            if (av == null) {
-                continue;
-            }
+            Objects.requireNonNull(av, "attribute value must not be null");
             map.computeIfAbsent(av.name(), k -> new ArrayList<>()).add(av);
         }
         return new AttributesCollection(map);
     }
 
-    public static AttributesCollection fromMap(Map<String, List<AttributeValue<?>>> map) {
-        if (map == null || map.isEmpty()) {
+    public static AttributesCollection fromMap(@NonNull Map<String, List<AttributeValue<?>>> map) {
+        if (map.isEmpty()) {
             return empty();
         }
         var copy = new LinkedHashMap<String, List<AttributeValue<?>>>();
         map.forEach((k, v) -> {
-            if (k == null) {
-                return;
+            Objects.requireNonNull(k, "attribute name must not be null");
+            Objects.requireNonNull(v, () -> "attribute values for '%s' must not be null".formatted(k));
+            if (!v.isEmpty()) {
+                copy.put(k, new ArrayList<>(v));
             }
-            if (v == null || v.isEmpty()) {
-                return;
-            }
-            copy.put(k, new ArrayList<>(v));
         });
         return new AttributesCollection(copy);
     }
 
     @JsonCreator
-    public static AttributesCollection jsonCreate(Map<String, List<AttributeValue<?>>> json) {
+    public static AttributesCollection jsonCreate(@NonNull Map<String, List<AttributeValue<?>>> json) {
         return fromMap(json);
     }
 
@@ -146,10 +143,7 @@ public final class AttributesCollection {
         return new AttributesCollection(copy);
     }
 
-    private AttributesCollection append(AttributeValue<?> av) {
-        if (av == null) {
-            return this;
-        }
+    private AttributesCollection append(@NonNull AttributeValue<?> av) {
         LinkedHashMap<String, List<AttributeValue<?>>> copy = copyData();
         copy.computeIfAbsent(av.name(), k -> new ArrayList<>()).add(av);
         return new AttributesCollection(copy);
