@@ -19,12 +19,10 @@ public final class AttributeDefinition implements Serializable {
     private final AssetType assetType;
     private final String name;
     private final AttributeType attributeType;
-    private final boolean required;
 
     public AttributeDefinition(@NonNull AssetType assetType,
                                @NonNull String name,
-                               AttributeType attributeType,
-                               boolean required) {
+                               AttributeType attributeType) {
         this.assetType = assetType;
         var normalizedName = name.trim();
         if (normalizedName.isEmpty()) {
@@ -32,7 +30,6 @@ public final class AttributeDefinition implements Serializable {
         }
         this.name = normalizedName;
         this.attributeType = attributeType == null ? AttributeType.STRING : attributeType;
-        this.required = required;
     }
 
     public AssetType assetType() {
@@ -47,10 +44,6 @@ public final class AttributeDefinition implements Serializable {
         return attributeType;
     }
 
-    public boolean required() {
-        return required;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -60,14 +53,13 @@ public final class AttributeDefinition implements Serializable {
             return false;
         }
         return assetType == that.assetType
-                && required == that.required
                 && Objects.equals(name, that.name)
                 && attributeType == that.attributeType;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(assetType, name, attributeType, required);
+        return Objects.hash(assetType, name, attributeType);
     }
 
     @Override
@@ -76,7 +68,6 @@ public final class AttributeDefinition implements Serializable {
                 "assetType=" + assetType +
                 ", name='" + name + '\'' +
                 ", attributeType=" + attributeType +
-                ", required=" + required +
                 '}';
     }
 }

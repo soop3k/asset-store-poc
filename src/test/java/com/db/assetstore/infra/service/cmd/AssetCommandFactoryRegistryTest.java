@@ -190,12 +190,12 @@ class AssetCommandFactoryRegistryTest {
         private final Map<AssetType, Map<String, List<ConstraintDefinition>>> constraints = new HashMap<>();
 
         private FixedRegistry() {
-            var city = new AttributeDefinition(AssetType.CRE, "city", AttributeType.STRING, false);
-            var area = new AttributeDefinition(AssetType.CRE, "area", AttributeType.DECIMAL, false);
-            var activeCre = new AttributeDefinition(AssetType.CRE, "active", AttributeType.BOOLEAN, false);
-            var name = new AttributeDefinition(AssetType.SHIP, "name", AttributeType.STRING, true);
-            var imo = new AttributeDefinition(AssetType.SHIP, "imo", AttributeType.DECIMAL, false);
-            var activeShip = new AttributeDefinition(AssetType.SHIP, "active", AttributeType.BOOLEAN, false);
+            var city = new AttributeDefinition(AssetType.CRE, "city", AttributeType.STRING);
+            var area = new AttributeDefinition(AssetType.CRE, "area", AttributeType.DECIMAL);
+            var activeCre = new AttributeDefinition(AssetType.CRE, "active", AttributeType.BOOLEAN);
+            var name = new AttributeDefinition(AssetType.SHIP, "name", AttributeType.STRING);
+            var imo = new AttributeDefinition(AssetType.SHIP, "imo", AttributeType.DECIMAL);
+            var activeShip = new AttributeDefinition(AssetType.SHIP, "active", AttributeType.BOOLEAN);
 
             definitions.put(AssetType.CRE, Map.of(
                     "city", city,
@@ -213,7 +213,10 @@ class AssetCommandFactoryRegistryTest {
                     "active", activeShip
             ));
             constraints.put(AssetType.SHIP, Map.of(
-                    "name", List.of(new ConstraintDefinition(name, ConstraintDefinition.Rule.TYPE, null)),
+                    "name", List.of(
+                            new ConstraintDefinition(name, ConstraintDefinition.Rule.TYPE, null),
+                            new ConstraintDefinition(name, ConstraintDefinition.Rule.REQUIRED, null)
+                    ),
                     "imo", List.of(new ConstraintDefinition(imo, ConstraintDefinition.Rule.TYPE, null)),
                     "active", List.of(new ConstraintDefinition(activeShip, ConstraintDefinition.Rule.TYPE, null))
             ));

@@ -26,7 +26,7 @@ class AttributeValidatorTest {
 
     @Test
     void throwsWhenRequiredAttributeMissing() {
-        var definition = new AttributeDefinition(AssetType.CRE, "name", AttributeType.STRING, true);
+        var definition = new AttributeDefinition(AssetType.CRE, "name", AttributeType.STRING);
         ConstraintDefinition type = new ConstraintDefinition(definition, Rule.TYPE, null);
         ConstraintDefinition required = new ConstraintDefinition(definition, Rule.REQUIRED, null);
         Map<String, AttributeDefinition> defs = Map.of("name", definition);
@@ -40,7 +40,7 @@ class AttributeValidatorTest {
 
     @Test
     void patchSkipsRequiredWhenAttributeOmitted() {
-        var definition = new AttributeDefinition(AssetType.CRE, "name", AttributeType.STRING, true);
+        var definition = new AttributeDefinition(AssetType.CRE, "name", AttributeType.STRING);
         ConstraintDefinition type = new ConstraintDefinition(definition, Rule.TYPE, null);
         ConstraintDefinition required = new ConstraintDefinition(definition, Rule.REQUIRED, null);
         Map<String, AttributeDefinition> defs = Map.of("name", definition);
@@ -53,7 +53,7 @@ class AttributeValidatorTest {
 
     @Test
     void patchStillFailsWhenRequiredAttributeProvidedWithoutValue() {
-        var definition = new AttributeDefinition(AssetType.CRE, "name", AttributeType.STRING, true);
+        var definition = new AttributeDefinition(AssetType.CRE, "name", AttributeType.STRING);
         ConstraintDefinition type = new ConstraintDefinition(definition, Rule.TYPE, null);
         ConstraintDefinition required = new ConstraintDefinition(definition, Rule.REQUIRED, null);
         Map<String, AttributeDefinition> defs = Map.of("name", definition);
@@ -68,7 +68,7 @@ class AttributeValidatorTest {
 
     @Test
     void strictModeRejectsUnknownAttributes() {
-        var definition = new AttributeDefinition(AssetType.CRE, "name", AttributeType.STRING, false);
+        var definition = new AttributeDefinition(AssetType.CRE, "name", AttributeType.STRING);
         ConstraintDefinition type = new ConstraintDefinition(definition, Rule.TYPE, null);
         Map<String, AttributeDefinition> defs = Map.of("name", definition);
         Map<String, List<ConstraintDefinition>> constraints = Map.of("name", List.of(type));
@@ -83,8 +83,8 @@ class AttributeValidatorTest {
 
     @Test
     void customRuleValidatesDependentAttributes() {
-        var name = new AttributeDefinition(AssetType.CRE, "name", AttributeType.STRING, false);
-        var code = new AttributeDefinition(AssetType.CRE, "code", AttributeType.STRING, false);
+        var name = new AttributeDefinition(AssetType.CRE, "name", AttributeType.STRING);
+        var code = new AttributeDefinition(AssetType.CRE, "code", AttributeType.STRING);
         ConstraintDefinition typeName = new ConstraintDefinition(name, Rule.TYPE, null);
         ConstraintDefinition typeCode = new ConstraintDefinition(code, Rule.TYPE, null);
         ConstraintDefinition custom = new ConstraintDefinition(name, Rule.CUSTOM,
@@ -107,7 +107,7 @@ class AttributeValidatorTest {
 
     @Test
     void validatesValuesWithinNumericBounds() {
-        var area = new AttributeDefinition(AssetType.CRE, "area", AttributeType.DECIMAL, false);
+        var area = new AttributeDefinition(AssetType.CRE, "area", AttributeType.DECIMAL);
         ConstraintDefinition type = new ConstraintDefinition(area, Rule.TYPE, null);
         ConstraintDefinition range = new ConstraintDefinition(area, Rule.MIN_MAX, "10,20");
         Map<String, AttributeDefinition> defs = Map.of("area", area);
@@ -131,7 +131,7 @@ class AttributeValidatorTest {
 
     @Test
     void rejectsValuesOutsideEnumList() {
-        var status = new AttributeDefinition(AssetType.CRE, "status", AttributeType.STRING, false);
+        var status = new AttributeDefinition(AssetType.CRE, "status", AttributeType.STRING);
         ConstraintDefinition type = new ConstraintDefinition(status, Rule.TYPE, null);
         ConstraintDefinition allowed = new ConstraintDefinition(status, Rule.ENUM, "draft,active,archived");
         Map<String, AttributeDefinition> defs = Map.of("status", status);
@@ -150,7 +150,7 @@ class AttributeValidatorTest {
 
     @Test
     void rejectsValuesExceedingConfiguredLength() {
-        var description = new AttributeDefinition(AssetType.CRE, "description", AttributeType.STRING, false);
+        var description = new AttributeDefinition(AssetType.CRE, "description", AttributeType.STRING);
         ConstraintDefinition type = new ConstraintDefinition(description, Rule.TYPE, null);
         ConstraintDefinition length = new ConstraintDefinition(description, Rule.LENGTH, "5");
         Map<String, AttributeDefinition> defs = Map.of("description", description);
@@ -169,7 +169,7 @@ class AttributeValidatorTest {
 
     @Test
     void rejectsAttributesWithMismatchedType() {
-        var weight = new AttributeDefinition(AssetType.CRE, "weight", AttributeType.DECIMAL, false);
+        var weight = new AttributeDefinition(AssetType.CRE, "weight", AttributeType.DECIMAL);
         ConstraintDefinition type = new ConstraintDefinition(weight, Rule.TYPE, null);
         Map<String, AttributeDefinition> defs = Map.of("weight", weight);
         Map<String, List<ConstraintDefinition>> constraints = Map.of("weight", List.of(type));

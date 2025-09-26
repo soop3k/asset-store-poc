@@ -119,9 +119,9 @@ class CreateAssetCommandFactoryTest {
         private final Map<AssetType, Map<String, List<ConstraintDefinition>>> constraints = new HashMap<>();
 
         private FixedRegistry() {
-            var city = new AttributeDefinition(AssetType.CRE, "city", AttributeType.STRING, false);
-            var area = new AttributeDefinition(AssetType.CRE, "area", AttributeType.DECIMAL, false);
-            var active = new AttributeDefinition(AssetType.CRE, "active", AttributeType.BOOLEAN, false);
+            var city = new AttributeDefinition(AssetType.CRE, "city", AttributeType.STRING);
+            var area = new AttributeDefinition(AssetType.CRE, "area", AttributeType.DECIMAL);
+            var active = new AttributeDefinition(AssetType.CRE, "active", AttributeType.BOOLEAN);
 
             definitions.put(AssetType.CRE, Map.of(
                     "city", city,

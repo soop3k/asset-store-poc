@@ -118,9 +118,9 @@ class PatchAssetCommandFactoryTest {
         private final Map<AssetType, Map<String, List<ConstraintDefinition>>> constraints = new HashMap<>();
 
         private FixedRegistry() {
-            var name = new AttributeDefinition(AssetType.SHIP, "name", AttributeType.STRING, true);
-            var imo = new AttributeDefinition(AssetType.SHIP, "imo", AttributeType.DECIMAL, false);
-            var active = new AttributeDefinition(AssetType.SHIP, "active", AttributeType.BOOLEAN, false);
+            var name = new AttributeDefinition(AssetType.SHIP, "name", AttributeType.STRING);
+            var imo = new AttributeDefinition(AssetType.SHIP, "imo", AttributeType.DECIMAL);
+            var active = new AttributeDefinition(AssetType.SHIP, "active", AttributeType.BOOLEAN);
 
             definitions.put(AssetType.SHIP, Map.of(
                     "name", name,
