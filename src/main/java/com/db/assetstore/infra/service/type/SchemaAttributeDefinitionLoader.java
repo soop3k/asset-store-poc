@@ -6,7 +6,6 @@ import com.db.assetstore.domain.service.type.AttributeDefinition;
 import com.db.assetstore.domain.service.type.AttributeDefinitionLoader;
 import com.db.assetstore.domain.service.type.ConstraintDefinition;
 import com.db.assetstore.domain.service.type.TypeSchemaRegistry;
-import com.db.assetstore.util.CollectionUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -150,11 +149,10 @@ public class SchemaAttributeDefinitionLoader implements AttributeDefinitionLoade
                 values.add(node.asText());
             }
         });
-        var safeValues = CollectionUtils.<List<String>>emptyIfNullOrEmpty(values);
-        if (safeValues.isEmpty()) {
+        if (values.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(String.join(",", safeValues));
+        return Optional.of(String.join(",", values));
     }
 
     private static Optional<String> readLengthRule(JsonNode definitionNode) {

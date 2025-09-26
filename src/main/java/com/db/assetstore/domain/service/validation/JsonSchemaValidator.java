@@ -7,7 +7,6 @@ import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SchemaValidatorsConfig;
 import com.networknt.schema.SpecVersion;
 import com.networknt.schema.ValidationMessage;
-import com.db.assetstore.util.CollectionUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -29,11 +28,10 @@ public final class JsonSchemaValidator {
 
     public List<String> validate(JsonNode payload, JsonSchema compiled) {
         Set<ValidationMessage> v = compiled.validate(payload);
-        var messages = CollectionUtils.<Set<ValidationMessage>>emptyIfNullOrEmpty(v);
-        if (messages.isEmpty()) {
+        if (v == null || v.isEmpty()) {
             return Collections.emptyList();
         }
-        return messages.stream().map(ValidationMessage::getMessage).sorted().toList();
+        return v.stream().map(ValidationMessage::getMessage).sorted().toList();
     }
 
     public void validateOrThrow(String json, String schemaRes) {

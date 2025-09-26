@@ -2,7 +2,6 @@ package com.db.assetstore.domain.service.validation.rule;
 
 import com.db.assetstore.domain.service.type.AttributeDefinition;
 import com.db.assetstore.domain.service.type.ConstraintDefinition;
-import com.db.assetstore.util.CollectionUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -20,11 +19,10 @@ public class ValidationRuleFactory {
     public List<ValidationRule> build(AttributeDefinition definition,
                                       List<ConstraintDefinition> constraints) {
         var rules = new ArrayList<ValidationRule>();
-        var safeConstraints = CollectionUtils.<List<ConstraintDefinition>>emptyIfNullOrEmpty(constraints);
-        if (safeConstraints.isEmpty()) {
+        if (constraints == null || constraints.isEmpty()) {
             return List.copyOf(rules);
         }
-        for (var constraint : safeConstraints) {
+        for (var constraint : constraints) {
             if (constraint == null) {
                 continue;
             }

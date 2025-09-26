@@ -15,7 +15,6 @@ import com.db.assetstore.infra.repository.AssetRepository;
 import com.db.assetstore.infra.repository.AttributeRepository;
 import com.db.assetstore.infra.service.AttributeComparator;
 import com.db.assetstore.infra.service.AttributeUpdater;
-import com.db.assetstore.util.CollectionUtils;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -88,9 +87,8 @@ public class AssetService {
     private String persistAsset(@NonNull Asset asset) {
         log.info("Adding asset: type={}, id={}", asset.getType(), asset.getId());
         AssetEntity entity = assetMapper.toEntity(asset);
-        var existingAttributes = CollectionUtils.<Collection<AttributeEntity>>emptyIfNullOrEmpty(
-                entity.getAttributes());
-        if (!existingAttributes.isEmpty()) {
+        var existingAttributes = entity.getAttributes();
+        if (existingAttributes != null && !existingAttributes.isEmpty()) {
             assetRepo.save(entity);
         } else {
             persistAttributes(entity, asset.getAttributesFlat());
@@ -113,8 +111,8 @@ public class AssetService {
         entity.setModifiedAt(Instant.now());
         entity = assetRepo.save(entity);
 
-        var patchAttributes = CollectionUtils.<Collection<AttributeValue<?>>>emptyIfNullOrEmpty(patch.attributes());
-        if (!patchAttributes.isEmpty()) {
+        var patchAttributes = patch.attributes();
+        if (patchAttributes != null && !patchAttributes.isEmpty()) {
             updateAsset(entity, patchAttributes);
         }
     }
@@ -132,10 +130,12 @@ public class AssetService {
         }
 
         Map<String, AttributeEntity> existing = new HashMap<>();
-        for (var attribute : CollectionUtils.<Collection<AttributeEntity>>emptyIfNullOrEmpty(
-                asset.getAttributes())) {
-            if (attribute != null) {
-                existing.put(attribute.getName(), attribute);
+        var currentEntities = asset.getAttributes();
+        if (currentEntities != null) {
+            for (var attribute : currentEntities) {
+                if (attribute != null) {
+                    existing.put(attribute.getName(), attribute);
+                }
             }
         }
 
@@ -162,7 +162,11 @@ public class AssetService {
     }
 
     private void persistAttributes(AssetEntity asset, Collection<AttributeValue<?>> attributes) {
-        for (var attributeValue : CollectionUtils.<Collection<AttributeValue<?>>>emptyIfNullOrEmpty(attributes)) {
+        if (attributes == null || attributes.isEmpty()) {
+            assetRepo.save(asset);
+            return;
+        }
+        for (var attributeValue : attributes) {
             if (attributeValue == null) {
                 continue;
             }
