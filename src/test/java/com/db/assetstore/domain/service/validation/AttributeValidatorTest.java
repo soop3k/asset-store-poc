@@ -44,6 +44,34 @@ class AttributeValidatorTest {
     }
 
     @Test
+    void patchSkipsRequiredWhenAttributeOmitted() {
+        AttributeDefinition definition = new AttributeDefinition(AssetType.CRE, "name", AttributeType.STRING);
+        ConstraintDefinition type = new ConstraintDefinition(definition, Rule.TYPE, null);
+        ConstraintDefinition required = new ConstraintDefinition(definition, Rule.REQUIRED, null);
+        Map<String, AttributeDefinition> defs = Map.of("name", definition);
+        Map<String, List<ConstraintDefinition>> constraints = Map.of("name", List.of(type, required));
+        AttributeValidator validator = validator(defs, constraints);
+
+        assertThatCode(() -> validator.validatePatch(AssetType.CRE, AttributesCollection.empty()))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void patchStillFailsWhenRequiredAttributeProvidedWithoutValue() {
+        AttributeDefinition definition = new AttributeDefinition(AssetType.CRE, "name", AttributeType.STRING);
+        ConstraintDefinition type = new ConstraintDefinition(definition, Rule.TYPE, null);
+        ConstraintDefinition required = new ConstraintDefinition(definition, Rule.REQUIRED, null);
+        Map<String, AttributeDefinition> defs = Map.of("name", definition);
+        Map<String, List<ConstraintDefinition>> constraints = Map.of("name", List.of(type, required));
+        AttributeValidator validator = validator(defs, constraints);
+
+        assertThatThrownBy(() -> validator.validatePatch(AssetType.CRE,
+                AttributesCollection.fromFlat(List.of(new AVString("name", null)))))
+                .isInstanceOf(RuleViolationException.class)
+                .hasMessageContaining("required");
+    }
+
+    @Test
     void customRuleValidatesDependentAttributes() {
         AttributeDefinition name = new AttributeDefinition(AssetType.CRE, "name", AttributeType.STRING);
         AttributeDefinition code = new AttributeDefinition(AssetType.CRE, "code", AttributeType.STRING);

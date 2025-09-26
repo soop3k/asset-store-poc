@@ -33,7 +33,7 @@ public class PatchAssetCommandFactory {
 
         AttributesCollection attributes = attributeJsonReader.read(assetType, request.getAttributes());
 
-        attributeValidator.validate(assetType, attributes);
+        attributeValidator.validatePatch(assetType, attributes);
 
         List<AttributeValue<?>> attributeValues = attributes.asListView();
 

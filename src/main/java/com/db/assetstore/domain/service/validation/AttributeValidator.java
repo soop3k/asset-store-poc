@@ -29,6 +29,16 @@ public class AttributeValidator {
     }
 
     public void validate(AssetType type, AttributesCollection attributes) {
+        validateInternal(type, attributes, true);
+    }
+
+    public void validatePatch(AssetType type, AttributesCollection attributes) {
+        validateInternal(type, attributes, false);
+    }
+
+    private void validateInternal(AssetType type,
+                                  AttributesCollection attributes,
+                                  boolean enforceRequiredForMissing) {
         Map<String, AttributeDefinition> definitionMap = attributeDefinitionRegistry.safeDefinitions(type);
         Map<String, List<ConstraintDefinition>> constraintMap = attributeDefinitionRegistry.safeConstraints(type);
 
@@ -42,6 +52,9 @@ public class AttributeValidator {
         }
 
         for (AttributeDefinition definition : definitionMap.values()) {
+            List<AttributeValue<?>> providedValues = values.get(definition.name());
+            boolean attributeProvided = providedValues != null && !providedValues.isEmpty();
+
             AttributeValidationContext baseContext = new AttributeValidationContext(
                     type,
                     definition,
@@ -51,6 +64,12 @@ public class AttributeValidator {
 
             List<ConstraintDefinition> constraints = constraintMap.getOrDefault(definition.name(), List.of());
             for (ConstraintDefinition constraint : constraints) {
+                if (!enforceRequiredForMissing
+                        && constraint.rule() == ConstraintDefinition.Rule.REQUIRED
+                        && !attributeProvided) {
+                    continue;
+                }
+
                 ValidationRule rule = validationRuleRegistry.get(constraint.rule());
                 if (rule == null) {
                     throw new AttributeValidationException(
