@@ -21,6 +21,8 @@ import com.db.assetstore.infra.api.dto.AssetCreateRequest;
 import com.db.assetstore.infra.api.dto.AssetDeleteRequest;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;
 import com.db.assetstore.infra.json.AttributeJsonReader;
+import com.db.assetstore.infra.json.AttributePayloadParser;
+import com.db.assetstore.infra.json.AttributeValueAssembler;
 import com.db.assetstore.testutil.TestAttributeDefinitionRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -68,7 +70,10 @@ class AssetCommandFactoryRegistryTest {
         customRegistry = new CustomValidationRuleRegistry(List.of(new MatchingAttributesRule()));
         validationRuleFactory = ruleFactory(customRegistry);
         AttributeValidator attributeValidator = new AttributeValidator(attributeDefinitionRegistry, validationRuleFactory);
-        AttributeJsonReader reader = new AttributeJsonReader(objectMapper, attributeDefinitionRegistry);
+        AttributeJsonReader reader = new AttributeJsonReader(
+                new AttributePayloadParser(),
+                new AttributeValueAssembler(attributeDefinitionRegistry)
+        );
 
         registry = new AssetCommandFactoryRegistry(
                 new CreateAssetCommandFactory(attributeValidator, reader),

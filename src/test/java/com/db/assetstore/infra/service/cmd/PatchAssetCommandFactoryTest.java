@@ -15,6 +15,8 @@ import com.db.assetstore.domain.service.validation.rule.RuleViolationException;
 import com.db.assetstore.domain.service.validation.rule.ValidationRuleFactory;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;
 import com.db.assetstore.infra.json.AttributeJsonReader;
+import com.db.assetstore.infra.json.AttributePayloadParser;
+import com.db.assetstore.infra.json.AttributeValueAssembler;
 import com.db.assetstore.testutil.TestAttributeDefinitionRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -53,7 +55,10 @@ class PatchAssetCommandFactoryTest {
                 .build();
         customRegistry = new CustomValidationRuleRegistry(List.of(new MatchingAttributesRule()));
         AttributeValidator validator = new AttributeValidator(registry, ruleFactory(customRegistry));
-        AttributeJsonReader reader = new AttributeJsonReader(objectMapper, registry);
+        AttributeJsonReader reader = new AttributeJsonReader(
+                new AttributePayloadParser(),
+                new AttributeValueAssembler(registry)
+        );
         factory = new PatchAssetCommandFactory(validator, reader);
 
         request = new AssetPatchRequest();

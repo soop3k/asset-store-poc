@@ -15,6 +15,8 @@ import com.db.assetstore.domain.service.validation.rule.ValidationRuleFactory;
 import com.db.assetstore.testutil.TestAttributeDefinitionRegistry;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;
 import com.db.assetstore.infra.json.AttributeJsonReader;
+import com.db.assetstore.infra.json.AttributePayloadParser;
+import com.db.assetstore.infra.json.AttributeValueAssembler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,7 +51,10 @@ class CreateAssetCommandFactoryTest {
                 .build();
         customRegistry = new CustomValidationRuleRegistry(List.of(new MatchingAttributesRule()));
         var validator = new AttributeValidator(registry, ruleFactory(customRegistry));
-        AttributeJsonReader reader = new AttributeJsonReader(objectMapper, registry);
+        AttributeJsonReader reader = new AttributeJsonReader(
+                new AttributePayloadParser(),
+                new AttributeValueAssembler(registry)
+        );
         factory = new CreateAssetCommandFactory(validator, reader);
     }
 
