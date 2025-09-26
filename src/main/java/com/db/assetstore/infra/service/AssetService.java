@@ -15,6 +15,7 @@ import com.db.assetstore.infra.repository.AssetRepository;
 import com.db.assetstore.infra.repository.AttributeRepository;
 import com.db.assetstore.infra.service.AttributeComparator;
 import com.db.assetstore.infra.service.AttributeUpdater;
+import com.db.assetstore.util.CollectionUtils;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -87,7 +88,9 @@ public class AssetService {
     private String persistAsset(@NonNull Asset asset) {
         log.info("Adding asset: type={}, id={}", asset.getType(), asset.getId());
         AssetEntity entity = assetMapper.toEntity(asset);
-        if (entity.getAttributes() != null && !entity.getAttributes().isEmpty()) {
+        var existingAttributes = CollectionUtils.<Collection<AttributeEntity>>emptyIfNullOrEmpty(
+                entity.getAttributes());
+        if (!existingAttributes.isEmpty()) {
             assetRepo.save(entity);
         } else {
             persistAttributes(entity, asset.getAttributesFlat());
@@ -110,8 +113,9 @@ public class AssetService {
         entity.setModifiedAt(Instant.now());
         entity = assetRepo.save(entity);
 
-        if (patch.attributes() != null) {
-            updateAsset(entity, patch.attributes());
+        var patchAttributes = CollectionUtils.<Collection<AttributeValue<?>>>emptyIfNullOrEmpty(patch.attributes());
+        if (!patchAttributes.isEmpty()) {
+            updateAsset(entity, patchAttributes);
         }
     }
 
@@ -128,7 +132,8 @@ public class AssetService {
         }
 
         Map<String, AttributeEntity> existing = new HashMap<>();
-        for (AttributeEntity attribute : asset.getAttributes()) {
+        for (var attribute : CollectionUtils.<Collection<AttributeEntity>>emptyIfNullOrEmpty(
+                asset.getAttributes())) {
             if (attribute != null) {
                 existing.put(attribute.getName(), attribute);
             }
@@ -157,14 +162,12 @@ public class AssetService {
     }
 
     private void persistAttributes(AssetEntity asset, Collection<AttributeValue<?>> attributes) {
-        if (attributes != null) {
-            for (AttributeValue<?> attributeValue : attributes) {
-                if (attributeValue == null) {
-                    continue;
-                }
-                AttributeEntity entity = attributeMapper.toEntity(asset, attributeValue);
-                asset.getAttributes().add(entity);
+        for (var attributeValue : CollectionUtils.<Collection<AttributeValue<?>>>emptyIfNullOrEmpty(attributes)) {
+            if (attributeValue == null) {
+                continue;
             }
+            AttributeEntity entity = attributeMapper.toEntity(asset, attributeValue);
+            asset.getAttributes().add(entity);
         }
         assetRepo.save(asset);
     }

@@ -3,6 +3,7 @@ package com.db.assetstore.domain.model;
 import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.model.attribute.AttributesCollection;
+import com.db.assetstore.util.CollectionUtils;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -57,11 +58,13 @@ public final class Asset {
         if (attributes == null || attributes.isEmpty()) {
             return out;
         }
-        attributes.asMapView().forEach((name, list) -> {
-            if (list != null && !list.isEmpty()) {
-                out.put(name, list.get(0));
-            }
-        });
+        CollectionUtils.<Map<String, List<AttributeValue<?>>>>emptyIfNullOrEmpty(attributes.asMapView())
+                .forEach((name, list) -> {
+                    var values = CollectionUtils.<List<AttributeValue<?>>>emptyIfNullOrEmpty(list);
+                    if (!values.isEmpty()) {
+                        out.put(name, values.get(0));
+                    }
+                });
         return out;
     }
 
@@ -93,7 +96,8 @@ public final class Asset {
      * Replace all attributes with the provided flat collection.
      */
     public Asset setAttributes(Collection<AttributeValue<?>> incoming) {
-        this.attributes = (incoming == null) ? AttributesCollection.empty() : AttributesCollection.fromFlat(incoming);
+        var safeIncoming = CollectionUtils.<Collection<AttributeValue<?>>>emptyIfNullOrEmpty(incoming);
+        this.attributes = AttributesCollection.fromFlat(safeIncoming);
         return this;
     }
 }

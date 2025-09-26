@@ -1,6 +1,7 @@
 package com.db.assetstore.domain.service.type;
 
 import com.db.assetstore.AssetType;
+import com.db.assetstore.util.CollectionUtils;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
 
@@ -21,13 +22,15 @@ public class DefaultAttributeDefinitionRegistry implements AttributeDefinitionRe
     private final Map<AssetType, CachedDefinitions> cache = new ConcurrentHashMap<>();
 
     public DefaultAttributeDefinitionRegistry(List<AttributeDefinitionLoader> loaders) {
-        if (loaders == null || loaders.isEmpty()) {
+        var safeLoaders = CollectionUtils.<List<AttributeDefinitionLoader>>emptyIfNullOrEmpty(loaders);
+        if (safeLoaders.isEmpty()) {
             this.loaders = List.of();
-        } else {
-            List<AttributeDefinitionLoader> sorted = new ArrayList<>(loaders);
-            AnnotationAwareOrderComparator.sort(sorted);
-            this.loaders = List.copyOf(sorted);
+            return;
         }
+
+        var sorted = new ArrayList<>(safeLoaders);
+        AnnotationAwareOrderComparator.sort(sorted);
+        this.loaders = List.copyOf(sorted);
     }
 
     @Override
@@ -60,20 +63,20 @@ public class DefaultAttributeDefinitionRegistry implements AttributeDefinitionRe
             return EMPTY;
         }
 
-        for (AttributeDefinitionLoader loader : loaders) {
-            AttributeDefinitionLoader.AttributeDefinitions loaded = loader.load(type);
+        for (var loader : loaders) {
+            var loaded = loader.load(type);
 
             loaded.definitions().forEach((name, definition) -> {
-                List<ConstraintDefinition> constraints = new ArrayList<>(
-                        loaded.constraints().getOrDefault(name, List.of()));
+                var constraints = new ArrayList<>(
+                        CollectionUtils.<List<ConstraintDefinition>>emptyIfNullOrEmpty(
+                                loaded.constraints().get(name)));
 
-                List<ConstraintDefinition> previous = preparedConstraints.get(name);
-                if (previous != null) {
-                    previous.stream()
-                            .filter(constraint -> constraint.rule() == ConstraintDefinition.Rule.CUSTOM)
-                            .forEach(constraint -> constraints.add(
-                                    new ConstraintDefinition(definition, constraint.rule(), constraint.value())));
-                }
+                CollectionUtils.<List<ConstraintDefinition>>emptyIfNullOrEmpty(
+                        preparedConstraints.get(name))
+                        .stream()
+                        .filter(constraint -> constraint.rule() == ConstraintDefinition.Rule.CUSTOM)
+                        .forEach(constraint -> constraints.add(
+                                new ConstraintDefinition(definition, constraint.rule(), constraint.value())));
 
                 preparedDefinitions.put(name, definition);
                 preparedConstraints.put(name, List.copyOf(constraints));
@@ -92,8 +95,8 @@ public class DefaultAttributeDefinitionRegistry implements AttributeDefinitionRe
                                      Map<String, List<ConstraintDefinition>> constraints) {
 
         private CachedDefinitions {
-            definitions = definitions == null ? Map.of() : definitions;
-            constraints = constraints == null ? Map.of() : constraints;
+            definitions = CollectionUtils.<Map<String, AttributeDefinition>>emptyIfNullOrEmpty(definitions);
+            constraints = CollectionUtils.<Map<String, List<ConstraintDefinition>>>emptyIfNullOrEmpty(constraints);
         }
     }
 }

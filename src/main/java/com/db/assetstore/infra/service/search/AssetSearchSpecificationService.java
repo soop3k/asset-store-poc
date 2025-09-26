@@ -3,6 +3,7 @@ package com.db.assetstore.infra.service.search;
 import com.db.assetstore.domain.search.Condition;
 import com.db.assetstore.domain.search.SearchCriteria;
 import com.db.assetstore.infra.jpa.search.AttributePredicateVisitor;
+import com.db.assetstore.util.CollectionUtils;
 import jakarta.persistence.criteria.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -23,8 +24,9 @@ public class AssetSearchSpecificationService {
                 if (criteria.type() != null) {
                     preds.add(cb.equal(root.get("type"), criteria.type()));
                 }
-                if (criteria.conditions() != null && !criteria.conditions().isEmpty()) {
-                    for (Condition<?> c : criteria.conditions()) {
+                var conditions = CollectionUtils.<List<Condition<?>>>emptyIfNullOrEmpty(criteria.conditions());
+                if (!conditions.isEmpty()) {
+                    for (var c : conditions) {
                         preds.add(attributeMatch(cb, root, c));
                     }
                 }

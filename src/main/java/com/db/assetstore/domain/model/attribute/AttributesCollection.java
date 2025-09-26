@@ -6,6 +6,7 @@ import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.domain.model.type.AttributeType;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.db.assetstore.util.CollectionUtils;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -28,11 +29,12 @@ public final class AttributesCollection {
     }
 
     public static AttributesCollection fromFlat(Collection<AttributeValue<?>> flat) {
-        if (flat == null || flat.isEmpty()) {
+        var safeFlat = CollectionUtils.emptyIfNullOrEmpty(flat);
+        if (safeFlat.isEmpty()) {
             return empty();
         }
-        LinkedHashMap<String, List<AttributeValue<?>>> map = new LinkedHashMap<>();
-        for (AttributeValue<?> av : flat) {
+        var map = new LinkedHashMap<String, List<AttributeValue<?>>>();
+        for (var av : safeFlat) {
             if (av == null) {
                 continue;
             }
@@ -42,15 +44,20 @@ public final class AttributesCollection {
     }
 
     public static AttributesCollection fromMap(Map<String, List<AttributeValue<?>>> map) {
-        if (map == null || map.isEmpty()) {
+        var safeMap = CollectionUtils.<Map<String, List<AttributeValue<?>>>>emptyIfNullOrEmpty(map);
+        if (safeMap.isEmpty()) {
             return empty();
         }
-        LinkedHashMap<String, List<AttributeValue<?>>> copy = new LinkedHashMap<>();
-        map.forEach((k, v) -> {
-            if (k == null || v == null || v.isEmpty()) {
+        var copy = new LinkedHashMap<String, List<AttributeValue<?>>>();
+        safeMap.forEach((k, v) -> {
+            if (k == null) {
                 return;
             }
-            copy.put(k, new ArrayList<>(v));
+            var values = CollectionUtils.<List<AttributeValue<?>>>emptyIfNullOrEmpty(v);
+            if (values.isEmpty()) {
+                return;
+            }
+            copy.put(k, new ArrayList<>(values));
         });
         return new AttributesCollection(copy);
     }
@@ -81,13 +88,13 @@ public final class AttributesCollection {
     public int size() { return data.size(); }
 
     public Optional<AttributeValue<?>> getFirst(String name) {
-        var vs = data.get(name);
-        return (vs == null || vs.isEmpty()) ? Optional.empty() : Optional.of(vs.get(0));
+        var vs = CollectionUtils.<List<AttributeValue<?>>>emptyIfNullOrEmpty(data.get(name));
+        return vs.isEmpty() ? Optional.empty() : Optional.of(vs.get(0));
     }
 
     public List<AttributeValue<?>> getAll(String name) {
-        var vs = data.get(name);
-        if (vs == null || vs.isEmpty()) {
+        var vs = CollectionUtils.<List<AttributeValue<?>>>emptyIfNullOrEmpty(data.get(name));
+        if (vs.isEmpty()) {
             return List.of();
         }
         return Collections.unmodifiableList(vs);
@@ -98,11 +105,11 @@ public final class AttributesCollection {
     }
 
     public <T> List<T> getMany(String name, Class<T> type) {
-        var vs = data.get(name);
-        if (vs == null || vs.isEmpty()) {
+        var vs = CollectionUtils.<List<AttributeValue<?>>>emptyIfNullOrEmpty(data.get(name));
+        if (vs.isEmpty()) {
             return List.of();
         }
-        ArrayList<T> out = new ArrayList<>(vs.size());
+        var out = new ArrayList<T>(vs.size());
         for (var av : vs) {
             Object v = av.value();
             if (v != null) {

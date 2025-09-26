@@ -4,6 +4,7 @@ import com.db.assetstore.infra.jpa.AttributeEntity;
 import com.db.assetstore.infra.jpa.AssetEntity;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.model.attribute.AttributesCollection;
+import com.db.assetstore.util.CollectionUtils;
 import lombok.RequiredArgsConstructor;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
@@ -18,11 +19,12 @@ import java.util.stream.Collectors;
 public interface AttributesCollectionMapper {
 
     default AttributesCollection fromEntities(List<AttributeEntity> entities) {
-        if (entities == null || entities.isEmpty()) {
+        var safeEntities = CollectionUtils.<List<AttributeEntity>>emptyIfNullOrEmpty(entities);
+        if (safeEntities.isEmpty()) {
             return AttributesCollection.empty();
         }
         AttributeMapper mapper = Mappers.getMapper(AttributeMapper.class);
-        List<AttributeValue<?>> values = entities.stream()
+        List<AttributeValue<?>> values = safeEntities.stream()
                 .filter(Objects::nonNull)
                 .map(mapper::toModel)
                 .collect(Collectors.toList());

@@ -8,6 +8,7 @@ import com.db.assetstore.infra.api.dto.AssetCreateRequest;
 import com.db.assetstore.infra.api.dto.AssetDeleteRequest;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;
 import com.db.assetstore.domain.service.cmd.factory.AssetCommandFactoryRegistry;
+import com.db.assetstore.util.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -44,11 +45,12 @@ public class AssetController {
 
     @PostMapping(path = "/bulk", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<String>> addAssetsBulk(@RequestBody List<AssetCreateRequest> requests) {
-        log.info("HTTP POST /assets/bulk - creating {} assets", requests == null ? 0 : requests.size());
-        if (requests == null || requests.isEmpty()) {
+        var safeRequests = CollectionUtils.<List<AssetCreateRequest>>emptyIfNullOrEmpty(requests);
+        log.info("HTTP POST /assets/bulk - creating {} assets", safeRequests.size());
+        if (safeRequests.isEmpty()) {
             return ResponseEntity.ok(List.of());
         }
-        List<String> ids = requests.stream()
+        List<String> ids = safeRequests.stream()
                 .map(commandFactoryRegistry::createCreateCommand)
                 .map(commandService::create)
                 .toList();
@@ -96,11 +98,12 @@ public class AssetController {
 
     @PatchMapping(path = "/bulk", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> patchAssetsBulk(@RequestBody List<AssetPatchRequest> requests) {
-        log.info("HTTP PATCH /assets/bulk - patch {} assets", requests == null ? 0 : requests.size());
-        if (requests == null || requests.isEmpty()) {
+        var safeRequests = CollectionUtils.<List<AssetPatchRequest>>emptyIfNullOrEmpty(requests);
+        log.info("HTTP PATCH /assets/bulk - patch {} assets", safeRequests.size());
+        if (safeRequests.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
-        for (AssetPatchRequest item : requests) {
+        for (var item : safeRequests) {
             var current = assetQueryService.get(item.getId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Asset %s not found".formatted(item.getId())));
             var cmd = commandFactoryRegistry.createPatchCommand(current.getType(), item);

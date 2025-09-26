@@ -11,6 +11,7 @@ import com.db.assetstore.domain.service.validation.rule.AttributeValidationExcep
 import com.db.assetstore.domain.service.validation.rule.RuleViolationException;
 import com.db.assetstore.domain.service.validation.rule.ValidationRule;
 import com.db.assetstore.domain.service.validation.rule.ValidationRuleFactory;
+import com.db.assetstore.util.CollectionUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -49,8 +50,9 @@ public class AttributeValidator {
         enforceKnownAttributes(mode, definitionMap, values);
 
         for (var definition : definitionMap.values()) {
-            var providedValues = values.get(definition.name());
-            var attributeProvided = providedValues != null && !providedValues.isEmpty();
+            var providedValues = CollectionUtils.<List<AttributeValue<?>>>emptyIfNullOrEmpty(
+                    values.get(definition.name()));
+            var attributeProvided = !providedValues.isEmpty();
 
             var context = new AttributeValidationContext(type, definition, provided);
 
