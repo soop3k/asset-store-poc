@@ -5,9 +5,9 @@ import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.model.attribute.AttributesCollection;
 import com.db.assetstore.domain.service.type.AttributeDefinition;
 import com.db.assetstore.domain.service.type.ConstraintDefinition;
+import lombok.NonNull;
 
 import java.util.List;
-import java.util.Objects;
 
 public final class AttributeValidationContext {
 
@@ -16,12 +16,12 @@ public final class AttributeValidationContext {
     private final AttributesCollection attributes;
     private final ConstraintDefinition constraint;
 
-    public AttributeValidationContext(AssetType assetType,
-                                      AttributeDefinition definition,
+    public AttributeValidationContext(@NonNull AssetType assetType,
+                                      @NonNull AttributeDefinition definition,
                                       AttributesCollection attributes,
                                       ConstraintDefinition constraint) {
-        this.assetType = Objects.requireNonNull(assetType, "assetType");
-        this.definition = Objects.requireNonNull(definition, "definition");
+        this.assetType = assetType;
+        this.definition = definition;
         this.attributes = attributes == null ? AttributesCollection.empty() : attributes;
         this.constraint = constraint;
     }

@@ -62,11 +62,11 @@ class AssetTest {
         ));
 
         AttributesCollection attrSet = AttributesCollection.fromFlat(a2.getAttributesFlat());
-        assertEquals("Gdansk", attrSet.getFirstByName("city").orElseThrow().value());
-        assertEquals(new java.math.BigDecimal("2"), attrSet.getFirstByName("rooms").orElseThrow().value());
-        assertEquals(Boolean.TRUE, attrSet.getFirstByName("active").orElseThrow().value());
+        assertEquals("Gdansk", attrSet.getFirst("city").orElseThrow().value());
+        assertEquals(new java.math.BigDecimal("2"), attrSet.getFirst("rooms").orElseThrow().value());
+        assertEquals(Boolean.TRUE, attrSet.getFirst("active").orElseThrow().value());
 
         // Missing attribute -> empty
-        assertTrue(attrSet.getFirstByName("price").isEmpty());
+        assertTrue(attrSet.getFirst("price").isEmpty());
     }
 }

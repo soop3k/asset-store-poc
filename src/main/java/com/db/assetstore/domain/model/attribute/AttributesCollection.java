@@ -93,11 +93,6 @@ public final class AttributesCollection {
         return Collections.unmodifiableList(vs);
     }
 
-    // Backward-compatible convenience alias used by tests
-    public Optional<AttributeValue<?>> getFirstByName(String name) {
-        return getFirst(name);
-    }
-
     public <T> Optional<T> getOne(String name, Class<T> type) {
         return getFirst(name).map(AttributeValue::value).map(type::cast);
     }

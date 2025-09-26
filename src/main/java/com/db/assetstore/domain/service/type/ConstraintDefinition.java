@@ -1,24 +1,23 @@
 package com.db.assetstore.domain.service.type;
 
+import lombok.NonNull;
+
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Objects;
 
 /**
  * Describes a validation constraint associated with an attribute. The {@code rule} names the
  * validation rule that should be executed while {@code value} carries rule specific configuration
  * such as numeric bounds or allowed values.
  */
-public record ConstraintDefinition(AttributeDefinition attribute,
-                                   Rule rule,
+public record ConstraintDefinition(@NonNull AttributeDefinition attribute,
+                                   @NonNull Rule rule,
                                    String value) implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
     public ConstraintDefinition {
-        Objects.requireNonNull(rule, "rule");
-        Objects.requireNonNull(attribute, "attribute");
         value = value == null || value.isBlank() ? null : value.trim();
     }
 
@@ -30,8 +29,7 @@ public record ConstraintDefinition(AttributeDefinition attribute,
         LENGTH,
         CUSTOM;
 
-        public static Rule from(String name) {
-            Objects.requireNonNull(name, "rule");
+        public static Rule from(@NonNull String name) {
             String normalized = name.trim();
             if (normalized.isEmpty()) {
                 throw new IllegalArgumentException("Rule name must not be blank");
