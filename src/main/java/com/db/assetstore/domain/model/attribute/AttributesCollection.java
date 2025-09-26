@@ -31,8 +31,8 @@ public final class AttributesCollection {
         if (flat == null || flat.isEmpty()) {
             return empty();
         }
-        LinkedHashMap<String, List<AttributeValue<?>>> map = new LinkedHashMap<>();
-        for (AttributeValue<?> av : flat) {
+        var map = new LinkedHashMap<String, List<AttributeValue<?>>>();
+        for (var av : flat) {
             if (av == null) {
                 continue;
             }
@@ -45,9 +45,12 @@ public final class AttributesCollection {
         if (map == null || map.isEmpty()) {
             return empty();
         }
-        LinkedHashMap<String, List<AttributeValue<?>>> copy = new LinkedHashMap<>();
+        var copy = new LinkedHashMap<String, List<AttributeValue<?>>>();
         map.forEach((k, v) -> {
-            if (k == null || v == null || v.isEmpty()) {
+            if (k == null) {
+                return;
+            }
+            if (v == null || v.isEmpty()) {
                 return;
             }
             copy.put(k, new ArrayList<>(v));
@@ -85,9 +88,12 @@ public final class AttributesCollection {
         return (vs == null || vs.isEmpty()) ? Optional.empty() : Optional.of(vs.get(0));
     }
 
-    // Backward-compatible convenience alias used by tests
-    public Optional<AttributeValue<?>> getFirstByName(String name) {
-        return getFirst(name);
+    public List<AttributeValue<?>> getAll(String name) {
+        var vs = data.get(name);
+        if (vs == null || vs.isEmpty()) {
+            return List.of();
+        }
+        return Collections.unmodifiableList(vs);
     }
 
     public <T> Optional<T> getOne(String name, Class<T> type) {
@@ -99,7 +105,7 @@ public final class AttributesCollection {
         if (vs == null || vs.isEmpty()) {
             return List.of();
         }
-        ArrayList<T> out = new ArrayList<>(vs.size());
+        var out = new ArrayList<T>(vs.size());
         for (var av : vs) {
             Object v = av.value();
             if (v != null) {

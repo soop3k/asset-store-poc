@@ -1,44 +1,65 @@
 package com.db.assetstore.infra.service.cmd;
 
 import com.db.assetstore.AssetType;
-import com.db.assetstore.infra.json.AttributeJsonReader;
 import com.db.assetstore.domain.model.type.AVBoolean;
 import com.db.assetstore.domain.model.type.AVDecimal;
 import com.db.assetstore.domain.model.type.AVString;
+import com.db.assetstore.domain.model.type.AttributeType;
 import com.db.assetstore.domain.service.cmd.PatchAssetCommand;
 import com.db.assetstore.domain.service.cmd.factory.PatchAssetCommandFactory;
 import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
-import com.db.assetstore.domain.service.type.TypeSchemaRegistry;
+import com.db.assetstore.domain.service.validation.AttributeValidator;
+import com.db.assetstore.domain.service.validation.custom.MatchingAttributesRule;
+import com.db.assetstore.domain.service.validation.rule.CustomValidationRuleRegistry;
+import com.db.assetstore.domain.service.validation.rule.RuleViolationException;
+import com.db.assetstore.domain.service.validation.rule.ValidationRuleFactory;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;
-import com.db.assetstore.infra.service.type.SchemaAttributeDefinitionLoader;
+import com.db.assetstore.infra.json.AttributeJsonReader;
+import com.db.assetstore.infra.json.AttributePayloadParser;
+import com.db.assetstore.infra.json.AttributeValueAssembler;
+import com.db.assetstore.testutil.TestAttributeDefinitionRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static com.db.assetstore.testutil.AttributeTestHelpers.constraint;
+import static com.db.assetstore.testutil.AttributeTestHelpers.definition;
+import static com.db.assetstore.domain.service.type.ConstraintDefinition.Rule.REQUIRED;
+import static com.db.assetstore.domain.service.type.ConstraintDefinition.Rule.TYPE;
 
 class PatchAssetCommandFactoryTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-
     private PatchAssetCommandFactory factory;
-
     private AssetPatchRequest request;
+    private AttributeDefinitionRegistry registry;
+    private CustomValidationRuleRegistry customRegistry;
 
     @BeforeEach
     void setUp() {
-        AttributeJsonReader attributeJsonReader = createJsonReader();
-        factory = new PatchAssetCommandFactory(attributeJsonReader);
+        var name = definition(AssetType.SHIP, "name", AttributeType.STRING);
+        var imo = definition(AssetType.SHIP, "imo", AttributeType.DECIMAL);
+        var active = definition(AssetType.SHIP, "active", AttributeType.BOOLEAN);
 
-        ObjectNode attributes = objectMapper.createObjectNode();
-        attributes.put("name", "Sea Queen");
-        attributes.put("imo", 9876543);
-        attributes.put("active", false);
+        registry = TestAttributeDefinitionRegistry.builder()
+                .withAttribute(name, constraint(name, TYPE), constraint(name, REQUIRED))
+                .withAttribute(imo, constraint(imo, TYPE))
+                .withAttribute(active, constraint(active, TYPE))
+                .withAssetType(AssetType.CRE)
+                .build();
+        customRegistry = new CustomValidationRuleRegistry(List.of(new MatchingAttributesRule()));
+        AttributeValidator validator = new AttributeValidator(registry, ruleFactory(customRegistry));
+        AttributeJsonReader reader = new AttributeJsonReader(
+                new AttributePayloadParser(),
+                new AttributeValueAssembler(registry)
+        );
+        factory = new PatchAssetCommandFactory(validator, reader);
 
         request = new AssetPatchRequest();
         request.setId("asset-2");
@@ -48,7 +69,7 @@ class PatchAssetCommandFactoryTest {
         request.setYear(2025);
         request.setDescription("Patched");
         request.setCurrency("EUR");
-        request.setAttributes(attributes);
+        request.setAttributes(attributesNode("Sea Queen", new BigDecimal("9876543"), false));
         request.setExecutedBy("patcher");
     }
 
@@ -83,28 +104,27 @@ class PatchAssetCommandFactoryTest {
         assertThat(command.requestTime()).isNotNull();
     }
 
-    private AttributeJsonReader createJsonReader() {
-        TypeSchemaRegistry typeSchemaRegistry = new TypeSchemaRegistry(objectMapper);
-        typeSchemaRegistry.discover();
+    @Test
+    void rejectsNullForRequiredAttributeOnPartialUpdate() {
+        ObjectNode node = objectMapper.createObjectNode();
+        node.putNull("name");
+        request.setAttributes(node);
 
-        SchemaAttributeDefinitionLoader schemaLoader = new SchemaAttributeDefinitionLoader(typeSchemaRegistry);
-
-        AttributeDefinitionRegistry registry = new AttributeDefinitionRegistry() {
-            private final Map<AssetType, Map<String, AttributeDefinition>> cache = new HashMap<>();
-
-            @Override
-            public Map<String, AttributeDefinition> getDefinitions(AssetType type) {
-                return cache.computeIfAbsent(type,
-                        t -> schemaLoader.load(t).orElseGet(Map::of));
-            }
-
-            @Override
-            public void refresh() {
-                cache.clear();
-            }
-        };
-        registry.refresh();
-
-        return new AttributeJsonReader(objectMapper, registry);
+        assertThatThrownBy(() -> factory.createCommand(AssetType.SHIP, "asset-2", request))
+                .isInstanceOf(RuleViolationException.class)
+                .hasMessageContaining("required");
     }
+
+    private ValidationRuleFactory ruleFactory(CustomValidationRuleRegistry customRegistry) {
+        return new ValidationRuleFactory(customRegistry);
+    }
+
+    private ObjectNode attributesNode(String name, BigDecimal imo, boolean active) {
+        ObjectNode node = objectMapper.createObjectNode();
+        node.put("name", name);
+        node.put("imo", imo);
+        node.put("active", active);
+        return node;
+    }
+
 }

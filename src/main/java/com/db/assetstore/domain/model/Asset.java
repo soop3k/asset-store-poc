@@ -7,7 +7,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 
 import java.math.BigDecimal;
@@ -43,8 +45,9 @@ public final class Asset {
     @Setter private String description;
     @Setter private String currency;
 
+    @Builder.Default
     @JsonIgnore
-    private AttributesCollection attributes;
+    private AttributesCollection attributes = AttributesCollection.empty();
 
     @JsonIgnore
     public List<AttributeValue<?>> getAttributesFlat() {
@@ -54,11 +57,8 @@ public final class Asset {
     @JsonProperty("attributes")
     public Map<String, AttributeValue<?>> getAttributesJson() {
         Map<String, AttributeValue<?>> out = new LinkedHashMap<>();
-        if (attributes == null || attributes.isEmpty()) {
-            return out;
-        }
         attributes.asMapView().forEach((name, list) -> {
-            if (list != null && !list.isEmpty()) {
+            if (!list.isEmpty()) {
                 out.put(name, list.get(0));
             }
         });
@@ -92,8 +92,8 @@ public final class Asset {
     /**
      * Replace all attributes with the provided flat collection.
      */
-    public Asset setAttributes(Collection<AttributeValue<?>> incoming) {
-        this.attributes = (incoming == null) ? AttributesCollection.empty() : AttributesCollection.fromFlat(incoming);
+    public Asset setAttributes(@NonNull Collection<AttributeValue<?>> incoming) {
+        this.attributes = AttributesCollection.fromFlat(incoming);
         return this;
     }
 }
