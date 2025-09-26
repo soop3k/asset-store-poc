@@ -1,16 +1,28 @@
 package com.db.assetstore.infra.service.cmd;
 
 import com.db.assetstore.AssetType;
-import com.db.assetstore.infra.json.AttributeJsonReader;
+import com.db.assetstore.domain.model.attribute.AttributesCollection;
 import com.db.assetstore.domain.model.type.AVBoolean;
 import com.db.assetstore.domain.model.type.AVDecimal;
 import com.db.assetstore.domain.model.type.AVString;
+import com.db.assetstore.domain.model.type.AttributeType;
 import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
 import com.db.assetstore.domain.service.cmd.factory.CreateAssetCommandFactory;
+import com.db.assetstore.domain.service.type.AttributeDefinition;
 import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
-import com.db.assetstore.domain.service.type.TypeSchemaRegistry;
+import com.db.assetstore.domain.service.type.ConstraintDefinition;
+import com.db.assetstore.domain.service.validation.AttributeValidator;
+import com.db.assetstore.domain.service.validation.custom.MatchingAttributesRule;
+import com.db.assetstore.domain.service.validation.rule.CustomRule;
+import com.db.assetstore.domain.service.validation.rule.CustomValidationRuleRegistry;
+import com.db.assetstore.domain.service.validation.rule.EnumRule;
+import com.db.assetstore.domain.service.validation.rule.LengthRule;
+import com.db.assetstore.domain.service.validation.rule.MinMaxRule;
+import com.db.assetstore.domain.service.validation.rule.RequiredRule;
+import com.db.assetstore.domain.service.validation.rule.TypeRule;
+import com.db.assetstore.domain.service.validation.rule.ValidationRuleRegistry;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;
-import com.db.assetstore.infra.service.type.SchemaAttributeDefinitionLoader;
+import com.db.assetstore.infra.json.AttributeJsonReader;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,6 +30,7 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,22 +38,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 class CreateAssetCommandFactoryTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-
     private CreateAssetCommandFactory factory;
+    private AttributeDefinitionRegistry registry;
+    private ValidationRuleRegistry ruleRegistry;
+    private CustomValidationRuleRegistry customRegistry;
 
     @BeforeEach
     void setUp() {
-        AttributeJsonReader attributeJsonReader = createJsonReader();
-        factory = new CreateAssetCommandFactory(attributeJsonReader);
+        registry = new FixedRegistry();
+        customRegistry = new CustomValidationRuleRegistry(List.of(new MatchingAttributesRule()));
+        ruleRegistry = rules(customRegistry);
+        AttributeValidator validator = new AttributeValidator(registry, ruleRegistry);
+        AttributeJsonReader reader = new AttributeJsonReader(objectMapper, registry);
+        factory = new CreateAssetCommandFactory(validator, reader);
     }
 
     @Test
     void populatesCommandAndParsesAttributes() {
-        ObjectNode attributes = objectMapper.createObjectNode();
-        attributes.put("city", "Frankfurt");
-        attributes.put("area", new BigDecimal("500.25"));
-        attributes.put("active", true);
-
         AssetCreateRequest request = new AssetCreateRequest(
                 "asset-1",
                 AssetType.CRE,
@@ -50,7 +64,7 @@ class CreateAssetCommandFactoryTest {
                 2024,
                 "Created",
                 "USD",
-                attributes,
+                attributesNode("Frankfurt", new BigDecimal("500.25"), true),
                 "creator"
         );
 
@@ -95,28 +109,62 @@ class CreateAssetCommandFactoryTest {
         assertThat(command.requestTime()).isNotNull();
     }
 
-    private AttributeJsonReader createJsonReader() {
-        TypeSchemaRegistry typeSchemaRegistry = new TypeSchemaRegistry(objectMapper);
-        typeSchemaRegistry.discover();
+    private ValidationRuleRegistry rules(CustomValidationRuleRegistry customRegistry) {
+        return new ValidationRuleRegistry(List.of(
+                new TypeRule(),
+                new RequiredRule(),
+                new MinMaxRule(),
+                new EnumRule(),
+                new LengthRule(),
+                new CustomRule(customRegistry)
+        ));
+    }
 
-        SchemaAttributeDefinitionLoader schemaLoader = new SchemaAttributeDefinitionLoader(typeSchemaRegistry);
+    private ObjectNode attributesNode(String city, BigDecimal area, boolean active) {
+        ObjectNode node = objectMapper.createObjectNode();
+        node.put("city", city);
+        node.put("area", area);
+        node.put("active", active);
+        return node;
+    }
 
-        AttributeDefinitionRegistry registry = new AttributeDefinitionRegistry() {
-            private final Map<AssetType, Map<String, AttributeDefinition>> cache = new HashMap<>();
+    private static final class FixedRegistry implements AttributeDefinitionRegistry {
 
-            @Override
-            public Map<String, AttributeDefinition> getDefinitions(AssetType type) {
-                return cache.computeIfAbsent(type,
-                        t -> schemaLoader.load(t).orElseGet(Map::of));
-            }
+        private final Map<AssetType, Map<String, AttributeDefinition>> definitions = new HashMap<>();
+        private final Map<AssetType, Map<String, List<ConstraintDefinition>>> constraints = new HashMap<>();
 
-            @Override
-            public void refresh() {
-                cache.clear();
-            }
-        };
-        registry.refresh();
+        private FixedRegistry() {
+            AttributeDefinition city = new AttributeDefinition(AssetType.CRE, "city", AttributeType.STRING);
+            AttributeDefinition area = new AttributeDefinition(AssetType.CRE, "area", AttributeType.DECIMAL);
+            AttributeDefinition active = new AttributeDefinition(AssetType.CRE, "active", AttributeType.BOOLEAN);
 
-        return new AttributeJsonReader(objectMapper, registry);
+            definitions.put(AssetType.CRE, Map.of(
+                    "city", city,
+                    "area", area,
+                    "active", active
+            ));
+            constraints.put(AssetType.CRE, Map.of(
+                    "city", List.of(new ConstraintDefinition(city, ConstraintDefinition.Rule.TYPE, null)),
+                    "area", List.of(new ConstraintDefinition(area, ConstraintDefinition.Rule.TYPE, null)),
+                    "active", List.of(new ConstraintDefinition(active, ConstraintDefinition.Rule.TYPE, null))
+            ));
+            definitions.put(AssetType.SHIP, Map.of());
+            constraints.put(AssetType.SHIP, Map.of());
+        }
+
+        @Override
+        public Map<String, AttributeDefinition> getDefinitions(AssetType type) {
+            return definitions.getOrDefault(type, Map.of());
+        }
+
+        @Override
+        public Map<String, List<ConstraintDefinition>> getConstraints(AssetType type) {
+            return constraints.getOrDefault(type, Map.of());
+        }
+
+        @Override
+        public void refresh() {
+            // no-op
+        }
     }
 }

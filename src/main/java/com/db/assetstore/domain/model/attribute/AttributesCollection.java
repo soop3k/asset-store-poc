@@ -85,6 +85,14 @@ public final class AttributesCollection {
         return (vs == null || vs.isEmpty()) ? Optional.empty() : Optional.of(vs.get(0));
     }
 
+    public List<AttributeValue<?>> getAll(String name) {
+        var vs = data.get(name);
+        if (vs == null || vs.isEmpty()) {
+            return List.of();
+        }
+        return Collections.unmodifiableList(vs);
+    }
+
     // Backward-compatible convenience alias used by tests
     public Optional<AttributeValue<?>> getFirstByName(String name) {
         return getFirst(name);
