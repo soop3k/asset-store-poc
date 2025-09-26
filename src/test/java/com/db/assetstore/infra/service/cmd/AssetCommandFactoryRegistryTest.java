@@ -12,9 +12,7 @@ import com.db.assetstore.domain.service.cmd.factory.AssetCommandFactoryRegistry;
 import com.db.assetstore.domain.service.cmd.factory.CreateAssetCommandFactory;
 import com.db.assetstore.domain.service.cmd.factory.DeleteAssetCommandFactory;
 import com.db.assetstore.domain.service.cmd.factory.PatchAssetCommandFactory;
-import com.db.assetstore.domain.service.type.AttributeDefinition;
 import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
-import com.db.assetstore.domain.service.type.ConstraintDefinition;
 import com.db.assetstore.domain.service.validation.AttributeValidator;
 import com.db.assetstore.domain.service.validation.custom.MatchingAttributesRule;
 import com.db.assetstore.domain.service.validation.rule.CustomValidationRuleRegistry;
@@ -23,18 +21,21 @@ import com.db.assetstore.infra.api.dto.AssetCreateRequest;
 import com.db.assetstore.infra.api.dto.AssetDeleteRequest;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;
 import com.db.assetstore.infra.json.AttributeJsonReader;
+import com.db.assetstore.testutil.TestAttributeDefinitionRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static com.db.assetstore.testutil.AttributeTestHelpers.constraint;
+import static com.db.assetstore.testutil.AttributeTestHelpers.definition;
+import static com.db.assetstore.domain.service.type.ConstraintDefinition.Rule.REQUIRED;
+import static com.db.assetstore.domain.service.type.ConstraintDefinition.Rule.TYPE;
 
 class AssetCommandFactoryRegistryTest {
 
@@ -49,7 +50,21 @@ class AssetCommandFactoryRegistryTest {
     @BeforeEach
     void setUp() {
 
-        attributeDefinitionRegistry = new FixedRegistry();
+        var city = definition(AssetType.CRE, "city", AttributeType.STRING);
+        var area = definition(AssetType.CRE, "area", AttributeType.DECIMAL);
+        var active = definition(AssetType.CRE, "active", AttributeType.BOOLEAN);
+        var name = definition(AssetType.SHIP, "name", AttributeType.STRING);
+        var imo = definition(AssetType.SHIP, "imo", AttributeType.DECIMAL);
+        var shipActive = definition(AssetType.SHIP, "active", AttributeType.BOOLEAN);
+
+        attributeDefinitionRegistry = TestAttributeDefinitionRegistry.builder()
+                .withAttribute(city, constraint(city, TYPE))
+                .withAttribute(area, constraint(area, TYPE))
+                .withAttribute(active, constraint(active, TYPE))
+                .withAttribute(name, constraint(name, TYPE), constraint(name, REQUIRED))
+                .withAttribute(imo, constraint(imo, TYPE))
+                .withAttribute(shipActive, constraint(shipActive, TYPE))
+                .build();
         customRegistry = new CustomValidationRuleRegistry(List.of(new MatchingAttributesRule()));
         validationRuleFactory = ruleFactory(customRegistry);
         AttributeValidator attributeValidator = new AttributeValidator(attributeDefinitionRegistry, validationRuleFactory);
@@ -184,57 +199,4 @@ class AssetCommandFactoryRegistryTest {
         return node;
     }
 
-    private static final class FixedRegistry implements AttributeDefinitionRegistry {
-
-        private final Map<AssetType, Map<String, AttributeDefinition>> definitions = new HashMap<>();
-        private final Map<AssetType, Map<String, List<ConstraintDefinition>>> constraints = new HashMap<>();
-
-        private FixedRegistry() {
-            var city = new AttributeDefinition(AssetType.CRE, "city", AttributeType.STRING);
-            var area = new AttributeDefinition(AssetType.CRE, "area", AttributeType.DECIMAL);
-            var activeCre = new AttributeDefinition(AssetType.CRE, "active", AttributeType.BOOLEAN);
-            var name = new AttributeDefinition(AssetType.SHIP, "name", AttributeType.STRING);
-            var imo = new AttributeDefinition(AssetType.SHIP, "imo", AttributeType.DECIMAL);
-            var activeShip = new AttributeDefinition(AssetType.SHIP, "active", AttributeType.BOOLEAN);
-
-            definitions.put(AssetType.CRE, Map.of(
-                    "city", city,
-                    "area", area,
-                    "active", activeCre
-            ));
-            constraints.put(AssetType.CRE, Map.of(
-                    "city", List.of(new ConstraintDefinition(city, ConstraintDefinition.Rule.TYPE, null)),
-                    "area", List.of(new ConstraintDefinition(area, ConstraintDefinition.Rule.TYPE, null)),
-                    "active", List.of(new ConstraintDefinition(activeCre, ConstraintDefinition.Rule.TYPE, null))
-            ));
-            definitions.put(AssetType.SHIP, Map.of(
-                    "name", name,
-                    "imo", imo,
-                    "active", activeShip
-            ));
-            constraints.put(AssetType.SHIP, Map.of(
-                    "name", List.of(
-                            new ConstraintDefinition(name, ConstraintDefinition.Rule.TYPE, null),
-                            new ConstraintDefinition(name, ConstraintDefinition.Rule.REQUIRED, null)
-                    ),
-                    "imo", List.of(new ConstraintDefinition(imo, ConstraintDefinition.Rule.TYPE, null)),
-                    "active", List.of(new ConstraintDefinition(activeShip, ConstraintDefinition.Rule.TYPE, null))
-            ));
-        }
-
-        @Override
-        public Map<String, AttributeDefinition> getDefinitions(AssetType type) {
-            return definitions.getOrDefault(type, Map.of());
-        }
-
-        @Override
-        public Map<String, List<ConstraintDefinition>> getConstraints(AssetType type) {
-            return constraints.getOrDefault(type, Map.of());
-        }
-
-        @Override
-        public void refresh() {
-            // no-op
-        }
-    }
 }

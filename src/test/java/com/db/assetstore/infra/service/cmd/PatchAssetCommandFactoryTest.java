@@ -7,9 +7,7 @@ import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.domain.model.type.AttributeType;
 import com.db.assetstore.domain.service.cmd.PatchAssetCommand;
 import com.db.assetstore.domain.service.cmd.factory.PatchAssetCommandFactory;
-import com.db.assetstore.domain.service.type.AttributeDefinition;
 import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
-import com.db.assetstore.domain.service.type.ConstraintDefinition;
 import com.db.assetstore.domain.service.validation.AttributeValidator;
 import com.db.assetstore.domain.service.validation.custom.MatchingAttributesRule;
 import com.db.assetstore.domain.service.validation.rule.CustomValidationRuleRegistry;
@@ -17,18 +15,21 @@ import com.db.assetstore.domain.service.validation.rule.RuleViolationException;
 import com.db.assetstore.domain.service.validation.rule.ValidationRuleFactory;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;
 import com.db.assetstore.infra.json.AttributeJsonReader;
+import com.db.assetstore.testutil.TestAttributeDefinitionRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static com.db.assetstore.testutil.AttributeTestHelpers.constraint;
+import static com.db.assetstore.testutil.AttributeTestHelpers.definition;
+import static com.db.assetstore.domain.service.type.ConstraintDefinition.Rule.REQUIRED;
+import static com.db.assetstore.domain.service.type.ConstraintDefinition.Rule.TYPE;
 
 class PatchAssetCommandFactoryTest {
 
@@ -40,7 +41,16 @@ class PatchAssetCommandFactoryTest {
 
     @BeforeEach
     void setUp() {
-        registry = new FixedRegistry();
+        var name = definition(AssetType.SHIP, "name", AttributeType.STRING);
+        var imo = definition(AssetType.SHIP, "imo", AttributeType.DECIMAL);
+        var active = definition(AssetType.SHIP, "active", AttributeType.BOOLEAN);
+
+        registry = TestAttributeDefinitionRegistry.builder()
+                .withAttribute(name, constraint(name, TYPE), constraint(name, REQUIRED))
+                .withAttribute(imo, constraint(imo, TYPE))
+                .withAttribute(active, constraint(active, TYPE))
+                .withAssetType(AssetType.CRE)
+                .build();
         customRegistry = new CustomValidationRuleRegistry(List.of(new MatchingAttributesRule()));
         AttributeValidator validator = new AttributeValidator(registry, ruleFactory(customRegistry));
         AttributeJsonReader reader = new AttributeJsonReader(objectMapper, registry);
@@ -112,46 +122,4 @@ class PatchAssetCommandFactoryTest {
         return node;
     }
 
-    private static final class FixedRegistry implements AttributeDefinitionRegistry {
-
-        private final Map<AssetType, Map<String, AttributeDefinition>> definitions = new HashMap<>();
-        private final Map<AssetType, Map<String, List<ConstraintDefinition>>> constraints = new HashMap<>();
-
-        private FixedRegistry() {
-            var name = new AttributeDefinition(AssetType.SHIP, "name", AttributeType.STRING);
-            var imo = new AttributeDefinition(AssetType.SHIP, "imo", AttributeType.DECIMAL);
-            var active = new AttributeDefinition(AssetType.SHIP, "active", AttributeType.BOOLEAN);
-
-            definitions.put(AssetType.SHIP, Map.of(
-                    "name", name,
-                    "imo", imo,
-                    "active", active
-            ));
-            constraints.put(AssetType.SHIP, Map.of(
-                    "name", List.of(
-                            new ConstraintDefinition(name, ConstraintDefinition.Rule.TYPE, null),
-                            new ConstraintDefinition(name, ConstraintDefinition.Rule.REQUIRED, null)
-                    ),
-                    "imo", List.of(new ConstraintDefinition(imo, ConstraintDefinition.Rule.TYPE, null)),
-                    "active", List.of(new ConstraintDefinition(active, ConstraintDefinition.Rule.TYPE, null))
-            ));
-            definitions.put(AssetType.CRE, Map.of());
-            constraints.put(AssetType.CRE, Map.of());
-        }
-
-        @Override
-        public Map<String, AttributeDefinition> getDefinitions(AssetType type) {
-            return definitions.getOrDefault(type, Map.of());
-        }
-
-        @Override
-        public Map<String, List<ConstraintDefinition>> getConstraints(AssetType type) {
-            return constraints.getOrDefault(type, Map.of());
-        }
-
-        @Override
-        public void refresh() {
-            // no-op
-        }
-    }
 }

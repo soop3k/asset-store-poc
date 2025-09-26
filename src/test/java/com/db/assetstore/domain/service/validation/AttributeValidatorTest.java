@@ -6,7 +6,6 @@ import com.db.assetstore.domain.model.type.AVDecimal;
 import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.domain.model.type.AttributeType;
 import com.db.assetstore.domain.service.type.AttributeDefinition;
-import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
 import com.db.assetstore.domain.service.type.ConstraintDefinition;
 import com.db.assetstore.domain.service.type.ConstraintDefinition.Rule;
 import com.db.assetstore.domain.service.validation.custom.MatchingAttributesRule;
@@ -14,6 +13,7 @@ import com.db.assetstore.domain.service.validation.rule.CustomValidationRuleRegi
 import com.db.assetstore.domain.service.validation.ValidationMode;
 import com.db.assetstore.domain.service.validation.rule.RuleViolationException;
 import com.db.assetstore.domain.service.validation.rule.ValidationRuleFactory;
+import com.db.assetstore.testutil.TestAttributeDefinitionRegistry;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -21,15 +21,17 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static com.db.assetstore.testutil.AttributeTestHelpers.constraint;
+import static com.db.assetstore.testutil.AttributeTestHelpers.definition;
 
 class AttributeValidatorTest {
 
     @Test
     void throwsWhenRequiredAttributeMissing() {
-        var definition = new AttributeDefinition(AssetType.CRE, "name", AttributeType.STRING);
-        ConstraintDefinition type = new ConstraintDefinition(definition, Rule.TYPE, null);
-        ConstraintDefinition required = new ConstraintDefinition(definition, Rule.REQUIRED, null);
-        Map<String, AttributeDefinition> defs = Map.of("name", definition);
+        var nameDefinition = definition(AssetType.CRE, "name", AttributeType.STRING);
+        ConstraintDefinition type = constraint(nameDefinition, Rule.TYPE);
+        ConstraintDefinition required = constraint(nameDefinition, Rule.REQUIRED);
+        Map<String, AttributeDefinition> defs = Map.of("name", nameDefinition);
         Map<String, List<ConstraintDefinition>> constraints = Map.of("name", List.of(type, required));
         AttributeValidator validator = validator(defs, constraints);
 
@@ -40,10 +42,10 @@ class AttributeValidatorTest {
 
     @Test
     void patchSkipsRequiredWhenAttributeOmitted() {
-        var definition = new AttributeDefinition(AssetType.CRE, "name", AttributeType.STRING);
-        ConstraintDefinition type = new ConstraintDefinition(definition, Rule.TYPE, null);
-        ConstraintDefinition required = new ConstraintDefinition(definition, Rule.REQUIRED, null);
-        Map<String, AttributeDefinition> defs = Map.of("name", definition);
+        var nameDefinition = definition(AssetType.CRE, "name", AttributeType.STRING);
+        ConstraintDefinition type = constraint(nameDefinition, Rule.TYPE);
+        ConstraintDefinition required = constraint(nameDefinition, Rule.REQUIRED);
+        Map<String, AttributeDefinition> defs = Map.of("name", nameDefinition);
         Map<String, List<ConstraintDefinition>> constraints = Map.of("name", List.of(type, required));
         AttributeValidator validator = validator(defs, constraints);
 
@@ -53,10 +55,10 @@ class AttributeValidatorTest {
 
     @Test
     void patchStillFailsWhenRequiredAttributeProvidedWithoutValue() {
-        var definition = new AttributeDefinition(AssetType.CRE, "name", AttributeType.STRING);
-        ConstraintDefinition type = new ConstraintDefinition(definition, Rule.TYPE, null);
-        ConstraintDefinition required = new ConstraintDefinition(definition, Rule.REQUIRED, null);
-        Map<String, AttributeDefinition> defs = Map.of("name", definition);
+        var nameDefinition = definition(AssetType.CRE, "name", AttributeType.STRING);
+        ConstraintDefinition type = constraint(nameDefinition, Rule.TYPE);
+        ConstraintDefinition required = constraint(nameDefinition, Rule.REQUIRED);
+        Map<String, AttributeDefinition> defs = Map.of("name", nameDefinition);
         Map<String, List<ConstraintDefinition>> constraints = Map.of("name", List.of(type, required));
         AttributeValidator validator = validator(defs, constraints);
 
@@ -68,9 +70,9 @@ class AttributeValidatorTest {
 
     @Test
     void strictModeRejectsUnknownAttributes() {
-        var definition = new AttributeDefinition(AssetType.CRE, "name", AttributeType.STRING);
-        ConstraintDefinition type = new ConstraintDefinition(definition, Rule.TYPE, null);
-        Map<String, AttributeDefinition> defs = Map.of("name", definition);
+        var nameDefinition = definition(AssetType.CRE, "name", AttributeType.STRING);
+        ConstraintDefinition type = constraint(nameDefinition, Rule.TYPE);
+        Map<String, AttributeDefinition> defs = Map.of("name", nameDefinition);
         Map<String, List<ConstraintDefinition>> constraints = Map.of("name", List.of(type));
         AttributeValidator validator = validator(defs, constraints);
 
@@ -83,12 +85,11 @@ class AttributeValidatorTest {
 
     @Test
     void customRuleValidatesDependentAttributes() {
-        var name = new AttributeDefinition(AssetType.CRE, "name", AttributeType.STRING);
-        var code = new AttributeDefinition(AssetType.CRE, "code", AttributeType.STRING);
-        ConstraintDefinition typeName = new ConstraintDefinition(name, Rule.TYPE, null);
-        ConstraintDefinition typeCode = new ConstraintDefinition(code, Rule.TYPE, null);
-        ConstraintDefinition custom = new ConstraintDefinition(name, Rule.CUSTOM,
-                "matchingAttributes");
+        var name = definition(AssetType.CRE, "name", AttributeType.STRING);
+        var code = definition(AssetType.CRE, "code", AttributeType.STRING);
+        ConstraintDefinition typeName = constraint(name, Rule.TYPE);
+        ConstraintDefinition typeCode = constraint(code, Rule.TYPE);
+        ConstraintDefinition custom = constraint(name, Rule.CUSTOM, "matchingAttributes");
         Map<String, AttributeDefinition> defs = Map.of("name", name, "code", code);
         Map<String, List<ConstraintDefinition>> constraints = Map.of(
                 "name", List.of(typeName, custom),
@@ -107,9 +108,9 @@ class AttributeValidatorTest {
 
     @Test
     void validatesValuesWithinNumericBounds() {
-        var area = new AttributeDefinition(AssetType.CRE, "area", AttributeType.DECIMAL);
-        ConstraintDefinition type = new ConstraintDefinition(area, Rule.TYPE, null);
-        ConstraintDefinition range = new ConstraintDefinition(area, Rule.MIN_MAX, "10,20");
+        var area = definition(AssetType.CRE, "area", AttributeType.DECIMAL);
+        ConstraintDefinition type = constraint(area, Rule.TYPE);
+        ConstraintDefinition range = constraint(area, Rule.MIN_MAX, "10,20");
         Map<String, AttributeDefinition> defs = Map.of("area", area);
         Map<String, List<ConstraintDefinition>> constraints = Map.of("area", List.of(type, range));
         AttributeValidator validator = validator(defs, constraints);
@@ -131,9 +132,9 @@ class AttributeValidatorTest {
 
     @Test
     void rejectsValuesOutsideEnumList() {
-        var status = new AttributeDefinition(AssetType.CRE, "status", AttributeType.STRING);
-        ConstraintDefinition type = new ConstraintDefinition(status, Rule.TYPE, null);
-        ConstraintDefinition allowed = new ConstraintDefinition(status, Rule.ENUM, "draft,active,archived");
+        var status = definition(AssetType.CRE, "status", AttributeType.STRING);
+        ConstraintDefinition type = constraint(status, Rule.TYPE);
+        ConstraintDefinition allowed = constraint(status, Rule.ENUM, "draft,active,archived");
         Map<String, AttributeDefinition> defs = Map.of("status", status);
         Map<String, List<ConstraintDefinition>> constraints = Map.of("status", List.of(type, allowed));
         AttributeValidator validator = validator(defs, constraints);
@@ -150,9 +151,9 @@ class AttributeValidatorTest {
 
     @Test
     void rejectsValuesExceedingConfiguredLength() {
-        var description = new AttributeDefinition(AssetType.CRE, "description", AttributeType.STRING);
-        ConstraintDefinition type = new ConstraintDefinition(description, Rule.TYPE, null);
-        ConstraintDefinition length = new ConstraintDefinition(description, Rule.LENGTH, "5");
+        var description = definition(AssetType.CRE, "description", AttributeType.STRING);
+        ConstraintDefinition type = constraint(description, Rule.TYPE);
+        ConstraintDefinition length = constraint(description, Rule.LENGTH, "5");
         Map<String, AttributeDefinition> defs = Map.of("description", description);
         Map<String, List<ConstraintDefinition>> constraints = Map.of("description", List.of(type, length));
         AttributeValidator validator = validator(defs, constraints);
@@ -169,8 +170,8 @@ class AttributeValidatorTest {
 
     @Test
     void rejectsAttributesWithMismatchedType() {
-        var weight = new AttributeDefinition(AssetType.CRE, "weight", AttributeType.DECIMAL);
-        ConstraintDefinition type = new ConstraintDefinition(weight, Rule.TYPE, null);
+        var weight = definition(AssetType.CRE, "weight", AttributeType.DECIMAL);
+        ConstraintDefinition type = constraint(weight, Rule.TYPE);
         Map<String, AttributeDefinition> defs = Map.of("weight", weight);
         Map<String, List<ConstraintDefinition>> constraints = Map.of("weight", List.of(type));
         AttributeValidator validator = validator(defs, constraints);
@@ -189,33 +190,9 @@ class AttributeValidatorTest {
                                                 Map<String, List<ConstraintDefinition>> constraints) {
         var customRegistry = customRegistry();
         var factory = new ValidationRuleFactory(customRegistry);
-        return new AttributeValidator(new FixedRegistry(defs, constraints), factory);
-    }
-
-    private static final class FixedRegistry implements AttributeDefinitionRegistry {
-
-        private final Map<String, AttributeDefinition> definitions;
-        private final Map<String, List<ConstraintDefinition>> constraints;
-
-        private FixedRegistry(Map<String, AttributeDefinition> definitions,
-                              Map<String, List<ConstraintDefinition>> constraints) {
-            this.definitions = definitions;
-            this.constraints = constraints;
-        }
-
-        @Override
-        public Map<String, AttributeDefinition> getDefinitions(AssetType type) {
-            return definitions;
-        }
-
-        @Override
-        public Map<String, List<ConstraintDefinition>> getConstraints(AssetType type) {
-            return constraints;
-        }
-
-        @Override
-        public void refresh() {
-            // no-op
-        }
+        var registry = TestAttributeDefinitionRegistry.builder()
+                .withAttributes(AssetType.CRE, defs, constraints)
+                .build();
+        return new AttributeValidator(registry, factory);
     }
 }
