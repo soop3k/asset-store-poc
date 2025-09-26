@@ -5,6 +5,7 @@ import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.model.attribute.AttributesCollection;
 import com.db.assetstore.domain.service.cmd.PatchAssetCommand;
 import com.db.assetstore.domain.service.validation.AttributeValidator;
+import com.db.assetstore.domain.service.validation.ValidationMode;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;
 import com.db.assetstore.infra.json.AttributeJsonReader;
 import lombok.NonNull;
@@ -33,7 +34,7 @@ public class PatchAssetCommandFactory {
 
         AttributesCollection attributes = attributeJsonReader.read(assetType, request.getAttributes());
 
-        attributeValidator.validatePatch(assetType, attributes);
+        attributeValidator.validate(assetType, attributes, ValidationMode.PARTIAL);
 
         List<AttributeValue<?>> attributeValues = attributes.asListView();
 

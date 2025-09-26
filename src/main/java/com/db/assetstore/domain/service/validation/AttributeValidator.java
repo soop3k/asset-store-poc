@@ -28,28 +28,25 @@ public class AttributeValidator {
         this.validationRuleRegistry = validationRuleRegistry;
     }
 
-    public void validate(AssetType type, AttributesCollection attributes) {
-        validateInternal(type, attributes, true);
+    public void validate(AssetType type,
+                         AttributesCollection attributes,
+                         ValidationMode mode) {
+        validateInternal(type, attributes, mode);
     }
 
-    public void validatePatch(AssetType type, AttributesCollection attributes) {
-        validateInternal(type, attributes, false);
+    public void validate(AssetType type, AttributesCollection attributes) {
+        validate(type, attributes, ValidationMode.FULL);
     }
 
     private void validateInternal(AssetType type,
                                   AttributesCollection attributes,
-                                  boolean enforceRequiredForMissing) {
+                                  ValidationMode mode) {
         Map<String, AttributeDefinition> definitionMap = attributeDefinitionRegistry.safeDefinitions(type);
         Map<String, List<ConstraintDefinition>> constraintMap = attributeDefinitionRegistry.safeConstraints(type);
 
         AttributesCollection provided = attributes == null ? AttributesCollection.empty() : attributes;
         Map<String, List<AttributeValue<?>>> values = provided.asMapView();
-        for (String attributeName : values.keySet()) {
-            if (!definitionMap.containsKey(attributeName)) {
-                throw new RuleViolationException("UNKNOWN_ATTRIBUTE", attributeName,
-                        "Unknown attribute definition: " + attributeName);
-            }
-        }
+        enforceKnownAttributes(mode, definitionMap, values);
 
         for (AttributeDefinition definition : definitionMap.values()) {
             List<AttributeValue<?>> providedValues = values.get(definition.name());
@@ -64,7 +61,7 @@ public class AttributeValidator {
 
             List<ConstraintDefinition> constraints = constraintMap.getOrDefault(definition.name(), List.of());
             for (ConstraintDefinition constraint : constraints) {
-                if (!enforceRequiredForMissing
+                if (!mode.enforceRequiredForMissing()
                         && constraint.rule() == ConstraintDefinition.Rule.REQUIRED
                         && !attributeProvided) {
                     continue;
@@ -76,6 +73,21 @@ public class AttributeValidator {
                             "No validation rule registered for " + constraint.rule());
                 }
                 rule.validate(baseContext.withConstraint(constraint));
+            }
+        }
+    }
+
+    private void enforceKnownAttributes(ValidationMode mode,
+                                        Map<String, AttributeDefinition> definitionMap,
+                                        Map<String, List<AttributeValue<?>>> values) {
+        if (!mode.failOnUnknownAttributes()) {
+            return;
+        }
+
+        for (String attributeName : values.keySet()) {
+            if (!definitionMap.containsKey(attributeName)) {
+                throw new RuleViolationException("UNKNOWN_ATTRIBUTE", attributeName,
+                        "Unknown attribute definition: " + attributeName);
             }
         }
     }

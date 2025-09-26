@@ -4,6 +4,7 @@ import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.model.attribute.AttributesCollection;
 import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
 import com.db.assetstore.domain.service.validation.AttributeValidator;
+import com.db.assetstore.domain.service.validation.ValidationMode;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;
 import com.db.assetstore.infra.json.AttributeJsonReader;
 import lombok.NonNull;
@@ -27,7 +28,7 @@ public class CreateAssetCommandFactory {
     public CreateAssetCommand createCommand(@NonNull AssetCreateRequest request) {
         AttributesCollection attributes = attributeJsonReader.read(request.type(), request.attributes());
 
-        attributeValidator.validate(request.type(), attributes);
+        attributeValidator.validate(request.type(), attributes, ValidationMode.STRICT);
 
         List<AttributeValue<?>> attributeValues = attributes.asListView();
 

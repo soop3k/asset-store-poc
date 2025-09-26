@@ -12,6 +12,7 @@ import com.db.assetstore.domain.service.type.ConstraintDefinition.Rule;
 import com.db.assetstore.domain.service.validation.custom.MatchingAttributesRule;
 import com.db.assetstore.domain.service.validation.rule.CustomRule;
 import com.db.assetstore.domain.service.validation.rule.CustomValidationRuleRegistry;
+import com.db.assetstore.domain.service.validation.ValidationMode;
 import com.db.assetstore.domain.service.validation.rule.EnumRule;
 import com.db.assetstore.domain.service.validation.rule.LengthRule;
 import com.db.assetstore.domain.service.validation.rule.MinMaxRule;
@@ -38,7 +39,7 @@ class AttributeValidatorTest {
         Map<String, List<ConstraintDefinition>> constraints = Map.of("name", List.of(type, required));
         AttributeValidator validator = validator(defs, constraints);
 
-        assertThatThrownBy(() -> validator.validate(AssetType.CRE, AttributesCollection.empty()))
+        assertThatThrownBy(() -> validator.validate(AssetType.CRE, AttributesCollection.empty(), ValidationMode.FULL))
                 .isInstanceOf(RuleViolationException.class)
                 .hasMessageContaining("required");
     }
@@ -52,7 +53,7 @@ class AttributeValidatorTest {
         Map<String, List<ConstraintDefinition>> constraints = Map.of("name", List.of(type, required));
         AttributeValidator validator = validator(defs, constraints);
 
-        assertThatCode(() -> validator.validatePatch(AssetType.CRE, AttributesCollection.empty()))
+        assertThatCode(() -> validator.validate(AssetType.CRE, AttributesCollection.empty(), ValidationMode.PARTIAL))
                 .doesNotThrowAnyException();
     }
 
@@ -65,10 +66,25 @@ class AttributeValidatorTest {
         Map<String, List<ConstraintDefinition>> constraints = Map.of("name", List.of(type, required));
         AttributeValidator validator = validator(defs, constraints);
 
-        assertThatThrownBy(() -> validator.validatePatch(AssetType.CRE,
+        assertThatThrownBy(() -> validator.validate(AssetType.CRE,
                 AttributesCollection.fromFlat(List.of(new AVString("name", null)))))
                 .isInstanceOf(RuleViolationException.class)
                 .hasMessageContaining("required");
+    }
+
+    @Test
+    void strictModeRejectsUnknownAttributes() {
+        AttributeDefinition definition = new AttributeDefinition(AssetType.CRE, "name", AttributeType.STRING);
+        ConstraintDefinition type = new ConstraintDefinition(definition, Rule.TYPE, null);
+        Map<String, AttributeDefinition> defs = Map.of("name", definition);
+        Map<String, List<ConstraintDefinition>> constraints = Map.of("name", List.of(type));
+        AttributeValidator validator = validator(defs, constraints);
+
+        assertThatThrownBy(() -> validator.validate(AssetType.CRE,
+                AttributesCollection.fromFlat(List.of(new AVString("unknown", "value"))),
+                ValidationMode.STRICT))
+                .isInstanceOf(RuleViolationException.class)
+                .hasMessageContaining("Unknown attribute definition");
     }
 
     @Test
