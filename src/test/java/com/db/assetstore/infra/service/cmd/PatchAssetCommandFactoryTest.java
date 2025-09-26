@@ -18,6 +18,7 @@ import com.db.assetstore.domain.service.validation.rule.EnumRule;
 import com.db.assetstore.domain.service.validation.rule.LengthRule;
 import com.db.assetstore.domain.service.validation.rule.MinMaxRule;
 import com.db.assetstore.domain.service.validation.rule.RequiredRule;
+import com.db.assetstore.domain.service.validation.rule.RuleViolationException;
 import com.db.assetstore.domain.service.validation.rule.TypeRule;
 import com.db.assetstore.domain.service.validation.rule.ValidationRuleRegistry;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;
@@ -33,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class PatchAssetCommandFactoryTest {
 
@@ -95,6 +97,17 @@ class PatchAssetCommandFactoryTest {
         assertThat(command.requestTime()).isNotNull();
     }
 
+    @Test
+    void rejectsNullForRequiredAttributeOnPartialUpdate() {
+        ObjectNode node = objectMapper.createObjectNode();
+        node.putNull("name");
+        request.setAttributes(node);
+
+        assertThatThrownBy(() -> factory.createCommand(AssetType.SHIP, "asset-2", request))
+                .isInstanceOf(RuleViolationException.class)
+                .hasMessageContaining("required");
+    }
+
     private ValidationRuleRegistry ruleRegistry(CustomValidationRuleRegistry customRegistry) {
         return new ValidationRuleRegistry(List.of(
                 new TypeRule(),
@@ -130,7 +143,10 @@ class PatchAssetCommandFactoryTest {
                     "active", active
             ));
             constraints.put(AssetType.SHIP, Map.of(
-                    "name", List.of(new ConstraintDefinition(name, ConstraintDefinition.Rule.TYPE, null)),
+                    "name", List.of(
+                            new ConstraintDefinition(name, ConstraintDefinition.Rule.TYPE, null),
+                            new ConstraintDefinition(name, ConstraintDefinition.Rule.REQUIRED, null)
+                    ),
                     "imo", List.of(new ConstraintDefinition(imo, ConstraintDefinition.Rule.TYPE, null)),
                     "active", List.of(new ConstraintDefinition(active, ConstraintDefinition.Rule.TYPE, null))
             ));
