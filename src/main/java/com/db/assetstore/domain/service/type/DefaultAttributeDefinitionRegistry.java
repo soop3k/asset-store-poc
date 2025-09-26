@@ -56,8 +56,8 @@ public class DefaultAttributeDefinitionRegistry implements AttributeDefinitionRe
     }
 
     private CachedDefinitions buildDefinitions(AssetType type) {
-        Map<String, AttributeDefinition> preparedDefinitions = new LinkedHashMap<>();
-        Map<String, List<ConstraintDefinition>> preparedConstraints = new LinkedHashMap<>();
+        var preparedDefinitions = new LinkedHashMap<String, AttributeDefinition>();
+        var preparedConstraints = new LinkedHashMap<String, List<ConstraintDefinition>>();
 
         if (loaders.isEmpty()) {
             return EMPTY;
@@ -83,8 +83,8 @@ public class DefaultAttributeDefinitionRegistry implements AttributeDefinitionRe
             });
         }
 
-        Map<String, AttributeDefinition> immutableDefinitions = Collections.unmodifiableMap(preparedDefinitions);
-        Map<String, List<ConstraintDefinition>> immutableConstraints = preparedConstraints.entrySet().stream()
+        var immutableDefinitions = Collections.unmodifiableMap(preparedDefinitions);
+        var immutableConstraints = preparedConstraints.entrySet().stream()
                 .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey,
                         entry -> List.copyOf(entry.getValue())));
 

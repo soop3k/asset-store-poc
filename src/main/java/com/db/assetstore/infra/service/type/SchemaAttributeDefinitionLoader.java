@@ -16,7 +16,6 @@ import org.springframework.core.annotation.Order;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,24 +38,24 @@ public class SchemaAttributeDefinitionLoader implements AttributeDefinitionLoade
     }
 
     private AttributeDefinitions parseSchema(AssetType assetType, JsonNode schema) {
-        Map<String, AttributeDefinition> definitions = new LinkedHashMap<>();
-        Map<String, List<ConstraintDefinition>> constraints = new LinkedHashMap<>();
+        var definitions = new LinkedHashMap<String, AttributeDefinition>();
+        var constraints = new LinkedHashMap<String, List<ConstraintDefinition>>();
         if (schema == null || !schema.isObject()) {
             log.debug("Schema for {} is not an object node", assetType);
             return new AttributeDefinitions(definitions, constraints);
         }
 
-        Set<String> required = readRequired(schema.get("required"));
-        JsonNode properties = schema.get("properties");
+        var required = readRequired(schema.get("required"));
+        var properties = schema.get("properties");
         if (properties == null || !properties.isObject()) {
             return new AttributeDefinitions(definitions, constraints);
         }
 
-        Iterator<String> fieldNames = properties.fieldNames();
+        var fieldNames = properties.fieldNames();
         while (fieldNames.hasNext()) {
-            String name = fieldNames.next();
-            JsonNode definitionNode = properties.get(name);
-            AttributeType attributeType = readAttributeType(definitionNode);
+            var name = fieldNames.next();
+            var definitionNode = properties.get(name);
+            var attributeType = readAttributeType(definitionNode);
             var attributeDefinition = new AttributeDefinition(assetType, name, attributeType);
             definitions.put(name, attributeDefinition);
 
@@ -85,7 +84,7 @@ public class SchemaAttributeDefinitionLoader implements AttributeDefinitionLoade
         if (requiredNode == null || !requiredNode.isArray()) {
             return Collections.emptySet();
         }
-        Set<String> required = new HashSet<>();
+        var required = new HashSet<String>();
         requiredNode.forEach(node -> {
             if (node.isTextual()) {
                 required.add(node.asText());
@@ -114,8 +113,8 @@ public class SchemaAttributeDefinitionLoader implements AttributeDefinitionLoade
         if (definitionNode == null || !definitionNode.isObject()) {
             return Optional.empty();
         }
-        JsonNode min = definitionNode.get("minimum");
-        JsonNode max = definitionNode.get("maximum");
+        var min = definitionNode.get("minimum");
+        var max = definitionNode.get("maximum");
         if (min == null && max == null) {
             return Optional.empty();
         }
@@ -130,7 +129,7 @@ public class SchemaAttributeDefinitionLoader implements AttributeDefinitionLoade
         if (minValue == null && maxValue == null) {
             return Optional.empty();
         }
-        StringBuilder builder = new StringBuilder();
+        var builder = new StringBuilder();
         builder.append(minValue != null ? minValue : "");
         builder.append(',');
         builder.append(maxValue != null ? maxValue : "");
@@ -141,11 +140,11 @@ public class SchemaAttributeDefinitionLoader implements AttributeDefinitionLoade
         if (definitionNode == null || !definitionNode.isObject()) {
             return Optional.empty();
         }
-        JsonNode enumNode = definitionNode.get("enum");
+        var enumNode = definitionNode.get("enum");
         if (enumNode == null || !enumNode.isArray() || enumNode.isEmpty()) {
             return Optional.empty();
         }
-        List<String> values = new ArrayList<>();
+        var values = new ArrayList<String>();
         enumNode.forEach(node -> {
             if (node.isValueNode()) {
                 values.add(node.asText());
@@ -162,7 +161,7 @@ public class SchemaAttributeDefinitionLoader implements AttributeDefinitionLoade
         if (definitionNode == null || !definitionNode.isObject()) {
             return Optional.empty();
         }
-        JsonNode maxLength = definitionNode.get("maxLength");
+        var maxLength = definitionNode.get("maxLength");
         if (maxLength == null || !maxLength.isNumber()) {
             return Optional.empty();
         }

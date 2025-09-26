@@ -15,7 +15,6 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -38,19 +37,19 @@ public class AttributeJsonReader {
         if (!jsonNode.isObject()) {
             throw new IllegalArgumentException("Attributes payload must be a JSON object");
         }
-        Map<String, AttributeDefinition> definitions = attributeDefinitionRegistry.getDefinitions(type);
-        List<AttributeValue<?>> values = new ArrayList<>();
-        Iterator<String> names = jsonNode.fieldNames();
+        var definitions = attributeDefinitionRegistry.getDefinitions(type);
+        var values = new ArrayList<AttributeValue<?>>();
+        var names = jsonNode.fieldNames();
         while (names.hasNext()) {
-            String name = names.next();
-            JsonNode valueNode = jsonNode.get(name);
-            AttributeDefinition definition = definitions.get(name);
+            var name = names.next();
+            var valueNode = jsonNode.get(name);
+            var definition = definitions.get(name);
             if (valueNode == null || valueNode.isNull()) {
                 values.add(createAttributeValue(name, definition, null));
                 continue;
             }
             if (valueNode.isArray()) {
-                for (JsonNode item : valueNode) {
+                for (var item : valueNode) {
                     values.add(createAttributeValue(name, definition, item));
                 }
             } else {
@@ -63,8 +62,8 @@ public class AttributeJsonReader {
     private AttributeValue<?> createAttributeValue(String name,
                                                    AttributeDefinition definition,
                                                    JsonNode node) {
-        AttributeType type = definition == null ? inferType(node) : definition.attributeType();
-        Object converted = convert(node, type);
+        var type = definition == null ? inferType(node) : definition.attributeType();
+        var converted = convert(node, type);
         return switch (type) {
             case STRING -> new AVString(name, (String) converted);
             case DECIMAL -> new AVDecimal(name, (BigDecimal) converted);
