@@ -1,5 +1,6 @@
 package com.db.assetstore.infra.service;
 
+import com.db.assetstore.domain.model.Asset;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.model.attribute.AttributeValueVisitor;
 import com.db.assetstore.domain.model.type.AttributeType;
@@ -16,21 +17,18 @@ public final class AttributeUpdater {
             return;
         }
         e.addHistory(Instant.now());
-        av.accept(new AttributeValueVisitor<>() {
-            @Override public Void visitString(String v, String name) {
-                e.setValueType(AttributeType.STRING);
+        av.accept(new AttributeValueVisitor<AttributeEntity>() {
+            @Override public AttributeEntity visitString(String v, String name) {
                 e.setValueStr(v);
-                return null;
+                return e;
             }
-            @Override public Void visitDecimal(BigDecimal v, String name) {
-                e.setValueType(AttributeType.DECIMAL);
+            @Override public AttributeEntity visitDecimal(BigDecimal v, String name) {
                 e.setValueNum(v);
-                return null;
+                return e;
             }
-            @Override public Void visitBoolean(Boolean v, String name) {
-                e.setValueType(AttributeType.BOOLEAN);
+            @Override public AttributeEntity visitBoolean(Boolean v, String name) {
                 e.setValueBool(v);
-                return null;
+                return e;
             }
         });
     }

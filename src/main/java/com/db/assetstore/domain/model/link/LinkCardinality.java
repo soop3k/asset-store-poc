@@ -1,8 +1,5 @@
 package com.db.assetstore.domain.model.link;
 
-/**
- * Describes allowed number of active links between an Asset and external entity instances.
- */
 public enum LinkCardinality {
     ASSET_ONE_TARGET_ONE,
     ASSET_MANY_TARGET_ONE,

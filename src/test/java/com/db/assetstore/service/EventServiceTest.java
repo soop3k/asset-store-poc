@@ -1,7 +1,7 @@
 package com.db.assetstore.service;
 
 import com.db.assetstore.AssetType;
-import com.db.assetstore.domain.json.AssetCanonicalizer;
+import com.db.assetstore.infra.json.AssetSerializer;
 import com.db.assetstore.domain.model.Asset;
 import com.db.assetstore.domain.model.type.AVBoolean;
 import com.db.assetstore.domain.model.type.AVDecimal;
@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class EventServiceTest {
     private static final ObjectMapper mapper = new JsonMapperProvider().objectMapper();
-    private static final AssetCanonicalizer assetCanon = new AssetCanonicalizer(mapper);
+    private static final AssetSerializer assetCanon = new AssetSerializer(mapper);
     private static final JsonSchemaValidator validator = new JsonSchemaValidator(mapper);
     private static final JsonTransformer transformer = new JsonTransformer(mapper, validator);
 
@@ -81,7 +81,7 @@ class EventServiceTest {
         asset.setDescription("desc");
         asset.setCurrency("PLN");
 
-        EventService svc = new EventService(new JsonTransformer(mapper, validator), new AssetCanonicalizer(mapper), mapper);
+        EventService svc = new EventService(new JsonTransformer(mapper, validator), new AssetSerializer(mapper), mapper);
         String eventJson = svc.generate("asset-rich-cre", asset);
         JsonNode e = mapper.readTree(eventJson);
 

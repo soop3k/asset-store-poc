@@ -1,4 +1,4 @@
-package com.db.assetstore.domain.json;
+package com.db.assetstore.infra.json;
 
 import com.db.assetstore.domain.model.Asset;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
@@ -10,11 +10,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public final class AssetCanonicalizer {
+public final class AssetSerializer {
 
     private final ObjectMapper mapper;
 
@@ -23,7 +22,7 @@ public final class AssetCanonicalizer {
 
         ObjectNode attrs = mapper.createObjectNode();
         AttributeNodeWriter writer = new AttributeNodeWriter(attrs);
-        asset.getAttributesByName().forEach((name, values) -> writer.write(name, first(values)));
+        asset.getAttributesFlat().forEach(writer::write);
         root.set("attributes", attrs);
 
         try {
@@ -31,10 +30,6 @@ public final class AssetCanonicalizer {
         } catch (JsonProcessingException e) {
             throw new IllegalStateException("Failed to serialize canonical asset JSON", e);
         }
-    }
-
-    private static AttributeValue<?> first(List<AttributeValue<?>> values) {
-        return (values == null || values.isEmpty()) ? null : values.get(0);
     }
 
     private static final class AttributeNodeWriter implements AttributeValueVisitor<Void> {
@@ -45,9 +40,9 @@ public final class AssetCanonicalizer {
             this.target = target;
         }
 
-        private void write(String field, AttributeValue<?> attribute) {
-            this.field = field;
-            if (attribute == null) {
+        private void write(AttributeValue<?> attribute) {
+            this.field = attribute.name();
+            if (attribute.value() == null) {
                 target.putNull(field);
             } else {
                 attribute.accept(this);

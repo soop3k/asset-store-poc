@@ -1,6 +1,6 @@
 package com.db.assetstore.domain.service;
 
-import com.db.assetstore.domain.json.AssetCanonicalizer;
+import com.db.assetstore.infra.json.AssetSerializer;
 import com.db.assetstore.domain.model.Asset;
 import com.db.assetstore.domain.service.transform.JsonTransformer;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -14,23 +14,13 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 
-/**
- * Service that generates event JSON from an Asset using JSLT templates.
- *
- * How it works:
- * 1) Convert Asset to canonical JSON.
- * 2) Apply transforms/events/{eventName}.jslt to produce the event JSON.
- *
- * Only JSLT is used for transformation; schema validations are intentionally not applied.
- * By adding transforms/events/{eventName}.jslt, new events can be added without changing Java code.
- */
 @Component
 @RequiredArgsConstructor
 public final class EventService {
     private static final Logger log = LoggerFactory.getLogger(EventService.class);
 
     private final JsonTransformer transformer;
-    private final AssetCanonicalizer canonicalizer;
+    private final AssetSerializer canonicalizer;
     private final ObjectMapper objectMapper;
 
     public String generate(@NonNull String eventName, @NonNull Asset asset) throws JsonProcessingException {

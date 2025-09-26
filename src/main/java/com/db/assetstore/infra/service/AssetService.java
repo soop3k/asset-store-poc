@@ -21,10 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -93,7 +90,7 @@ public class AssetService {
         if (entity.getAttributes() != null && !entity.getAttributes().isEmpty()) {
             assetRepo.save(entity);
         } else {
-            insertAllOnCreate(entity, asset.getAttributesFlat());
+            persistAttributes(entity, asset.getAttributesFlat());
         }
         return entity.getId();
     }
@@ -102,24 +99,13 @@ public class AssetService {
         AssetEntity entity = assetRepo.findByIdAndDeleted(id, 0)
                 .orElseThrow(() -> new IllegalArgumentException("Asset not found: " + id));
 
-        if (patch.status() != null) {
-            entity.setStatus(patch.status());
-        }
-        if (patch.subtype() != null) {
-            entity.setSubtype(patch.subtype());
-        }
-        if (patch.notionalAmount() != null) {
-            entity.setNotionalAmount(patch.notionalAmount());
-        }
-        if (patch.year() != null) {
-            entity.setYear(patch.year());
-        }
-        if (patch.description() != null) {
-            entity.setDescription(patch.description());
-        }
-        if (patch.currency() != null) {
-            entity.setCurrency(patch.currency());
-        }
+        Optional.ofNullable(patch.status()).ifPresent(entity::setStatus);
+        Optional.ofNullable(patch.subtype()).ifPresent(entity::setSubtype);
+        Optional.ofNullable(patch.notionalAmount()).ifPresent(entity::setNotionalAmount);
+        Optional.ofNullable(patch.year()).ifPresent(entity::setYear);
+        Optional.ofNullable(patch.description()).ifPresent(entity::setDescription);
+        Optional.ofNullable(patch.currency()).ifPresent(entity::setCurrency);
+
         entity.setModifiedBy(executedBy);
         entity.setModifiedAt(Instant.now());
         entity = assetRepo.save(entity);
@@ -170,9 +156,7 @@ public class AssetService {
         }
     }
 
-    private void insertAllOnCreate(AssetEntity asset, Collection<AttributeValue<?>> attributes) {
-        int incoming = attributes != null ? attributes.size() : -1;
-        log.info("insertAllOnCreate(): incomingAttrCount={}", incoming);
+    private void persistAttributes(AssetEntity asset, Collection<AttributeValue<?>> attributes) {
         if (attributes != null) {
             for (AttributeValue<?> attributeValue : attributes) {
                 if (attributeValue == null) {

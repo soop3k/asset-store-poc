@@ -1,6 +1,6 @@
 package com.db.assetstore.domain.service.cmd.factory;
 
-import com.db.assetstore.domain.json.AttributeJsonReader;
+import com.db.assetstore.infra.json.AttributeJsonReader;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;

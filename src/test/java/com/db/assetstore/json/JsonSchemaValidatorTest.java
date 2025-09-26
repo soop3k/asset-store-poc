@@ -1,10 +1,6 @@
 package com.db.assetstore.json;
 
-import com.db.assetstore.domain.json.AttributeJsonReader;
-import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
-import com.db.assetstore.domain.service.type.TypeSchemaRegistry;
 import com.db.assetstore.infra.config.JsonMapperProvider;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import com.db.assetstore.domain.service.validation.JsonSchemaValidator;
 

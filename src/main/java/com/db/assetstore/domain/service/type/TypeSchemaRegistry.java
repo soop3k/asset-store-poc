@@ -7,7 +7,6 @@ import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SchemaValidatorsConfig;
 import com.networknt.schema.SpecVersion;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -35,7 +34,7 @@ public final class TypeSchemaRegistry {
 
     public void discover() { rebuild(); }
 
-    public Set<AssetType> rebuild() {
+    public void rebuild() {
         entries.clear();
 
         ClassLoader cl = TypeSchemaRegistry.class.getClassLoader();
@@ -54,8 +53,6 @@ public final class TypeSchemaRegistry {
             }
         }
         log.info("TypeSchemaRegistry: supported={}", entries.keySet());
-
-        return Collections.unmodifiableSet(entries.keySet());
     }
 
     public Set<AssetType> supportedTypes() {

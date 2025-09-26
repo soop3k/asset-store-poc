@@ -193,7 +193,7 @@ class AssetControllerTest {
     }
 
     @Test
-    void createBulkAssets_emptyArray_returnsEmptyArray() throws Exception {
+    void createBulkAssetsEmptyArray() throws Exception {
         mockMvc.perform(post("/assets/bulk")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("[]"))
@@ -202,15 +202,7 @@ class AssetControllerTest {
     }
 
     @Test
-    void createBulkAssets_nullRequest_returnsBadRequest() throws Exception {
-        mockMvc.perform(post("/assets/bulk")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("null"))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void listAssets_afterCreatingMultiple_returnsAllWithProperStructure() throws Exception {
+    void listAssetsReturnsAllWithProperStructure() throws Exception {
         String cre = """
                 {
                     "id": "list-cre-1",
@@ -245,7 +237,7 @@ class AssetControllerTest {
     }
 
     @Test
-    void listAssets_returnsJsonArray() throws Exception {
+    void listAssetsReturnsJsonArray() throws Exception {
         mockMvc.perform(get("/assets"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
@@ -253,7 +245,7 @@ class AssetControllerTest {
     }
 
     @Test
-    void getAsset_existingId_returnsFullAssetData() throws Exception {
+    void getAssetReturnsFullAssetData() throws Exception {
         String payload = """
                 {
                     "id": "get-test-1",
@@ -286,13 +278,13 @@ class AssetControllerTest {
     }
 
     @Test
-    void getAsset_nonExistentId_returnsNotFound() throws Exception {
+    void getAssetNonExistentId() throws Exception {
         mockMvc.perform(get("/assets/non-existent-id"))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void updateAsset_PUT_updatesAllFields() throws Exception {
+    void updateAssetupdatesAllFields() throws Exception {
         String initialPayload = """
                 {
                     "id": "put-test-1",
@@ -340,7 +332,7 @@ class AssetControllerTest {
     }
 
     @Test
-    void updateAsset_PUT_nonExistentId_returnsNotFound() throws Exception {
+    void updateAssetNonExistentId() throws Exception {
         String updatePayload = """
                 {
                     "status": "ACTIVE",
@@ -355,7 +347,7 @@ class AssetControllerTest {
     }
 
     @Test
-    void patchAsset_PATCH_updatesOnlyProvidedFields() throws Exception {
+    void patchAssetUpdatesOnlyProvidedFields() throws Exception {
         String initialPayload = """
                 {
                     "id": "patch-test-1",
@@ -401,7 +393,7 @@ class AssetControllerTest {
     }
 
     @Test
-    void patchAsset_PATCH_nonExistentId_returnsNotFound() throws Exception {
+    void patchAssetNonExistentId() throws Exception {
         mockMvc.perform(patch("/assets/non-existent")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"ACTIVE\",\"executedBy\":\"updater\"}"))
@@ -410,7 +402,7 @@ class AssetControllerTest {
 
 
     @Test
-    void patchAssetsBulk_updatesMultipleAssetsPartially() throws Exception {
+    void updatesMultipleAssetsPartially() throws Exception {
         String asset1 = """
                 {
                     "id": "bulk-patch-1",

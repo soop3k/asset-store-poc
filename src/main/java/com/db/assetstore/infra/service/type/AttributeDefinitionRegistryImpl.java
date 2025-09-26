@@ -50,7 +50,7 @@ public class AttributeDefinitionRegistryImpl implements AttributeDefinitionRegis
         Map<String, AttributeDefinition> merged = new LinkedHashMap<>(schemaDefinitions.get());
         dbDefinitions.forEach(merged::putIfAbsent);
 
-        log.debug("Loaded {} attribute definitions for {} (schema={}, db={})",
+        log.info("Loaded {} attribute definitions for {} (schema={}, db={})",
                 merged.size(), type, schemaDefinitions.get().size(), dbDefinitions.size());
 
         return Collections.unmodifiableMap(merged);

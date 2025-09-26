@@ -8,5 +8,4 @@ import java.util.List;
 
 public interface AttributeDefRepository extends JpaRepository<AttributeDefEntity, Long> {
     List<AttributeDefEntity> findAllByType(AssetType type);
-    boolean existsByTypeAndName(AssetType type, String name);
 }
