@@ -14,6 +14,7 @@ public interface AttributeDefinitionMapper {
 
     @Mapping(target = "assetType", source = "type")
     @Mapping(target = "attributeType", source = "valueType")
+    @Mapping(target = "required", source = "required")
     AttributeDefinition toDomain(AttributeDefEntity entity);
 
     @Mapping(target = "attribute", source = "attribute")

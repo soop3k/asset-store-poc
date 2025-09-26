@@ -13,9 +13,9 @@ public final class CustomValidationRuleRegistry {
     private final Map<String, CustomValidationRule> rulesByName;
 
     public CustomValidationRuleRegistry(List<CustomValidationRule> customRules) {
-        Map<String, CustomValidationRule> map = new LinkedHashMap<>();
-        for (CustomValidationRule rule : customRules) {
-            String name = normalize(rule.name());
+        var map = new LinkedHashMap<String, CustomValidationRule>();
+        for (var rule : customRules) {
+            var name = normalize(rule.name());
             map.putIfAbsent(name, rule);
         }
         this.rulesByName = Map.copyOf(map);

@@ -13,14 +13,8 @@ import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
 import com.db.assetstore.domain.service.type.ConstraintDefinition;
 import com.db.assetstore.domain.service.validation.AttributeValidator;
 import com.db.assetstore.domain.service.validation.custom.MatchingAttributesRule;
-import com.db.assetstore.domain.service.validation.rule.CustomRule;
 import com.db.assetstore.domain.service.validation.rule.CustomValidationRuleRegistry;
-import com.db.assetstore.domain.service.validation.rule.EnumRule;
-import com.db.assetstore.domain.service.validation.rule.LengthRule;
-import com.db.assetstore.domain.service.validation.rule.MinMaxRule;
-import com.db.assetstore.domain.service.validation.rule.RequiredRule;
-import com.db.assetstore.domain.service.validation.rule.TypeRule;
-import com.db.assetstore.domain.service.validation.rule.ValidationRuleRegistry;
+import com.db.assetstore.domain.service.validation.rule.ValidationRuleFactory;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;
 import com.db.assetstore.infra.json.AttributeJsonReader;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,15 +34,13 @@ class CreateAssetCommandFactoryTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private CreateAssetCommandFactory factory;
     private AttributeDefinitionRegistry registry;
-    private ValidationRuleRegistry ruleRegistry;
     private CustomValidationRuleRegistry customRegistry;
 
     @BeforeEach
     void setUp() {
         registry = new FixedRegistry();
         customRegistry = new CustomValidationRuleRegistry(List.of(new MatchingAttributesRule()));
-        ruleRegistry = rules(customRegistry);
-        AttributeValidator validator = new AttributeValidator(registry, ruleRegistry);
+        var validator = new AttributeValidator(registry, ruleFactory(customRegistry));
         AttributeJsonReader reader = new AttributeJsonReader(objectMapper, registry);
         factory = new CreateAssetCommandFactory(validator, reader);
     }
@@ -109,15 +101,8 @@ class CreateAssetCommandFactoryTest {
         assertThat(command.requestTime()).isNotNull();
     }
 
-    private ValidationRuleRegistry rules(CustomValidationRuleRegistry customRegistry) {
-        return new ValidationRuleRegistry(List.of(
-                new TypeRule(),
-                new RequiredRule(),
-                new MinMaxRule(),
-                new EnumRule(),
-                new LengthRule(),
-                new CustomRule(customRegistry)
-        ));
+    private ValidationRuleFactory ruleFactory(CustomValidationRuleRegistry customRegistry) {
+        return new ValidationRuleFactory(customRegistry);
     }
 
     private ObjectNode attributesNode(String city, BigDecimal area, boolean active) {
@@ -134,9 +119,9 @@ class CreateAssetCommandFactoryTest {
         private final Map<AssetType, Map<String, List<ConstraintDefinition>>> constraints = new HashMap<>();
 
         private FixedRegistry() {
-            AttributeDefinition city = new AttributeDefinition(AssetType.CRE, "city", AttributeType.STRING);
-            AttributeDefinition area = new AttributeDefinition(AssetType.CRE, "area", AttributeType.DECIMAL);
-            AttributeDefinition active = new AttributeDefinition(AssetType.CRE, "active", AttributeType.BOOLEAN);
+            var city = new AttributeDefinition(AssetType.CRE, "city", AttributeType.STRING, false);
+            var area = new AttributeDefinition(AssetType.CRE, "area", AttributeType.DECIMAL, false);
+            var active = new AttributeDefinition(AssetType.CRE, "active", AttributeType.BOOLEAN, false);
 
             definitions.put(AssetType.CRE, Map.of(
                     "city", city,

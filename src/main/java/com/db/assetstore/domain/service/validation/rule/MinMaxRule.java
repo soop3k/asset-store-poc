@@ -1,14 +1,22 @@
 package com.db.assetstore.domain.service.validation.rule;
 
-import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.model.attribute.AttributeValueVisitor;
 import com.db.assetstore.domain.service.type.ConstraintDefinition;
-import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 
-@Component
 public final class MinMaxRule implements ValidationRule {
+
+    private final String attributeName;
+    private final BigDecimal min;
+    private final BigDecimal max;
+
+    public MinMaxRule(String attributeName, String rawBounds) {
+        this.attributeName = attributeName;
+        var bounds = parseBounds(rawBounds);
+        this.min = bounds.min;
+        this.max = bounds.max;
+    }
 
     @Override
     public ConstraintDefinition.Rule rule() {
@@ -17,23 +25,18 @@ public final class MinMaxRule implements ValidationRule {
 
     @Override
     public void validate(AttributeValidationContext context) {
-        ConstraintDefinition constraint = context.constraint();
-        if (constraint == null) {
-            throw new AttributeValidationException("MIN_MAX rule requires constraint definition");
-        }
-        Bounds bounds = parseBounds(constraint.value());
-        for (AttributeValue<?> value : context.values()) {
+        for (var value : context.values()) {
             if (value == null || value.value() == null) {
                 continue;
             }
-            BigDecimal number = toDecimal(value);
-            if (bounds.min != null && number.compareTo(bounds.min) < 0) {
-                throw new RuleViolationException(rule().name(), context.definition().name(),
-                        "Value " + number + " is less than minimum " + bounds.min);
+            var number = toDecimal(value);
+            if (min != null && number.compareTo(min) < 0) {
+                throw new RuleViolationException(rule().name(), attributeName,
+                        "Value " + number + " is less than minimum " + min);
             }
-            if (bounds.max != null && number.compareTo(bounds.max) > 0) {
-                throw new RuleViolationException(rule().name(), context.definition().name(),
-                        "Value " + number + " exceeds maximum " + bounds.max);
+            if (max != null && number.compareTo(max) > 0) {
+                throw new RuleViolationException(rule().name(), attributeName,
+                        "Value " + number + " exceeds maximum " + max);
             }
         }
     }
@@ -42,9 +45,9 @@ public final class MinMaxRule implements ValidationRule {
         if (raw == null) {
             throw new AttributeValidationException("MIN_MAX rule requires bounds");
         }
-        String[] parts = raw.split(",", -1);
-        BigDecimal min = parseDecimal(parts, 0);
-        BigDecimal max = parseDecimal(parts, 1);
+        var parts = raw.split(",", -1);
+        var min = parseDecimal(parts, 0);
+        var max = parseDecimal(parts, 1);
         if (min == null && max == null) {
             throw new AttributeValidationException("MIN_MAX rule requires bounds");
         }
@@ -58,7 +61,7 @@ public final class MinMaxRule implements ValidationRule {
         if (index >= parts.length) {
             return null;
         }
-        String token = parts[index].trim();
+        var token = parts[index].trim();
         if (token.isEmpty()) {
             return null;
         }

@@ -10,7 +10,7 @@ import com.db.assetstore.domain.service.validation.rule.AttributeValidationConte
 import com.db.assetstore.domain.service.validation.rule.AttributeValidationException;
 import com.db.assetstore.domain.service.validation.rule.RuleViolationException;
 import com.db.assetstore.domain.service.validation.rule.ValidationRule;
-import com.db.assetstore.domain.service.validation.rule.ValidationRuleRegistry;
+import com.db.assetstore.domain.service.validation.rule.ValidationRuleFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -20,12 +20,12 @@ import java.util.Map;
 public class AttributeValidator {
 
     private final AttributeDefinitionRegistry attributeDefinitionRegistry;
-    private final ValidationRuleRegistry validationRuleRegistry;
+    private final ValidationRuleFactory validationRuleFactory;
 
     public AttributeValidator(AttributeDefinitionRegistry attributeDefinitionRegistry,
-                              ValidationRuleRegistry validationRuleRegistry) {
+                              ValidationRuleFactory validationRuleFactory) {
         this.attributeDefinitionRegistry = attributeDefinitionRegistry;
-        this.validationRuleRegistry = validationRuleRegistry;
+        this.validationRuleFactory = validationRuleFactory;
     }
 
     public void validate(AssetType type,
@@ -41,38 +41,29 @@ public class AttributeValidator {
     private void validateInternal(AssetType type,
                                   AttributesCollection attributes,
                                   ValidationMode mode) {
-        Map<String, AttributeDefinition> definitionMap = attributeDefinitionRegistry.safeDefinitions(type);
-        Map<String, List<ConstraintDefinition>> constraintMap = attributeDefinitionRegistry.safeConstraints(type);
+        var definitionMap = attributeDefinitionRegistry.safeDefinitions(type);
+        var constraintMap = attributeDefinitionRegistry.safeConstraints(type);
 
-        AttributesCollection provided = attributes == null ? AttributesCollection.empty() : attributes;
-        Map<String, List<AttributeValue<?>>> values = provided.asMapView();
+        var provided = attributes == null ? AttributesCollection.empty() : attributes;
+        var values = provided.asMapView();
         enforceKnownAttributes(mode, definitionMap, values);
 
-        for (AttributeDefinition definition : definitionMap.values()) {
-            List<AttributeValue<?>> providedValues = values.get(definition.name());
-            boolean attributeProvided = providedValues != null && !providedValues.isEmpty();
+        for (var definition : definitionMap.values()) {
+            var providedValues = values.get(definition.name());
+            var attributeProvided = providedValues != null && !providedValues.isEmpty();
 
-            AttributeValidationContext baseContext = new AttributeValidationContext(
-                    type,
-                    definition,
-                    provided,
-                    null
-            );
+            var context = new AttributeValidationContext(type, definition, provided);
 
-            List<ConstraintDefinition> constraints = constraintMap.getOrDefault(definition.name(), List.of());
-            for (ConstraintDefinition constraint : constraints) {
+            var constraints = constraintMap.getOrDefault(definition.name(), List.of());
+            var rules = validationRuleFactory.build(definition, constraints);
+            for (var rule : rules) {
                 if (!mode.enforceRequiredForMissing()
-                        && constraint.rule() == ConstraintDefinition.Rule.REQUIRED
+                        && rule.rule() == ConstraintDefinition.Rule.REQUIRED
                         && !attributeProvided) {
                     continue;
                 }
 
-                ValidationRule rule = validationRuleRegistry.get(constraint.rule());
-                if (rule == null) {
-                    throw new AttributeValidationException(
-                            "No validation rule registered for " + constraint.rule());
-                }
-                rule.validate(baseContext.withConstraint(constraint));
+                rule.validate(context);
             }
         }
     }
@@ -84,7 +75,7 @@ public class AttributeValidator {
             return;
         }
 
-        for (String attributeName : values.keySet()) {
+        for (var attributeName : values.keySet()) {
             if (!definitionMap.containsKey(attributeName)) {
                 throw new RuleViolationException("UNKNOWN_ATTRIBUTE", attributeName,
                         "Unknown attribute definition: " + attributeName);

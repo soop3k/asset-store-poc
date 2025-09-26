@@ -26,15 +26,15 @@ public class DatabaseAttributeDefinitionLoader implements AttributeDefinitionLoa
 
     @Override
     public AttributeDefinitions load(AssetType type) {
-        Map<String, AttributeDefinition> definitions = new LinkedHashMap<>();
-        Map<String, List<ConstraintDefinition>> constraints = new LinkedHashMap<>();
+        var definitions = new LinkedHashMap<String, AttributeDefinition>();
+        var constraints = new LinkedHashMap<String, List<ConstraintDefinition>>();
 
-        List<AttributeDefEntity> entities = attributeDefRepository.findAllByType(type);
-        for (AttributeDefEntity entity : entities) {
-            AttributeDefinition attributeDefinition = attributeDefinitionMapper.toDomain(entity);
+        var entities = attributeDefRepository.findAllByType(type);
+        for (var entity : entities) {
+            var attributeDefinition = attributeDefinitionMapper.toDomain(entity);
             definitions.put(entity.getName(), attributeDefinition);
 
-            List<ConstraintDefinition> attributeConstraints = new ArrayList<>();
+            var attributeConstraints = new ArrayList<ConstraintDefinition>();
             attributeConstraints.add(new ConstraintDefinition(attributeDefinition, ConstraintDefinition.Rule.TYPE, null));
             if (entity.isRequired()) {
                 attributeConstraints.add(new ConstraintDefinition(attributeDefinition, ConstraintDefinition.Rule.REQUIRED, null));

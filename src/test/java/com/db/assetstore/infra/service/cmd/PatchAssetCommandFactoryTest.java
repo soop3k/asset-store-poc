@@ -12,15 +12,9 @@ import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
 import com.db.assetstore.domain.service.type.ConstraintDefinition;
 import com.db.assetstore.domain.service.validation.AttributeValidator;
 import com.db.assetstore.domain.service.validation.custom.MatchingAttributesRule;
-import com.db.assetstore.domain.service.validation.rule.CustomRule;
 import com.db.assetstore.domain.service.validation.rule.CustomValidationRuleRegistry;
-import com.db.assetstore.domain.service.validation.rule.EnumRule;
-import com.db.assetstore.domain.service.validation.rule.LengthRule;
-import com.db.assetstore.domain.service.validation.rule.MinMaxRule;
-import com.db.assetstore.domain.service.validation.rule.RequiredRule;
 import com.db.assetstore.domain.service.validation.rule.RuleViolationException;
-import com.db.assetstore.domain.service.validation.rule.TypeRule;
-import com.db.assetstore.domain.service.validation.rule.ValidationRuleRegistry;
+import com.db.assetstore.domain.service.validation.rule.ValidationRuleFactory;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;
 import com.db.assetstore.infra.json.AttributeJsonReader;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -42,15 +36,13 @@ class PatchAssetCommandFactoryTest {
     private PatchAssetCommandFactory factory;
     private AssetPatchRequest request;
     private AttributeDefinitionRegistry registry;
-    private ValidationRuleRegistry ruleRegistry;
     private CustomValidationRuleRegistry customRegistry;
 
     @BeforeEach
     void setUp() {
         registry = new FixedRegistry();
         customRegistry = new CustomValidationRuleRegistry(List.of(new MatchingAttributesRule()));
-        ruleRegistry = ruleRegistry(customRegistry);
-        AttributeValidator validator = new AttributeValidator(registry, ruleRegistry);
+        AttributeValidator validator = new AttributeValidator(registry, ruleFactory(customRegistry));
         AttributeJsonReader reader = new AttributeJsonReader(objectMapper, registry);
         factory = new PatchAssetCommandFactory(validator, reader);
 
@@ -108,15 +100,8 @@ class PatchAssetCommandFactoryTest {
                 .hasMessageContaining("required");
     }
 
-    private ValidationRuleRegistry ruleRegistry(CustomValidationRuleRegistry customRegistry) {
-        return new ValidationRuleRegistry(List.of(
-                new TypeRule(),
-                new RequiredRule(),
-                new MinMaxRule(),
-                new EnumRule(),
-                new LengthRule(),
-                new CustomRule(customRegistry)
-        ));
+    private ValidationRuleFactory ruleFactory(CustomValidationRuleRegistry customRegistry) {
+        return new ValidationRuleFactory(customRegistry);
     }
 
     private ObjectNode attributesNode(String name, BigDecimal imo, boolean active) {
@@ -133,9 +118,9 @@ class PatchAssetCommandFactoryTest {
         private final Map<AssetType, Map<String, List<ConstraintDefinition>>> constraints = new HashMap<>();
 
         private FixedRegistry() {
-            AttributeDefinition name = new AttributeDefinition(AssetType.SHIP, "name", AttributeType.STRING);
-            AttributeDefinition imo = new AttributeDefinition(AssetType.SHIP, "imo", AttributeType.DECIMAL);
-            AttributeDefinition active = new AttributeDefinition(AssetType.SHIP, "active", AttributeType.BOOLEAN);
+            var name = new AttributeDefinition(AssetType.SHIP, "name", AttributeType.STRING, true);
+            var imo = new AttributeDefinition(AssetType.SHIP, "imo", AttributeType.DECIMAL, false);
+            var active = new AttributeDefinition(AssetType.SHIP, "active", AttributeType.BOOLEAN, false);
 
             definitions.put(AssetType.SHIP, Map.of(
                     "name", name,

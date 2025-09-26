@@ -56,10 +56,10 @@ public class SchemaAttributeDefinitionLoader implements AttributeDefinitionLoade
             String name = fieldNames.next();
             JsonNode definitionNode = properties.get(name);
             AttributeType attributeType = readAttributeType(definitionNode);
-            AttributeDefinition attributeDefinition = new AttributeDefinition(assetType, name, attributeType);
+            var attributeDefinition = new AttributeDefinition(assetType, name, attributeType, required.contains(name));
             definitions.put(name, attributeDefinition);
 
-            List<ConstraintDefinition> attributeConstraints = new ArrayList<>();
+            var attributeConstraints = new ArrayList<ConstraintDefinition>();
             attributeConstraints.add(new ConstraintDefinition(attributeDefinition, ConstraintDefinition.Rule.TYPE, null));
             if (required.contains(name)) {
                 attributeConstraints.add(new ConstraintDefinition(attributeDefinition, ConstraintDefinition.Rule.REQUIRED, null));

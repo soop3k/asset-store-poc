@@ -17,14 +17,8 @@ import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
 import com.db.assetstore.domain.service.type.ConstraintDefinition;
 import com.db.assetstore.domain.service.validation.AttributeValidator;
 import com.db.assetstore.domain.service.validation.custom.MatchingAttributesRule;
-import com.db.assetstore.domain.service.validation.rule.CustomRule;
 import com.db.assetstore.domain.service.validation.rule.CustomValidationRuleRegistry;
-import com.db.assetstore.domain.service.validation.rule.EnumRule;
-import com.db.assetstore.domain.service.validation.rule.LengthRule;
-import com.db.assetstore.domain.service.validation.rule.MinMaxRule;
-import com.db.assetstore.domain.service.validation.rule.RequiredRule;
-import com.db.assetstore.domain.service.validation.rule.TypeRule;
-import com.db.assetstore.domain.service.validation.rule.ValidationRuleRegistry;
+import com.db.assetstore.domain.service.validation.rule.ValidationRuleFactory;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;
 import com.db.assetstore.infra.api.dto.AssetDeleteRequest;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;
@@ -47,7 +41,7 @@ class AssetCommandFactoryRegistryTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private AssetCommandFactoryRegistry registry;
     private AttributeDefinitionRegistry attributeDefinitionRegistry;
-    private ValidationRuleRegistry validationRuleRegistry;
+    private ValidationRuleFactory validationRuleFactory;
     private CustomValidationRuleRegistry customRegistry;
     private AssetCreateRequest createRequest;
     private AssetPatchRequest patchRequest;
@@ -57,8 +51,8 @@ class AssetCommandFactoryRegistryTest {
 
         attributeDefinitionRegistry = new FixedRegistry();
         customRegistry = new CustomValidationRuleRegistry(List.of(new MatchingAttributesRule()));
-        validationRuleRegistry = ruleRegistry(customRegistry);
-        AttributeValidator attributeValidator = new AttributeValidator(attributeDefinitionRegistry, validationRuleRegistry);
+        validationRuleFactory = ruleFactory(customRegistry);
+        AttributeValidator attributeValidator = new AttributeValidator(attributeDefinitionRegistry, validationRuleFactory);
         AttributeJsonReader reader = new AttributeJsonReader(objectMapper, attributeDefinitionRegistry);
 
         registry = new AssetCommandFactoryRegistry(
@@ -170,15 +164,8 @@ class AssetCommandFactoryRegistryTest {
                 .hasMessageContaining("match");
     }
 
-    private ValidationRuleRegistry ruleRegistry(CustomValidationRuleRegistry customRegistry) {
-        return new ValidationRuleRegistry(List.of(
-                new TypeRule(),
-                new RequiredRule(),
-                new MinMaxRule(),
-                new EnumRule(),
-                new LengthRule(),
-                new CustomRule(customRegistry)
-        ));
+    private ValidationRuleFactory ruleFactory(CustomValidationRuleRegistry customRegistry) {
+        return new ValidationRuleFactory(customRegistry);
     }
 
     private ObjectNode createAttributesNode() {
@@ -203,12 +190,12 @@ class AssetCommandFactoryRegistryTest {
         private final Map<AssetType, Map<String, List<ConstraintDefinition>>> constraints = new HashMap<>();
 
         private FixedRegistry() {
-            AttributeDefinition city = new AttributeDefinition(AssetType.CRE, "city", AttributeType.STRING);
-            AttributeDefinition area = new AttributeDefinition(AssetType.CRE, "area", AttributeType.DECIMAL);
-            AttributeDefinition activeCre = new AttributeDefinition(AssetType.CRE, "active", AttributeType.BOOLEAN);
-            AttributeDefinition name = new AttributeDefinition(AssetType.SHIP, "name", AttributeType.STRING);
-            AttributeDefinition imo = new AttributeDefinition(AssetType.SHIP, "imo", AttributeType.DECIMAL);
-            AttributeDefinition activeShip = new AttributeDefinition(AssetType.SHIP, "active", AttributeType.BOOLEAN);
+            var city = new AttributeDefinition(AssetType.CRE, "city", AttributeType.STRING, false);
+            var area = new AttributeDefinition(AssetType.CRE, "area", AttributeType.DECIMAL, false);
+            var activeCre = new AttributeDefinition(AssetType.CRE, "active", AttributeType.BOOLEAN, false);
+            var name = new AttributeDefinition(AssetType.SHIP, "name", AttributeType.STRING, true);
+            var imo = new AttributeDefinition(AssetType.SHIP, "imo", AttributeType.DECIMAL, false);
+            var activeShip = new AttributeDefinition(AssetType.SHIP, "active", AttributeType.BOOLEAN, false);
 
             definitions.put(AssetType.CRE, Map.of(
                     "city", city,

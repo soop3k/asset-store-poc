@@ -4,7 +4,6 @@ import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.model.attribute.AttributesCollection;
 import com.db.assetstore.domain.service.type.AttributeDefinition;
-import com.db.assetstore.domain.service.type.ConstraintDefinition;
 import lombok.NonNull;
 
 import java.util.List;
@@ -14,16 +13,12 @@ public final class AttributeValidationContext {
     private final AssetType assetType;
     private final AttributeDefinition definition;
     private final AttributesCollection attributes;
-    private final ConstraintDefinition constraint;
-
     public AttributeValidationContext(@NonNull AssetType assetType,
                                       @NonNull AttributeDefinition definition,
-                                      AttributesCollection attributes,
-                                      ConstraintDefinition constraint) {
+                                      AttributesCollection attributes) {
         this.assetType = assetType;
         this.definition = definition;
         this.attributes = attributes == null ? AttributesCollection.empty() : attributes;
-        this.constraint = constraint;
     }
 
     public AssetType assetType() {
@@ -42,11 +37,4 @@ public final class AttributeValidationContext {
         return attributes;
     }
 
-    public ConstraintDefinition constraint() {
-        return constraint;
-    }
-
-    public AttributeValidationContext withConstraint(ConstraintDefinition newConstraint) {
-        return new AttributeValidationContext(assetType, definition, attributes, newConstraint);
-    }
 }
