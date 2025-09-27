@@ -29,11 +29,11 @@ public final class MinMaxRule implements ValidationRule {
             var number = toDecimal(value);
             if (min != null && number.compareTo(min) < 0) {
                 throw new RuleViolationException(rule().name(), attributeName,
-                        "Value " + number + " is less than minimum " + min);
+                        "Value is less than the minimum", ">=" + min, number);
             }
             if (max != null && number.compareTo(max) > 0) {
                 throw new RuleViolationException(rule().name(), attributeName,
-                        "Value " + number + " exceeds maximum " + max);
+                        "Value exceeds the maximum", "<=" + max, number);
             }
         });
     }
@@ -77,7 +77,7 @@ public final class MinMaxRule implements ValidationRule {
                     return new BigDecimal(v);
                 } catch (NumberFormatException ex) {
                     throw new RuleViolationException(rule().name(), name,
-                            "Value '" + v + "' is not numeric");
+                            "Value is not numeric", "numeric", v);
                 }
             }
 
@@ -89,7 +89,7 @@ public final class MinMaxRule implements ValidationRule {
             @Override
             public BigDecimal visitBoolean(Boolean v, String name) {
                 throw new RuleViolationException(rule().name(), name,
-                        "Boolean value not allowed for numeric constraint");
+                        "Boolean value not allowed for numeric constraint", "numeric", v);
             }
         });
     }

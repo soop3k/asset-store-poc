@@ -28,7 +28,7 @@ public final class TypeRule implements ValidationRule {
             }
             if (value.attributeType() != expectedType) {
                 throw new RuleViolationException(rule().name(), attributeName,
-                        "Attribute type mismatch. Expected " + expectedType + " but got " + value.attributeType());
+                        "Attribute type mismatch", expectedType, value.attributeType());
             }
             value.accept(new AttributeValueVisitor<Void>() {
                 @Override
@@ -57,7 +57,7 @@ public final class TypeRule implements ValidationRule {
 
                 private RuleViolationException mismatch(AttributeType actualType, String attribute) {
                     return new RuleViolationException(rule().name(), attribute,
-                            "Attribute type mismatch. Expected " + expectedType + " but got " + actualType);
+                            "Attribute type mismatch", expectedType, actualType);
                 }
             });
         }

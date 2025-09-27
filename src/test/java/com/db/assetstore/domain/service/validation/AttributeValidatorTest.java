@@ -8,9 +8,9 @@ import com.db.assetstore.domain.model.type.AttributeType;
 import com.db.assetstore.domain.service.type.AttributeDefinition;
 import com.db.assetstore.domain.service.type.ConstraintDefinition;
 import com.db.assetstore.domain.service.type.ConstraintDefinition.Rule;
-import com.db.assetstore.domain.service.validation.rule.CustomValidationRuleRegistry;
+import com.db.assetstore.domain.service.validation.rule.AttributeValidationErrorsException;
 import com.db.assetstore.domain.service.validation.ValidationMode;
-import com.db.assetstore.domain.service.validation.rule.RuleViolationException;
+import com.db.assetstore.domain.service.validation.rule.CustomValidationRuleRegistry;
 import com.db.assetstore.domain.service.validation.rule.ValidationRuleFactory;
 import com.db.assetstore.testutil.TestAttributeDefinitionRegistry;
 import com.db.assetstore.testutil.validation.MatchingAttributesRule;
@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static com.db.assetstore.testutil.AttributeTestHelpers.constraint;
@@ -36,8 +37,16 @@ class AttributeValidatorTest {
         AttributeValidator validator = validator(defs, constraints);
 
         assertThatThrownBy(() -> validator.validate(AssetType.CRE, AttributesCollection.empty(), ValidationMode.FULL))
-                .isInstanceOf(RuleViolationException.class)
-                .hasMessageContaining("required");
+                .isInstanceOf(AttributeValidationErrorsException.class)
+                .satisfies(ex -> {
+                    var errors = (AttributeValidationErrorsException) ex;
+                    assertThat(errors.violations()).anySatisfy(v -> {
+                        assertThat(v.rule()).isEqualTo(Rule.REQUIRED.name());
+                        assertThat(v.attributes()).contains("name");
+                        assertThat(v.expected()).isEqualTo("non-null value");
+                        assertThat(v.actual()).isEqualTo("<absent>");
+                    });
+                });
     }
 
     @Test
@@ -64,8 +73,14 @@ class AttributeValidatorTest {
 
         assertThatThrownBy(() -> validator.validate(AssetType.CRE,
                 AttributesCollection.fromFlat(List.of(new AVString("name", null)))))
-                .isInstanceOf(RuleViolationException.class)
-                .hasMessageContaining("required");
+                .isInstanceOf(AttributeValidationErrorsException.class)
+                .satisfies(ex -> {
+                    var errors = (AttributeValidationErrorsException) ex;
+                    assertThat(errors.violations()).anySatisfy(v -> {
+                        assertThat(v.rule()).isEqualTo(Rule.REQUIRED.name());
+                        assertThat(v.actual()).isNull();
+                    });
+                });
     }
 
     @Test
@@ -79,8 +94,15 @@ class AttributeValidatorTest {
         assertThatThrownBy(() -> validator.validate(AssetType.CRE,
                 AttributesCollection.fromFlat(List.of(new AVString("unknown", "value"))),
                 ValidationMode.STRICT))
-                .isInstanceOf(RuleViolationException.class)
-                .hasMessageContaining("Unknown attribute definition");
+                .isInstanceOf(AttributeValidationErrorsException.class)
+                .satisfies(ex -> {
+                    var errors = (AttributeValidationErrorsException) ex;
+                    assertThat(errors.violations()).anySatisfy(v -> {
+                        assertThat(v.rule()).isEqualTo("UNKNOWN_ATTRIBUTE");
+                        assertThat(v.attributes()).contains("unknown");
+                        assertThat(v.expected()).asString().contains("name");
+                    });
+                });
     }
 
     @Test
@@ -102,8 +124,14 @@ class AttributeValidatorTest {
 
         assertThatThrownBy(() -> validator.validate(AssetType.CRE,
                 AttributesCollection.fromFlat(List.of(new AVString("name", "alpha"), new AVString("code", "beta")))))
-                .isInstanceOf(RuleViolationException.class)
-                .hasMessageContaining("Attributes must match");
+                .isInstanceOf(AttributeValidationErrorsException.class)
+                .satisfies(ex -> {
+                    var errors = (AttributeValidationErrorsException) ex;
+                    assertThat(errors.violations()).anySatisfy(v -> {
+                        assertThat(v.rule()).isEqualTo(Rule.CUSTOM.name());
+                        assertThat(v.message()).contains("Attributes must match");
+                    });
+                });
     }
 
     @Test
@@ -121,13 +149,15 @@ class AttributeValidatorTest {
 
         assertThatThrownBy(() -> validator.validate(AssetType.CRE,
                 AttributesCollection.fromFlat(List.of(AVDecimal.of("area", 25)))))
-                .isInstanceOf(RuleViolationException.class)
-                .hasMessageContaining("exceeds maximum");
+                .isInstanceOf(AttributeValidationErrorsException.class)
+                .satisfies(ex -> assertNumericViolation((AttributeValidationErrorsException) ex,
+                        Rule.MIN_MAX.name(), "<=" + new java.math.BigDecimal("20"), new java.math.BigDecimal("25")));
 
         assertThatThrownBy(() -> validator.validate(AssetType.CRE,
                 AttributesCollection.fromFlat(List.of(AVDecimal.of("area", 5)))))
-                .isInstanceOf(RuleViolationException.class)
-                .hasMessageContaining("less than minimum");
+                .isInstanceOf(AttributeValidationErrorsException.class)
+                .satisfies(ex -> assertNumericViolation((AttributeValidationErrorsException) ex,
+                        Rule.MIN_MAX.name(), ">=" + new java.math.BigDecimal("10"), new java.math.BigDecimal("5")));
     }
 
     @Test
@@ -145,8 +175,15 @@ class AttributeValidatorTest {
 
         assertThatThrownBy(() -> validator.validate(AssetType.CRE,
                 AttributesCollection.fromFlat(List.of(new AVString("status", "pending")))))
-                .isInstanceOf(RuleViolationException.class)
-                .hasMessageContaining("is not allowed");
+                .isInstanceOf(AttributeValidationErrorsException.class)
+                .satisfies(ex -> {
+                    var errors = (AttributeValidationErrorsException) ex;
+                    assertThat(errors.violations()).anySatisfy(v -> {
+                        assertThat(v.rule()).isEqualTo(Rule.ENUM.name());
+                        assertThat(v.expected().toString()).contains("draft");
+                        assertThat(v.actual()).isEqualTo("pending");
+                    });
+                });
     }
 
     @Test
@@ -164,8 +201,14 @@ class AttributeValidatorTest {
 
         assertThatThrownBy(() -> validator.validate(AssetType.CRE,
                 AttributesCollection.fromFlat(List.of(new AVString("description", "too long")))))
-                .isInstanceOf(RuleViolationException.class)
-                .hasMessageContaining("Length must be less than or equal to 5");
+                .isInstanceOf(AttributeValidationErrorsException.class)
+                .satisfies(ex -> {
+                    var errors = (AttributeValidationErrorsException) ex;
+                    assertThat(errors.violations()).anySatisfy(v -> {
+                        assertThat(v.rule()).isEqualTo(Rule.LENGTH.name());
+                        assertThat(v.expected()).isEqualTo("<=5");
+                    });
+                });
     }
 
     @Test
@@ -178,8 +221,25 @@ class AttributeValidatorTest {
 
         assertThatThrownBy(() -> validator.validate(AssetType.CRE,
                 AttributesCollection.fromFlat(List.of(new AVString("weight", "heavy")))))
-                .isInstanceOf(RuleViolationException.class)
-                .hasMessageContaining("Attribute type mismatch");
+                .isInstanceOf(AttributeValidationErrorsException.class)
+                .satisfies(ex -> {
+                    var errors = (AttributeValidationErrorsException) ex;
+                    assertThat(errors.violations()).anySatisfy(v -> {
+                        assertThat(v.rule()).isEqualTo(Rule.TYPE.name());
+                        assertThat(v.expected()).isEqualTo(AttributeType.DECIMAL);
+                        assertThat(v.actual()).isEqualTo(AttributeType.STRING);
+                    });
+                });
+
+    private void assertNumericViolation(AttributeValidationErrorsException exception,
+                                        String rule,
+                                        Object expected,
+                                        Object actual) {
+        assertThat(exception.violations()).anySatisfy(v -> {
+            assertThat(v.rule()).isEqualTo(rule);
+            assertThat(v.expected()).isEqualTo(expected);
+            assertThat(v.actual()).isEqualTo(actual);
+        });
     }
 
     private static CustomValidationRuleRegistry customRegistry() {

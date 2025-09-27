@@ -4,6 +4,7 @@ import com.db.assetstore.domain.model.attribute.AttributeValueVisitor;
 import com.db.assetstore.domain.service.type.ConstraintDefinition;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -43,7 +44,7 @@ public final class EnumRule implements ValidationRule {
             });
             if (!match) {
                 throw new RuleViolationException(rule().name(), attributeName,
-                        "Value '" + value.value() + "' is not allowed");
+                        "Value is not in the allowed list", allowedValues.describe(), value.value());
             }
         });
     }
@@ -91,5 +92,19 @@ public final class EnumRule implements ValidationRule {
     private record AllowedValues(Set<String> strings,
                                  Set<BigDecimal> decimals,
                                  Set<Boolean> booleans) {
+
+        String describe() {
+            var parts = new ArrayList<String>();
+            if (!strings.isEmpty()) {
+                parts.add("strings=" + strings);
+            }
+            if (!decimals.isEmpty()) {
+                parts.add("decimals=" + decimals);
+            }
+            if (!booleans.isEmpty()) {
+                parts.add("booleans=" + booleans);
+            }
+            return parts.isEmpty() ? "[]" : String.join("; ", parts);
+        }
     }
 }

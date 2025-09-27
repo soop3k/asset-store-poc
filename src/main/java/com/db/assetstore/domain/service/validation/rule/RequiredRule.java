@@ -24,17 +24,17 @@ public final class RequiredRule implements ValidationRule {
     public void validate(AttributeValidationContext context) {
         if (context.values().isEmpty()) {
             throw new RuleViolationException(rule().name(), attributeName,
-                    "Attribute is required");
+                    "Attribute is required", "non-null value", "<absent>");
         }
         for (var value : context.values()) {
             if (value == null || value.value() == null) {
                 throw new RuleViolationException(rule().name(), attributeName,
-                        "Attribute is required");
+                        "Attribute is required", "non-null value", null);
             }
             var raw = value.value();
             if (raw instanceof CharSequence sequence && sequence.toString().isBlank()) {
                 throw new RuleViolationException(rule().name(), attributeName,
-                        "Attribute must not be blank");
+                        "Attribute must not be blank", "non-blank text", raw);
             }
         }
     }

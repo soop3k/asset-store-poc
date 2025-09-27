@@ -58,7 +58,7 @@ public final class LengthRule implements ValidationRule {
     private void ensureLength(int length) {
         if (length > max) {
             throw new RuleViolationException(rule().name(), attributeName,
-                    "Length must be less than or equal to " + max);
+                    "Length exceeds the maximum", "<=" + max, length);
         }
     }
 }

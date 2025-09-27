@@ -9,8 +9,8 @@ import com.db.assetstore.domain.service.cmd.PatchAssetCommand;
 import com.db.assetstore.domain.service.cmd.factory.PatchAssetCommandFactory;
 import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
 import com.db.assetstore.domain.service.validation.AttributeValidator;
+import com.db.assetstore.domain.service.validation.rule.AttributeValidationErrorsException;
 import com.db.assetstore.domain.service.validation.rule.CustomValidationRuleRegistry;
-import com.db.assetstore.domain.service.validation.rule.RuleViolationException;
 import com.db.assetstore.domain.service.validation.rule.ValidationRuleFactory;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;
 import com.db.assetstore.infra.json.AttributeJsonReader;
@@ -110,8 +110,14 @@ class PatchAssetCommandFactoryTest {
         request.setAttributes(node);
 
         assertThatThrownBy(() -> factory.createCommand(AssetType.SHIP, "asset-2", request))
-                .isInstanceOf(RuleViolationException.class)
-                .hasMessageContaining("required");
+                .isInstanceOf(AttributeValidationErrorsException.class)
+                .satisfies(ex -> {
+                    var errors = (AttributeValidationErrorsException) ex;
+                    assertThat(errors.violations()).anySatisfy(v -> {
+                        assertThat(v.rule()).isEqualTo(REQUIRED.name());
+                        assertThat(v.actual()).isNull();
+                    });
+                });
     }
 
     private ValidationRuleFactory ruleFactory(CustomValidationRuleRegistry customRegistry) {
