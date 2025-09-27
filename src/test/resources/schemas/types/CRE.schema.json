@@ -7,13 +7,13 @@
     "city": {
       "type": "string",
       "x-customRules": [
-        { "class": "MatchingAttributesRule" }
+        "MatchingAttributesRule"
       ]
     },
     "area": { "type": "number" },
     "rooms": {
       "type": "integer",
-      "x-customRules": "com.db.assetstore.testutil.validation.MatchingAttributesRule"
+      "x-customRules": "MatchingAttributesRule"
     },
     "active": { "type": "boolean" }
   },

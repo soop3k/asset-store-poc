@@ -15,8 +15,9 @@ public final class CustomValidationRuleRegistry {
     public CustomValidationRuleRegistry(List<CustomValidationRule> customRules) {
         var map = new LinkedHashMap<String, CustomValidationRule>();
         for (var rule : customRules) {
-            var name = normalize(rule.name());
-            map.putIfAbsent(name, rule);
+            register(map, rule.name(), rule);
+            register(map, rule.getClass().getSimpleName(), rule);
+            register(map, rule.getClass().getName(), rule);
         }
         this.rulesByName = Map.copyOf(map);
     }
@@ -30,5 +31,14 @@ public final class CustomValidationRuleRegistry {
 
     private static String normalize(String name) {
         return name == null ? null : name.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private static void register(Map<String, CustomValidationRule> target,
+                                 String key,
+                                 CustomValidationRule rule) {
+        if (key == null || key.isBlank()) {
+            return;
+        }
+        target.putIfAbsent(normalize(key), rule);
     }
 }

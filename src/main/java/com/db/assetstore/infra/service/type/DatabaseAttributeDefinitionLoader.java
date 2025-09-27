@@ -4,7 +4,6 @@ import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.service.type.AttributeDefinition;
 import com.db.assetstore.domain.service.type.AttributeDefinitionLoader;
 import com.db.assetstore.domain.service.type.ConstraintDefinition;
-import com.db.assetstore.domain.service.validation.rule.CustomRuleNameResolver;
 import com.db.assetstore.infra.mapper.AttributeDefinitionMapper;
 import com.db.assetstore.infra.repository.AttributeDefRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -74,15 +73,38 @@ public class DatabaseAttributeDefinitionLoader implements AttributeDefinitionLoa
             try {
                 JsonNode node = objectMapper.readTree(trimmed);
                 if (node.hasNonNull("name")) {
-                    return node.get("name").asText();
+                    return normalizeName(node.get("name").asText());
                 }
                 if (node.hasNonNull("class")) {
-                    return CustomRuleNameResolver.fromClassName(node.get("class").asText());
+                    return simpleClassName(node.get("class").asText());
                 }
             } catch (JsonProcessingException ex) {
                 throw new IllegalStateException("Unable to parse custom constraint value: " + rawValue, ex);
             }
         }
+        return simpleClassName(trimmed);
+    }
+
+    private String normalizeName(String value) {
+        if (value == null) {
+            return null;
+        }
+        var trimmed = value.trim();
+        if (trimmed.isEmpty()) {
+            return null;
+        }
         return trimmed;
+    }
+
+    private String simpleClassName(String className) {
+        var normalized = normalizeName(className);
+        if (normalized == null) {
+            return null;
+        }
+        int lastDot = normalized.lastIndexOf('.');
+        if (lastDot >= 0 && lastDot < normalized.length() - 1) {
+            return normalized.substring(lastDot + 1);
+        }
+        return normalized;
     }
 }

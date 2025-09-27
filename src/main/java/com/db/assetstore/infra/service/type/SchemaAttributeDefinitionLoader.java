@@ -21,7 +21,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import com.db.assetstore.domain.service.validation.rule.CustomRuleNameResolver;
 
 @Slf4j
 @Component
@@ -196,19 +195,28 @@ public class SchemaAttributeDefinitionLoader implements AttributeDefinitionLoade
             return;
         }
 
-        String className = null;
-        if (node.isTextual()) {
-            className = node.asText();
-        } else if (node.isObject()) {
-            var classNode = node.get("class");
-            if (classNode != null && classNode.isTextual()) {
-                className = classNode.asText();
-            }
+        if (!node.isTextual()) {
+            return;
         }
 
-        var resolved = CustomRuleNameResolver.fromClassName(className);
+        var resolved = simpleClassName(node.asText());
         if (resolved != null && !resolved.isBlank()) {
             target.add(new ConstraintDefinition(definition, ConstraintDefinition.Rule.CUSTOM, resolved));
         }
+    }
+
+    private static String simpleClassName(String value) {
+        if (value == null) {
+            return null;
+        }
+        var trimmed = value.trim();
+        if (trimmed.isEmpty()) {
+            return null;
+        }
+        int lastDot = trimmed.lastIndexOf('.');
+        if (lastDot >= 0 && lastDot < trimmed.length() - 1) {
+            return trimmed.substring(lastDot + 1);
+        }
+        return trimmed;
     }
 }
