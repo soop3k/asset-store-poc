@@ -1,8 +1,6 @@
-package com.db.assetstore.domain.service;
+package com.db.assetstore.domain.service.asset;
 
 import com.db.assetstore.domain.model.attribute.AttributeHistory;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 

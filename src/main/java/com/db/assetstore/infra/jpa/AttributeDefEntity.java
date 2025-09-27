@@ -10,6 +10,8 @@ import com.db.assetstore.AssetType;
 import java.util.ArrayList;
 import java.util.List;
 
+import java.util.Collections;
+
 @Entity
 @Table(name = "asset_attribute_def")
 @Getter
@@ -42,4 +44,5 @@ public class AttributeDefEntity {
         this.valueType = valueType;
         this.required = required;
     }
+
 }

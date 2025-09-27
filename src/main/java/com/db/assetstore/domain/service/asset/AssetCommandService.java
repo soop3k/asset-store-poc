@@ -1,10 +1,10 @@
-package com.db.assetstore.domain.service;
+package com.db.assetstore.domain.service.asset;
 
 import com.db.assetstore.domain.service.cmd.AssetCommand;
 import com.db.assetstore.domain.service.cmd.CommandResult;
-import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
-import com.db.assetstore.domain.service.cmd.DeleteAssetCommand;
-import com.db.assetstore.domain.service.cmd.PatchAssetCommand;
+import com.db.assetstore.domain.service.asset.cmd.CreateAssetCommand;
+import com.db.assetstore.domain.service.asset.cmd.DeleteAssetCommand;
+import com.db.assetstore.domain.service.asset.cmd.PatchAssetCommand;
 
 public interface AssetCommandService {
 

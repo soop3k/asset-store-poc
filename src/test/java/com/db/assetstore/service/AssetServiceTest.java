@@ -2,9 +2,9 @@ package com.db.assetstore.service;
 
 import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.service.cmd.CommandResult;
-import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
-import com.db.assetstore.domain.service.cmd.DeleteAssetCommand;
-import com.db.assetstore.domain.service.cmd.PatchAssetCommand;
+import com.db.assetstore.domain.service.asset.cmd.CreateAssetCommand;
+import com.db.assetstore.domain.service.asset.cmd.DeleteAssetCommand;
+import com.db.assetstore.domain.service.asset.cmd.PatchAssetCommand;
 import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.infra.jpa.AssetEntity;
 import com.db.assetstore.infra.jpa.AttributeEntity;

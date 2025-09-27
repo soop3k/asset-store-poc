@@ -1,8 +1,8 @@
-package com.db.assetstore.domain.service.cmd.factory;
+package com.db.assetstore.domain.service.asset.cmd.factory;
 
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.model.attribute.AttributesCollection;
-import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
+import com.db.assetstore.domain.service.asset.cmd.CreateAssetCommand;
 import com.db.assetstore.domain.service.validation.AttributeValidator;
 import com.db.assetstore.domain.service.validation.ValidationMode;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;

@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -40,10 +41,6 @@ public class SchemaAttributeDefinitionLoader implements AttributeDefinitionLoade
     private AttributeDefinitions parseSchema(AssetType assetType, JsonNode schema) {
         var definitions = new LinkedHashMap<String, AttributeDefinition>();
         var constraints = new LinkedHashMap<String, List<ConstraintDefinition>>();
-        if (schema == null || !schema.isObject()) {
-            log.debug("Schema for {} is not an object node", assetType);
-            return new AttributeDefinitions(definitions, constraints);
-        }
 
         var required = readRequired(schema.get("required"));
         var properties = schema.get("properties");
@@ -86,13 +83,11 @@ public class SchemaAttributeDefinitionLoader implements AttributeDefinitionLoade
         if (requiredNode == null || !requiredNode.isArray()) {
             return Collections.emptySet();
         }
-        var required = new HashSet<String>();
-        requiredNode.forEach(node -> {
-            if (node.isTextual()) {
-                required.add(node.asText());
-            }
-        });
-        return required;
+
+        return requiredNode.valueStream()
+                .filter(JsonNode::isTextual)
+                .map(JsonNode::asText)
+                .collect(Collectors.toSet());
     }
 
     private static AttributeType readAttributeType(JsonNode definitionNode) {
@@ -106,7 +101,6 @@ public class SchemaAttributeDefinitionLoader implements AttributeDefinitionLoade
         return switch (typeNode.asText()) {
             case "integer", "number" -> AttributeType.DECIMAL;
             case "boolean" -> AttributeType.BOOLEAN;
-            case "string" -> AttributeType.STRING;
             default -> AttributeType.STRING;
         };
     }
@@ -131,11 +125,8 @@ public class SchemaAttributeDefinitionLoader implements AttributeDefinitionLoade
         if (minValue == null && maxValue == null) {
             return Optional.empty();
         }
-        var builder = new StringBuilder();
-        builder.append(minValue != null ? minValue : "");
-        builder.append(',');
-        builder.append(maxValue != null ? maxValue : "");
-        return Optional.of(builder.toString());
+        String builder = (minValue != null ? minValue : "") +  ',' + (maxValue != null ? maxValue : "");
+        return Optional.of(builder);
     }
 
     private static Optional<String> readEnumRule(JsonNode definitionNode) {
@@ -146,15 +137,16 @@ public class SchemaAttributeDefinitionLoader implements AttributeDefinitionLoade
         if (enumNode == null || !enumNode.isArray() || enumNode.isEmpty()) {
             return Optional.empty();
         }
-        var values = new ArrayList<String>();
-        enumNode.forEach(node -> {
-            if (node.isValueNode()) {
-                values.add(node.asText());
-            }
-        });
+
+        var values = enumNode.valueStream()
+                .filter(JsonNode::isValueNode)
+                .map(JsonNode::asText)
+                .toList();
+
         if (values.isEmpty()) {
             return Optional.empty();
         }
+
         return Optional.of(String.join(",", values));
     }
 
@@ -199,20 +191,10 @@ public class SchemaAttributeDefinitionLoader implements AttributeDefinitionLoade
             return;
         }
 
-        var resolved = normalizeCustomRuleName(node.asText());
-        if (resolved != null && !resolved.isBlank()) {
-            target.add(new ConstraintDefinition(definition, ConstraintDefinition.Rule.CUSTOM, resolved));
+        var val = node.asText();
+        if (val != null && !val.isBlank()) {
+            target.add(new ConstraintDefinition(definition, ConstraintDefinition.Rule.CUSTOM, val));
         }
     }
 
-    private static String normalizeCustomRuleName(String value) {
-        if (value == null) {
-            return null;
-        }
-        var trimmed = value.trim();
-        if (trimmed.isEmpty()) {
-            return null;
-        }
-        return trimmed;
-    }
 }

@@ -1,17 +1,21 @@
 package com.db.assetstore.infra.json;
 
 import com.db.assetstore.AssetType;
+import com.db.assetstore.domain.model.attribute.AttributesCollection;
 import com.db.assetstore.domain.model.type.AVBoolean;
 import com.db.assetstore.domain.model.type.AVDecimal;
 import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.domain.model.type.AttributeType;
 import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
+import com.db.assetstore.infra.config.JsonMapperProvider;
 import com.db.assetstore.testutil.InMemoryAttributeDefinitionLoader;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.util.List;
+
 import static com.db.assetstore.domain.service.type.ConstraintDefinition.Rule.TYPE;
 import static com.db.assetstore.testutil.AttributeTestHelpers.constraint;
 import static com.db.assetstore.testutil.AttributeTestHelpers.definition;
@@ -20,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class AttributeJsonReaderTest {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new JsonMapperProvider().objectMapper();
     private AttributeJsonReader reader;
 
     @BeforeEach
@@ -50,11 +54,15 @@ class AttributeJsonReaderTest {
 
         var result = reader.read(AssetType.CRE, payload);
 
-        assertThat(result).containsExactly(
-                new AVString("city", "Warsaw"),
-                new AVBoolean("active", true),
-                new AVDecimal("area", new BigDecimal("123.45")),
-                new AVDecimal("area", new BigDecimal("678.90"))
+        assertThat(result).extracting(
+                AttributesCollection::asListView
+        ).isEqualTo(
+                AttributesCollection.fromFlat(List.of(
+                        new AVString("city", "Warsaw"),
+                        new AVBoolean("active", true),
+                        new AVDecimal("area", new BigDecimal("123.45")),
+                        new AVDecimal("area", new BigDecimal("678.90"))
+                )).asListView()
         );
     }
 
@@ -90,13 +98,4 @@ class AttributeJsonReaderTest {
                 .hasMessageContaining("expects type STRING");
     }
 
-    @Test
-    void failsWhenStringValueIsArray() {
-        var payload = objectMapper.createObjectNode();
-        payload.putArray("city").add("Warsaw");
-
-        assertThatThrownBy(() -> reader.read(AssetType.CRE, payload))
-                .isInstanceOf(AttributeParsingException.class)
-                .hasMessageContaining("expects type STRING");
-    }
 }

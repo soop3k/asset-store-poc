@@ -25,7 +25,7 @@ public class ConstraintDefEntity {
     @Column(name = "name", length = 64, nullable = false)
     private ConstraintDefinition.Rule rule;
 
-    @Column(name = "value", length = 2048)
+    @Column(name = "rule_value", length = 2048)
     private String value;
 
     public ConstraintDefEntity(AttributeDefEntity attributeDefinition, ConstraintDefinition.Rule rule, String value) {

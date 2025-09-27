@@ -33,9 +33,6 @@ public class AttributeValidator {
     public void validate(AssetType type,
                          AttributesCollection attributes,
                          ValidationMode mode) {
-        Objects.requireNonNull(type, "asset type must not be null");
-        Objects.requireNonNull(attributes, "attributes must not be null");
-        Objects.requireNonNull(mode, "validation mode must not be null");
         validateInternal(type, attributes, mode);
     }
 

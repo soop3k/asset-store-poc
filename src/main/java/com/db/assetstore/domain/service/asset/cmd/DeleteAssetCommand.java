@@ -1,5 +1,8 @@
-package com.db.assetstore.domain.service.cmd;
+package com.db.assetstore.domain.service.asset.cmd;
 
+import com.db.assetstore.domain.service.cmd.AssetCommand;
+import com.db.assetstore.domain.service.cmd.AssetCommandVisitor;
+import com.db.assetstore.domain.service.cmd.CommandResult;
 import lombok.Builder;
 import lombok.NonNull;
 

@@ -1,7 +1,7 @@
 package com.db.assetstore.infra.service;
 
 import com.db.assetstore.domain.model.Asset;
-import com.db.assetstore.domain.service.AssetQueryService;
+import com.db.assetstore.domain.service.asset.AssetQueryService;
 import com.db.assetstore.domain.search.SearchCriteria;
 import com.db.assetstore.infra.jpa.AssetEntity;
 import com.db.assetstore.infra.mapper.AssetMapper;

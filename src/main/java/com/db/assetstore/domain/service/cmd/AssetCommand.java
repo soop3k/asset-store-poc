@@ -1,9 +1,10 @@
 package com.db.assetstore.domain.service.cmd;
 
+import com.db.assetstore.domain.service.asset.AssetCommandService;
 import lombok.NonNull;
 
 /**
- * Marker interface for commands executed by the {@link com.db.assetstore.domain.service.AssetCommandService}.
+ * Marker interface for commands executed by the {@link AssetCommandService}.
  * Provides the command name so infrastructure components can log or persist it without hardcoded values.
  */
 public interface AssetCommand<R> {

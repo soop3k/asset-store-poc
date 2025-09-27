@@ -21,14 +21,11 @@ public class AttributeValueAssembler {
 
     private final AttributeDefinitionRegistry attributeDefinitionRegistry;
 
-    AttributeValueAssembler(AttributeDefinitionRegistry attributeDefinitionRegistry) {
+    public AttributeValueAssembler(AttributeDefinitionRegistry attributeDefinitionRegistry) {
         this.attributeDefinitionRegistry = attributeDefinitionRegistry;
     }
 
     AttributesCollection assemble(AssetType type, List<ParsedAttributeValue> rawValues) {
-        if (rawValues.isEmpty()) {
-            return AttributesCollection.empty();
-        }
         var definitions = attributeDefinitionRegistry.getDefinitions(type);
         var values = new ArrayList<AttributeValue<?>>();
 

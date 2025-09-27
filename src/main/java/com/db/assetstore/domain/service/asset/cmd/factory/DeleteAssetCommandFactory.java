@@ -1,6 +1,6 @@
-package com.db.assetstore.domain.service.cmd.factory;
+package com.db.assetstore.domain.service.asset.cmd.factory;
 
-import com.db.assetstore.domain.service.cmd.DeleteAssetCommand;
+import com.db.assetstore.domain.service.asset.cmd.DeleteAssetCommand;
 import com.db.assetstore.infra.api.dto.AssetDeleteRequest;
 import lombok.NonNull;
 import org.springframework.stereotype.Component;

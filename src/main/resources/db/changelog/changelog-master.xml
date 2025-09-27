@@ -217,7 +217,7 @@
             <column name="name" type="varchar(64)">
                 <constraints nullable="false"/>
             </column>
-            <column name="value" type="varchar(2048)"/>
+            <column name="rule_value" type="varchar(2048)"/>
         </createTable>
         <addForeignKeyConstraint baseTableName="asset_attribute_constraint_def" baseColumnNames="attribute_def_id"
                                   referencedTableName="asset_attribute_def" referencedColumnNames="id"

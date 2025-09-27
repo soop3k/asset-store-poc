@@ -1,12 +1,12 @@
 package com.db.assetstore.infra.service.cmd;
 
-import com.db.assetstore.domain.service.AssetCommandService;
+import com.db.assetstore.domain.service.asset.AssetCommandService;
 import com.db.assetstore.domain.service.cmd.AssetCommand;
 import com.db.assetstore.domain.service.cmd.AssetCommandVisitor;
 import com.db.assetstore.domain.service.cmd.CommandResult;
-import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
-import com.db.assetstore.domain.service.cmd.DeleteAssetCommand;
-import com.db.assetstore.domain.service.cmd.PatchAssetCommand;
+import com.db.assetstore.domain.service.asset.cmd.CreateAssetCommand;
+import com.db.assetstore.domain.service.asset.cmd.DeleteAssetCommand;
+import com.db.assetstore.domain.service.asset.cmd.PatchAssetCommand;
 import com.db.assetstore.domain.service.link.cmd.CreateAssetLinkCommand;
 import com.db.assetstore.domain.service.link.cmd.DeleteAssetLinkCommand;
 import com.db.assetstore.infra.service.link.AssetLinkService;

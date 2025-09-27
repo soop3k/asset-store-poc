@@ -37,7 +37,6 @@ public class AssetSearchSpecificationService {
     private <T> Predicate attributeMatch(CriteriaBuilder cb,
                                          Root<T> root,
                                          Condition<?> cond) {
-        // create a dedicated join for every condition to avoid cross-condition conflicts
         Join<Object, Object> a = root.join("attributes", JoinType.INNER);
         List<Predicate> sp = new ArrayList<>();
         sp.add(cb.equal(a.get("name"), cond.attribute()));

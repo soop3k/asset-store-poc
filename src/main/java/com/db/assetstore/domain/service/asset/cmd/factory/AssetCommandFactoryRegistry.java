@@ -1,9 +1,9 @@
-package com.db.assetstore.domain.service.cmd.factory;
+package com.db.assetstore.domain.service.asset.cmd.factory;
 
 import com.db.assetstore.AssetType;
-import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
-import com.db.assetstore.domain.service.cmd.DeleteAssetCommand;
-import com.db.assetstore.domain.service.cmd.PatchAssetCommand;
+import com.db.assetstore.domain.service.asset.cmd.CreateAssetCommand;
+import com.db.assetstore.domain.service.asset.cmd.DeleteAssetCommand;
+import com.db.assetstore.domain.service.asset.cmd.PatchAssetCommand;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;
 import com.db.assetstore.infra.api.dto.AssetDeleteRequest;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;

@@ -59,18 +59,9 @@ public final class TypeSchemaRegistry {
         return Collections.unmodifiableSet(entries.keySet());
     }
 
-    public Optional<String> getSchemaPath(AssetType type) {
-        Entry e = entries.get(type);
-        return e == null ? Optional.empty() : Optional.of(e.path());
-    }
-
     public Optional<JsonNode> getSchemaNode(AssetType type) {
         Entry e = entries.get(type);
         return e == null ? Optional.empty() : Optional.of(e.node());
     }
 
-    public Optional<JsonSchema> getCompiledSchema(AssetType type) {
-        Entry e = entries.get(type);
-        return e == null ? Optional.empty() : Optional.of(e.compiled());
-    }
 }

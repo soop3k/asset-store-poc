@@ -2,12 +2,12 @@ package com.db.assetstore.infra.api;
 
 import com.db.assetstore.domain.model.Asset;
 import com.db.assetstore.domain.search.SearchCriteria;
-import com.db.assetstore.domain.service.AssetCommandService;
-import com.db.assetstore.domain.service.AssetQueryService;
+import com.db.assetstore.domain.service.asset.AssetCommandService;
+import com.db.assetstore.domain.service.asset.AssetQueryService;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;
 import com.db.assetstore.infra.api.dto.AssetDeleteRequest;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;
-import com.db.assetstore.domain.service.cmd.factory.AssetCommandFactoryRegistry;
+import com.db.assetstore.domain.service.asset.cmd.factory.AssetCommandFactoryRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;

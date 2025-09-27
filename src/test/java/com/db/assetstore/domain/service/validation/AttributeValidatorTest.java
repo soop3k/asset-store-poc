@@ -230,6 +230,7 @@ class AttributeValidatorTest {
                         assertThat(v.actual()).isEqualTo(AttributeType.STRING);
                     });
                 });
+    }
 
     private void assertNumericViolation(AttributeValidationErrorsException exception,
                                         String rule,

@@ -2,7 +2,7 @@ package com.db.assetstore.infra.api;
 
 import com.db.assetstore.domain.model.Asset;
 import com.db.assetstore.domain.model.link.AssetLink;
-import com.db.assetstore.domain.service.AssetQueryService;
+import com.db.assetstore.domain.service.asset.AssetQueryService;
 import com.db.assetstore.domain.service.link.AssetLinkQueryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

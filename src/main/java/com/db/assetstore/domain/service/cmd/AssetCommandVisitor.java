@@ -1,5 +1,8 @@
 package com.db.assetstore.domain.service.cmd;
 
+import com.db.assetstore.domain.service.asset.cmd.CreateAssetCommand;
+import com.db.assetstore.domain.service.asset.cmd.DeleteAssetCommand;
+import com.db.assetstore.domain.service.asset.cmd.PatchAssetCommand;
 import com.db.assetstore.domain.service.link.cmd.CreateAssetLinkCommand;
 import com.db.assetstore.domain.service.link.cmd.DeleteAssetLinkCommand;
 

@@ -6,7 +6,7 @@ import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.domain.service.cmd.AssetCommand;
 import com.db.assetstore.domain.service.cmd.AssetCommandVisitor;
 import com.db.assetstore.domain.service.cmd.CommandResult;
-import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
+import com.db.assetstore.domain.service.asset.cmd.CreateAssetCommand;
 import com.db.assetstore.infra.config.JsonMapperProvider;
 import com.db.assetstore.infra.jpa.AssetEntity;
 import com.db.assetstore.infra.jpa.AttributeEntity;
