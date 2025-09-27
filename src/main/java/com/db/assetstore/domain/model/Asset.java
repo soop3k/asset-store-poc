@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 
 import java.math.BigDecimal;
@@ -44,7 +45,8 @@ public final class Asset {
     @Setter private String currency;
 
     @JsonIgnore
-    private AttributesCollection attributes;
+    @Builder.Default
+    private AttributesCollection attributes = AttributesCollection.empty();
 
     @JsonIgnore
     public List<AttributeValue<?>> getAttributesFlat() {
@@ -54,11 +56,15 @@ public final class Asset {
     @JsonProperty("attributes")
     public Map<String, AttributeValue<?>> getAttributesJson() {
         Map<String, AttributeValue<?>> out = new LinkedHashMap<>();
-        if (attributes == null || attributes.isEmpty()) {
+        if (attributes.isEmpty()) {
             return out;
         }
-        attributes.asMapView().forEach((name, list) -> {
-            if (list != null && !list.isEmpty()) {
+        var grouped = attributes.asMapView();
+        if (grouped.isEmpty()) {
+            return out;
+        }
+        grouped.forEach((name, list) -> {
+            if (!list.isEmpty()) {
                 out.put(name, list.get(0));
             }
         });
@@ -81,10 +87,7 @@ public final class Asset {
     /**
      * Append a single attribute value to the collection (non-destructive for other attributes).
      */
-    public Asset setAttribute(AttributeValue<?> av) {
-        if (av == null) {
-            return this;
-        }
+    public Asset setAttribute(@NonNull AttributeValue<?> av) {
         this.attributes = this.attributes.add(av);
         return this;
     }
@@ -92,8 +95,8 @@ public final class Asset {
     /**
      * Replace all attributes with the provided flat collection.
      */
-    public Asset setAttributes(Collection<AttributeValue<?>> incoming) {
-        this.attributes = (incoming == null) ? AttributesCollection.empty() : AttributesCollection.fromFlat(incoming);
+    public Asset setAttributes(@NonNull Collection<AttributeValue<?>> incoming) {
+        this.attributes = AttributesCollection.fromFlat(incoming);
         return this;
     }
 }

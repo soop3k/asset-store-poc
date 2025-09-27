@@ -23,8 +23,9 @@ public class AssetSearchSpecificationService {
                 if (criteria.type() != null) {
                     preds.add(cb.equal(root.get("type"), criteria.type()));
                 }
-                if (criteria.conditions() != null && !criteria.conditions().isEmpty()) {
-                    for (Condition<?> c : criteria.conditions()) {
+                var conditions = criteria.conditions();
+                if (conditions != null && !conditions.isEmpty()) {
+                    for (var c : conditions) {
                         preds.add(attributeMatch(cb, root, c));
                     }
                 }

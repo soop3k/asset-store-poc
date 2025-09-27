@@ -44,10 +44,11 @@ public class AssetController {
 
     @PostMapping(path = "/bulk", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<String>> addAssetsBulk(@RequestBody List<AssetCreateRequest> requests) {
-        log.info("HTTP POST /assets/bulk - creating {} assets", requests == null ? 0 : requests.size());
         if (requests == null || requests.isEmpty()) {
+            log.info("HTTP POST /assets/bulk - creating 0 assets");
             return ResponseEntity.ok(List.of());
         }
+        log.info("HTTP POST /assets/bulk - creating {} assets", requests.size());
         List<String> ids = requests.stream()
                 .map(commandFactoryRegistry::createCreateCommand)
                 .map(commandService::create)
@@ -96,11 +97,12 @@ public class AssetController {
 
     @PatchMapping(path = "/bulk", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> patchAssetsBulk(@RequestBody List<AssetPatchRequest> requests) {
-        log.info("HTTP PATCH /assets/bulk - patch {} assets", requests == null ? 0 : requests.size());
         if (requests == null || requests.isEmpty()) {
+            log.info("HTTP PATCH /assets/bulk - patch 0 assets");
             return ResponseEntity.noContent().build();
         }
-        for (AssetPatchRequest item : requests) {
+        log.info("HTTP PATCH /assets/bulk - patch {} assets", requests.size());
+        for (var item : requests) {
             var current = assetQueryService.get(item.getId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Asset %s not found".formatted(item.getId())));
             var cmd = commandFactoryRegistry.createPatchCommand(current.getType(), item);

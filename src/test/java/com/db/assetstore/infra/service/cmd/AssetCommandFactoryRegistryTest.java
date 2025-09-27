@@ -1,10 +1,10 @@
 package com.db.assetstore.infra.service.cmd;
 
 import com.db.assetstore.AssetType;
-import com.db.assetstore.infra.json.AttributeJsonReader;
 import com.db.assetstore.domain.model.type.AVBoolean;
 import com.db.assetstore.domain.model.type.AVDecimal;
 import com.db.assetstore.domain.model.type.AVString;
+import com.db.assetstore.domain.model.type.AttributeType;
 import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
 import com.db.assetstore.domain.service.cmd.DeleteAssetCommand;
 import com.db.assetstore.domain.service.cmd.PatchAssetCommand;
@@ -13,48 +13,73 @@ import com.db.assetstore.domain.service.cmd.factory.CreateAssetCommandFactory;
 import com.db.assetstore.domain.service.cmd.factory.DeleteAssetCommandFactory;
 import com.db.assetstore.domain.service.cmd.factory.PatchAssetCommandFactory;
 import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
-import com.db.assetstore.domain.service.type.TypeSchemaRegistry;
+import com.db.assetstore.domain.service.validation.AttributeValidator;
+import com.db.assetstore.domain.service.validation.rule.CustomValidationRuleRegistry;
+import com.db.assetstore.domain.service.validation.rule.ValidationRuleFactory;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;
 import com.db.assetstore.infra.api.dto.AssetDeleteRequest;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;
-import com.db.assetstore.infra.service.type.SchemaAttributeDefinitionLoader;
+import com.db.assetstore.infra.json.AttributeJsonReader;
+import com.db.assetstore.infra.json.AttributePayloadParser;
+import com.db.assetstore.infra.json.AttributeValueAssembler;
+import com.db.assetstore.testutil.TestAttributeDefinitionRegistry;
+import com.db.assetstore.testutil.validation.MatchingAttributesRule;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
-
+import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static com.db.assetstore.testutil.AttributeTestHelpers.constraint;
+import static com.db.assetstore.testutil.AttributeTestHelpers.definition;
+import static com.db.assetstore.domain.service.type.ConstraintDefinition.Rule.REQUIRED;
+import static com.db.assetstore.domain.service.type.ConstraintDefinition.Rule.TYPE;
 
 class AssetCommandFactoryRegistryTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-
     private AssetCommandFactoryRegistry registry;
-
+    private AttributeDefinitionRegistry attributeDefinitionRegistry;
+    private ValidationRuleFactory validationRuleFactory;
+    private CustomValidationRuleRegistry customRegistry;
     private AssetCreateRequest createRequest;
-
     private AssetPatchRequest patchRequest;
 
     @BeforeEach
     void setUp() {
 
-        AttributeJsonReader attributeJsonReader = createJsonReader();
+        var city = definition(AssetType.CRE, "city", AttributeType.STRING);
+        var area = definition(AssetType.CRE, "area", AttributeType.DECIMAL);
+        var active = definition(AssetType.CRE, "active", AttributeType.BOOLEAN);
+        var name = definition(AssetType.SHIP, "name", AttributeType.STRING);
+        var imo = definition(AssetType.SHIP, "imo", AttributeType.DECIMAL);
+        var shipActive = definition(AssetType.SHIP, "active", AttributeType.BOOLEAN);
+
+        attributeDefinitionRegistry = TestAttributeDefinitionRegistry.builder()
+                .withAttribute(city, constraint(city, TYPE))
+                .withAttribute(area, constraint(area, TYPE))
+                .withAttribute(active, constraint(active, TYPE))
+                .withAttribute(name, constraint(name, TYPE), constraint(name, REQUIRED))
+                .withAttribute(imo, constraint(imo, TYPE))
+                .withAttribute(shipActive, constraint(shipActive, TYPE))
+                .build();
+        customRegistry = new CustomValidationRuleRegistry(List.of(new MatchingAttributesRule()));
+        validationRuleFactory = ruleFactory(customRegistry);
+        AttributeValidator attributeValidator = new AttributeValidator(attributeDefinitionRegistry, validationRuleFactory);
+        AttributeJsonReader reader = new AttributeJsonReader(
+                new AttributePayloadParser(),
+                new AttributeValueAssembler(attributeDefinitionRegistry)
+        );
 
         registry = new AssetCommandFactoryRegistry(
-                new CreateAssetCommandFactory(attributeJsonReader),
-                new PatchAssetCommandFactory(attributeJsonReader),
+                new CreateAssetCommandFactory(attributeValidator, reader),
+                new PatchAssetCommandFactory(attributeValidator, reader),
                 new DeleteAssetCommandFactory()
         );
 
-        ObjectNode createAttributes = objectMapper.createObjectNode();
-        createAttributes.put("city", "Frankfurt");
-        createAttributes.put("area", new BigDecimal("500.25"));
-        createAttributes.put("active", true);
         createRequest = new AssetCreateRequest(
                 "asset-1",
                 AssetType.CRE,
@@ -64,20 +89,16 @@ class AssetCommandFactoryRegistryTest {
                 2024,
                 "Created",
                 "USD",
-                createAttributes,
+                createAttributesNode(),
                 "creator"
         );
 
-        ObjectNode patchAttributes = objectMapper.createObjectNode();
-        patchAttributes.put("name", "Sea Queen");
-        patchAttributes.put("imo", 9876543);
-        patchAttributes.put("active", false);
         patchRequest = new AssetPatchRequest();
         patchRequest.setStatus("INACTIVE");
         patchRequest.setSubtype("FREIGHT");
         patchRequest.setDescription("Patched");
         patchRequest.setCurrency("EUR");
-        patchRequest.setAttributes(patchAttributes);
+        patchRequest.setAttributes(patchAttributesNode());
         patchRequest.setExecutedBy("patcher");
     }
 
@@ -162,29 +183,24 @@ class AssetCommandFactoryRegistryTest {
                 .hasMessageContaining("match");
     }
 
-    private AttributeJsonReader createJsonReader() {
-        TypeSchemaRegistry typeSchemaRegistry = new TypeSchemaRegistry(objectMapper);
-        typeSchemaRegistry.discover();
+    private ValidationRuleFactory ruleFactory(CustomValidationRuleRegistry customRegistry) {
+        return new ValidationRuleFactory(customRegistry);
+    }
 
-        SchemaAttributeDefinitionLoader schemaLoader = new SchemaAttributeDefinitionLoader(typeSchemaRegistry);
+    private ObjectNode createAttributesNode() {
+        ObjectNode node = objectMapper.createObjectNode();
+        node.put("city", "Frankfurt");
+        node.put("area", new BigDecimal("500.25"));
+        node.put("active", true);
+        return node;
+    }
 
-        AttributeDefinitionRegistry registry = new AttributeDefinitionRegistry() {
-            private final Map<AssetType, Map<String, AttributeDefinition>> cache = new HashMap<>();
-
-            @Override
-            public Map<String, AttributeDefinition> getDefinitions(AssetType type) {
-                return cache.computeIfAbsent(type,
-                        t -> schemaLoader.load(t).orElseGet(Map::of));
-            }
-
-            @Override
-            public void refresh() {
-                cache.clear();
-            }
-        };
-        registry.refresh();
-
-        return new AttributeJsonReader(objectMapper, registry);
+    private ObjectNode patchAttributesNode() {
+        ObjectNode node = objectMapper.createObjectNode();
+        node.put("name", "Sea Queen");
+        node.put("imo", new BigDecimal("9876543"));
+        node.put("active", false);
+        return node;
     }
 
 }

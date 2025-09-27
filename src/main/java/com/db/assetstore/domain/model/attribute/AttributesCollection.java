@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -27,30 +28,29 @@ public final class AttributesCollection {
         return new AttributesCollection(new LinkedHashMap<>());
     }
 
-    public static AttributesCollection fromFlat(Collection<AttributeValue<?>> flat) {
-        if (flat == null || flat.isEmpty()) {
+    public static AttributesCollection fromFlat(@NonNull Collection<AttributeValue<?>> flat) {
+        if (flat.isEmpty()) {
             return empty();
         }
-        LinkedHashMap<String, List<AttributeValue<?>>> map = new LinkedHashMap<>();
-        for (AttributeValue<?> av : flat) {
-            if (av == null) {
-                continue;
-            }
+        var map = new LinkedHashMap<String, List<AttributeValue<?>>>();
+        for (var av : flat) {
+            Objects.requireNonNull(av, "attribute value must not be null");
             map.computeIfAbsent(av.name(), k -> new ArrayList<>()).add(av);
         }
         return new AttributesCollection(map);
     }
 
-    public static AttributesCollection fromMap(Map<String, List<AttributeValue<?>>> map) {
-        if (map == null || map.isEmpty()) {
+    public static AttributesCollection fromMap(@NonNull Map<String, List<AttributeValue<?>>> map) {
+        if (map.isEmpty()) {
             return empty();
         }
-        LinkedHashMap<String, List<AttributeValue<?>>> copy = new LinkedHashMap<>();
+        var copy = new LinkedHashMap<String, List<AttributeValue<?>>>();
         map.forEach((k, v) -> {
-            if (k == null || v == null || v.isEmpty()) {
-                return;
+            Objects.requireNonNull(k, "attribute name must not be null");
+            Objects.requireNonNull(v, "attribute values must not be null");
+            if (!v.isEmpty()) {
+                copy.put(k, new ArrayList<>(v));
             }
-            copy.put(k, new ArrayList<>(v));
         });
         return new AttributesCollection(copy);
     }
@@ -85,9 +85,12 @@ public final class AttributesCollection {
         return (vs == null || vs.isEmpty()) ? Optional.empty() : Optional.of(vs.get(0));
     }
 
-    // Backward-compatible convenience alias used by tests
-    public Optional<AttributeValue<?>> getFirstByName(String name) {
-        return getFirst(name);
+    public List<AttributeValue<?>> getAll(String name) {
+        var vs = data.get(name);
+        if (vs == null || vs.isEmpty()) {
+            return List.of();
+        }
+        return Collections.unmodifiableList(vs);
     }
 
     public <T> Optional<T> getOne(String name, Class<T> type) {
@@ -99,7 +102,7 @@ public final class AttributesCollection {
         if (vs == null || vs.isEmpty()) {
             return List.of();
         }
-        ArrayList<T> out = new ArrayList<>(vs.size());
+        var out = new ArrayList<T>(vs.size());
         for (var av : vs) {
             Object v = av.value();
             if (v != null) {
@@ -140,10 +143,7 @@ public final class AttributesCollection {
         return new AttributesCollection(copy);
     }
 
-    private AttributesCollection append(AttributeValue<?> av) {
-        if (av == null) {
-            return this;
-        }
+    private AttributesCollection append(@NonNull AttributeValue<?> av) {
         LinkedHashMap<String, List<AttributeValue<?>>> copy = copyData();
         copy.computeIfAbsent(av.name(), k -> new ArrayList<>()).add(av);
         return new AttributesCollection(copy);

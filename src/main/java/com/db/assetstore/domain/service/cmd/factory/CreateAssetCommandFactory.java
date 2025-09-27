@@ -1,9 +1,12 @@
 package com.db.assetstore.domain.service.cmd.factory;
 
-import com.db.assetstore.infra.json.AttributeJsonReader;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
+import com.db.assetstore.domain.model.attribute.AttributesCollection;
 import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
+import com.db.assetstore.domain.service.validation.AttributeValidator;
+import com.db.assetstore.domain.service.validation.ValidationMode;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;
+import com.db.assetstore.infra.json.AttributeJsonReader;
 import lombok.NonNull;
 import org.springframework.stereotype.Component;
 
@@ -13,16 +16,21 @@ import java.util.List;
 @Component
 public class CreateAssetCommandFactory {
 
+    private final AttributeValidator attributeValidator;
     private final AttributeJsonReader attributeJsonReader;
 
-    public CreateAssetCommandFactory(@NonNull AttributeJsonReader attributeJsonReader) {
+    public CreateAssetCommandFactory(@NonNull AttributeValidator attributeValidator,
+                                     @NonNull AttributeJsonReader attributeJsonReader) {
+        this.attributeValidator = attributeValidator;
         this.attributeJsonReader = attributeJsonReader;
     }
 
     public CreateAssetCommand createCommand(@NonNull AssetCreateRequest request) {
-        List<AttributeValue<?>> attributes = request.attributes() == null
-                ? List.of()
-                : List.copyOf(attributeJsonReader.read(request.type(), request.attributes()));
+        AttributesCollection attributes = attributeJsonReader.read(request.type(), request.attributes());
+
+        attributeValidator.validate(request.type(), attributes, ValidationMode.STRICT);
+
+        List<AttributeValue<?>> attributeValues = attributes.asListView();
 
         return CreateAssetCommand.builder()
                 .id(request.id())
@@ -33,7 +41,7 @@ public class CreateAssetCommandFactory {
                 .year(request.year())
                 .description(request.description())
                 .currency(request.currency())
-                .attributes(attributes)
+                .attributes(attributeValues)
                 .executedBy(request.executedBy())
                 .requestTime(Instant.now())
                 .build();
