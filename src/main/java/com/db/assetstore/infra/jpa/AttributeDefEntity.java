@@ -33,7 +33,7 @@ public class AttributeDefEntity {
     @Column(name = "required", nullable = false)
     private boolean required = false;
 
-    @OneToMany(mappedBy = "attributeDefinition", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "attributeDefinition", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ConstraintDefEntity> constraints = new ArrayList<>();
 
     public AttributeDefEntity(AssetType type, String name, AttributeType valueType, boolean required) {

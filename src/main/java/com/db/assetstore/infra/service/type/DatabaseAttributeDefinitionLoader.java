@@ -29,7 +29,7 @@ public class DatabaseAttributeDefinitionLoader implements AttributeDefinitionLoa
         var definitions = new LinkedHashMap<String, AttributeDefinition>();
         var constraints = new LinkedHashMap<String, List<ConstraintDefinition>>();
 
-        var entities = attributeDefRepository.findAllByType(type);
+        var entities = attributeDefRepository.findAllByTypeWithConstraints(type);
         for (var entity : entities) {
             var attributeDefinition = attributeDefinitionMapper.toDomain(entity);
             definitions.put(entity.getName(), attributeDefinition);
