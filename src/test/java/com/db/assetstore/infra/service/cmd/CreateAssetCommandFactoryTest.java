@@ -15,7 +15,6 @@ import com.db.assetstore.infra.api.dto.AssetCreateRequest;
 import com.db.assetstore.infra.json.AttributeJsonReader;
 import com.db.assetstore.infra.json.AttributePayloadParser;
 import com.db.assetstore.infra.json.AttributeValueAssembler;
-import com.db.assetstore.testutil.validation.MatchingAttributesRule;
 import com.db.assetstore.testutil.InMemoryAttributeDefinitionLoader;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -34,7 +33,6 @@ class CreateAssetCommandFactoryTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private CreateAssetCommandFactory factory;
     private AttributeDefinitionRegistry registry;
-    private CustomValidationRuleRegistry customRegistry;
 
     @BeforeEach
     void setUp() {
@@ -48,8 +46,7 @@ class CreateAssetCommandFactoryTest {
                 .withAttribute(active, constraint(active, TYPE))
                 .withAssetType(AssetType.SHIP)
                 .buildRegistry();
-        customRegistry = new CustomValidationRuleRegistry(List.of(new MatchingAttributesRule()));
-        var validator = new AttributeValidator(registry, ruleFactory(customRegistry));
+        var validator = new AttributeValidator(registry, ruleFactory());
         AttributeJsonReader reader = new AttributeJsonReader(
                 new AttributePayloadParser(),
                 new AttributeValueAssembler(registry)
@@ -113,8 +110,8 @@ class CreateAssetCommandFactoryTest {
         assertThat(command.requestTime()).isNotNull();
     }
 
-    private ValidationRuleFactory ruleFactory(CustomValidationRuleRegistry customRegistry) {
-        return new ValidationRuleFactory(customRegistry);
+    private ValidationRuleFactory ruleFactory() {
+        return new ValidationRuleFactory(new CustomValidationRuleRegistry(List.of()));
     }
 
     private ObjectNode attributesNode(String city, BigDecimal area, boolean active) {

@@ -24,6 +24,6 @@ class TypeSchemaRegistryTest {
         assertTrue(supported.contains(AssetType.SHIP), "SHIP should be supported");
 
         assertFalse(supported.contains(AssetType.AV), "AV should not be supported without schema");
-        assertFalse(supported.contains(AssetType.SPV), "SPV should not be supported without schema");
+        assertTrue(supported.contains(AssetType.SPV), "SPV should be supported when schema is present");
     }
 }

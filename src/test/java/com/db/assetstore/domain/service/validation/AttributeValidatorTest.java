@@ -107,8 +107,8 @@ class AttributeValidatorTest {
 
     @Test
     void customRuleValidatesDependentAttributes() {
-        var name = definition(AssetType.CRE, "name", AttributeType.STRING);
-        var code = definition(AssetType.CRE, "code", AttributeType.STRING);
+        var name = definition(AssetType.SPV, "name", AttributeType.STRING);
+        var code = definition(AssetType.SPV, "code", AttributeType.STRING);
         ConstraintDefinition typeName = constraint(name, Rule.TYPE);
         ConstraintDefinition typeCode = constraint(code, Rule.TYPE);
         ConstraintDefinition custom = constraint(name, Rule.CUSTOM, "matchingAttributes");
@@ -117,12 +117,13 @@ class AttributeValidatorTest {
                 "name", List.of(typeName, custom),
                 "code", List.of(typeCode)
         );
-        AttributeValidator validator = validator(defs, constraints);
+        var customRegistry = new CustomValidationRuleRegistry(List.of(new MatchingAttributesRule()));
+        AttributeValidator validator = validator(defs, constraints, customRegistry);
 
-        validator.validate(AssetType.CRE,
+        validator.validate(AssetType.SPV,
                 AttributesCollection.fromFlat(List.of(new AVString("name", "alpha"), new AVString("code", "alpha"))));
 
-        assertThatThrownBy(() -> validator.validate(AssetType.CRE,
+        assertThatThrownBy(() -> validator.validate(AssetType.SPV,
                 AttributesCollection.fromFlat(List.of(new AVString("name", "alpha"), new AVString("code", "beta")))))
                 .isInstanceOf(AttributeValidationErrorsException.class)
                 .satisfies(ex -> {
@@ -242,13 +243,14 @@ class AttributeValidatorTest {
         });
     }
 
-    private static CustomValidationRuleRegistry customRegistry() {
-        return new CustomValidationRuleRegistry(List.of(new MatchingAttributesRule()));
+    private static AttributeValidator validator(Map<String, AttributeDefinition> defs,
+                                                Map<String, List<ConstraintDefinition>> constraints) {
+        return validator(defs, constraints, new CustomValidationRuleRegistry(List.of()));
     }
 
     private static AttributeValidator validator(Map<String, AttributeDefinition> defs,
-                                                Map<String, List<ConstraintDefinition>> constraints) {
-        var customRegistry = customRegistry();
+                                                Map<String, List<ConstraintDefinition>> constraints,
+                                                CustomValidationRuleRegistry customRegistry) {
         var factory = new ValidationRuleFactory(customRegistry);
         var registry = InMemoryAttributeDefinitionLoader.builder()
                 .withAttributes(AssetType.CRE, defs, constraints)

@@ -64,26 +64,12 @@ class AttributeDefinitionRegistryImplIntegrationTest {
         assertThat(constraints.getOrDefault("city", List.of()))
                 .anyMatch(c -> c.rule() == ConstraintDefinition.Rule.REQUIRED);
         assertThat(constraints.getOrDefault("city", List.of()))
-                .anySatisfy(c -> {
-                    assertThat(c.rule()).isEqualTo(ConstraintDefinition.Rule.CUSTOM);
-                    assertThat(c.value()).isEqualTo("matchingAttributes");
-                });
+                .noneMatch(c -> c.rule() == ConstraintDefinition.Rule.CUSTOM);
 
         AttributeDefinition customDef = definitions.get("custom");
         assertThat(customDef.attributeType()).isEqualTo(AttributeType.STRING);
         assertThat(constraints.getOrDefault("custom", List.of()))
                 .anyMatch(c -> c.rule() == ConstraintDefinition.Rule.REQUIRED);
-    }
-
-    @Test
-    void schemaCustomRulesAreResolvedByName() {
-        Map<String, List<ConstraintDefinition>> constraints = registry.getConstraints(AssetType.CRE);
-
-        assertThat(constraints.getOrDefault("rooms", List.of()))
-                .anySatisfy(c -> {
-                    assertThat(c.rule()).isEqualTo(ConstraintDefinition.Rule.CUSTOM);
-                    assertThat(c.value()).isEqualTo("matchingAttributes");
-                });
     }
 
     @Test

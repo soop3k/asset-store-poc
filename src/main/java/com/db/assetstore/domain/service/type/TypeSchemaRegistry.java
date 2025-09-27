@@ -7,8 +7,8 @@ import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SchemaValidatorsConfig;
 import com.networknt.schema.SpecVersion;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
@@ -20,7 +20,6 @@ import java.util.Set;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public final class TypeSchemaRegistry {
 
     private static final String SCHEMA_PATH_PATTERN = "schemas/types/%s.schema.json";
@@ -29,18 +28,28 @@ public final class TypeSchemaRegistry {
     private final JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7);
 
     private final Map<AssetType, Entry> entries = new LinkedHashMap<>();
+    private final ClassLoader resourceLoader;
 
     public record Entry(String path, JsonNode node, JsonSchema compiled) {}
+
+    @Autowired
+    public TypeSchemaRegistry(ObjectMapper om) {
+        this(om, TypeSchemaRegistry.class.getClassLoader());
+    }
+
+    public TypeSchemaRegistry(ObjectMapper om, ClassLoader resourceLoader) {
+        this.om = om;
+        this.resourceLoader = resourceLoader == null ? TypeSchemaRegistry.class.getClassLoader() : resourceLoader;
+    }
 
     public void discover() { rebuild(); }
 
     public void rebuild() {
         entries.clear();
 
-        ClassLoader cl = TypeSchemaRegistry.class.getClassLoader();
         for (AssetType t : AssetType.values()) {
             String path = String.format(SCHEMA_PATH_PATTERN, t.name());
-            try (InputStream is = cl.getResourceAsStream(path)) {
+            try (InputStream is = resourceLoader.getResourceAsStream(path)) {
                 if (is == null) {
                     continue;
                 }

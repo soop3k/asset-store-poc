@@ -1,5 +1,8 @@
 package com.db.assetstore;
 
 public enum AssetType {
-    CRE, SHIP, AV, SPV
+    CRE,
+    SHIP,
+    AV,
+    SPV
 }

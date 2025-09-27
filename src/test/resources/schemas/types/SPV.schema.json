@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Structured Product Vehicle Asset",
+  "type": "object",
+  "properties": {
+    "primary": {
+      "type": "string",
+      "x-customRules": ["matchingAttributes"]
+    },
+    "secondary": {
+      "type": "string"
+    }
+  },
+  "required": ["primary", "secondary"]
+}
