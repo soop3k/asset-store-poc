@@ -49,14 +49,14 @@ class AttributeDefinitionRegistryImplIntegrationTest {
 
     @Test
     void schemaDefinitionsOverrideDatabaseValues() {
-        AttributeDefEntity city = new AttributeDefEntity(AssetType.CRE, "city", AttributeType.DECIMAL, false);
+        AttributeDefEntity city = new AttributeDefEntity(AssetType.SPV, "city", AttributeType.DECIMAL, false);
         city.getConstraints().add(new ConstraintDefEntity(city, ConstraintDefinition.Rule.CUSTOM,
                 "matchingAttributes"));
         attributeDefRepository.save(city);
-        attributeDefRepository.save(new AttributeDefEntity(AssetType.CRE, "custom", AttributeType.STRING, true));
+        attributeDefRepository.save(new AttributeDefEntity(AssetType.SPV, "custom", AttributeType.STRING, true));
 
-        Map<String, AttributeDefinition> definitions = registry.getDefinitions(AssetType.CRE);
-        Map<String, List<ConstraintDefinition>> constraints = registry.getConstraints(AssetType.CRE);
+        Map<String, AttributeDefinition> definitions = registry.getDefinitions(AssetType.SPV);
+        Map<String, List<ConstraintDefinition>> constraints = registry.getConstraints(AssetType.SPV);
 
         assertThat(definitions).containsKeys("city", "area", "rooms", "active", "custom");
         AttributeDefinition cityDef = definitions.get("city");
@@ -77,7 +77,7 @@ class AttributeDefinitionRegistryImplIntegrationTest {
 
     @Test
     void schemaCustomRulesAreResolvedByName() {
-        Map<String, List<ConstraintDefinition>> constraints = registry.getConstraints(AssetType.CRE);
+        Map<String, List<ConstraintDefinition>> constraints = registry.getConstraints(AssetType.SPV);
 
         assertThat(constraints.getOrDefault("rooms", List.of()))
                 .anySatisfy(c -> {
