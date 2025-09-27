@@ -24,7 +24,7 @@ public final class EnumRule implements ValidationRule {
 
     @Override
     public void validate(AttributeValidationContext context) {
-        RuleExecutionHelper.forEachPresentValue(context, value -> {
+        forEachPresentValue(context, value -> {
             var match = value.accept(new AttributeValueVisitor<Boolean>() {
                 @Override
                 public Boolean visitString(String v, String name) {

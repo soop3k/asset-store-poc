@@ -25,7 +25,7 @@ public final class MinMaxRule implements ValidationRule {
 
     @Override
     public void validate(AttributeValidationContext context) {
-        RuleExecutionHelper.forEachPresentValue(context, value -> {
+        forEachPresentValue(context, value -> {
             var number = toDecimal(value);
             if (min != null && number.compareTo(min) < 0) {
                 throw new RuleViolationException(rule().name(), attributeName,
