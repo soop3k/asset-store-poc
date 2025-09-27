@@ -34,7 +34,7 @@ public final class EnumRule implements ValidationRule {
 
                 @Override
                 public Boolean visitDecimal(BigDecimal v, String name) {
-                    return allowedValues.decimals.contains(v);
+                    return allowedValues.matchesDecimal(v);
                 }
 
                 @Override
@@ -65,7 +65,7 @@ public final class EnumRule implements ValidationRule {
             if (isBoolean(trimmed)) {
                 booleans.add(Boolean.parseBoolean(trimmed));
             } else if (isNumeric(trimmed)) {
-                decimals.add(new BigDecimal(trimmed));
+                decimals.add(new BigDecimal(trimmed).stripTrailingZeros());
             } else {
                 strings.add(trimmed);
             }
@@ -92,6 +92,10 @@ public final class EnumRule implements ValidationRule {
     private record AllowedValues(Set<String> strings,
                                  Set<BigDecimal> decimals,
                                  Set<Boolean> booleans) {
+
+        boolean matchesDecimal(BigDecimal candidate) {
+            return decimals.stream().anyMatch(value -> value.compareTo(candidate) == 0);
+        }
 
         String describe() {
             var parts = new ArrayList<String>();
