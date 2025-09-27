@@ -6,7 +6,7 @@ import com.db.assetstore.domain.model.type.AVDecimal;
 import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.domain.model.type.AttributeType;
 import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
-import com.db.assetstore.testutil.TestAttributeDefinitionRegistry;
+import com.db.assetstore.testutil.InMemoryAttributeDefinitionLoader;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,11 +29,11 @@ class AttributeJsonReaderTest {
         var area = definition(AssetType.CRE, "area", AttributeType.DECIMAL);
         var active = definition(AssetType.CRE, "active", AttributeType.BOOLEAN);
 
-        AttributeDefinitionRegistry registry = TestAttributeDefinitionRegistry.builder()
+        AttributeDefinitionRegistry registry = InMemoryAttributeDefinitionLoader.builder()
                 .withAttribute(city, constraint(city, TYPE))
                 .withAttribute(area, constraint(area, TYPE))
                 .withAttribute(active, constraint(active, TYPE))
-                .build();
+                .buildRegistry();
 
         reader = new AttributeJsonReader(
                 new AttributePayloadParser(),
