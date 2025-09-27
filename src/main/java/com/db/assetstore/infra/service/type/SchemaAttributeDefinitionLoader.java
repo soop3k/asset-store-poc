@@ -199,23 +199,19 @@ public class SchemaAttributeDefinitionLoader implements AttributeDefinitionLoade
             return;
         }
 
-        var resolved = simpleClassName(node.asText());
+        var resolved = normalizeCustomRuleName(node.asText());
         if (resolved != null && !resolved.isBlank()) {
             target.add(new ConstraintDefinition(definition, ConstraintDefinition.Rule.CUSTOM, resolved));
         }
     }
 
-    private static String simpleClassName(String value) {
+    private static String normalizeCustomRuleName(String value) {
         if (value == null) {
             return null;
         }
         var trimmed = value.trim();
         if (trimmed.isEmpty()) {
             return null;
-        }
-        int lastDot = trimmed.lastIndexOf('.');
-        if (lastDot >= 0 && lastDot < trimmed.length() - 1) {
-            return trimmed.substring(lastDot + 1);
         }
         return trimmed;
     }

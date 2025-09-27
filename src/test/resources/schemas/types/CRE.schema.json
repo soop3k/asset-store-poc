@@ -7,13 +7,13 @@
     "city": {
       "type": "string",
       "x-customRules": [
-        "MatchingAttributesRule"
+        "matchingAttributes"
       ]
     },
     "area": { "type": "number" },
     "rooms": {
       "type": "integer",
-      "x-customRules": "MatchingAttributesRule"
+      "x-customRules": "matchingAttributes"
     },
     "active": { "type": "boolean" }
   },

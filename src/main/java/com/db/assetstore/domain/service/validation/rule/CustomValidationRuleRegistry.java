@@ -16,8 +16,6 @@ public final class CustomValidationRuleRegistry {
         var map = new LinkedHashMap<String, CustomValidationRule>();
         for (var rule : customRules) {
             register(map, rule.name(), rule);
-            register(map, rule.getClass().getSimpleName(), rule);
-            register(map, rule.getClass().getName(), rule);
         }
         this.rulesByName = Map.copyOf(map);
     }

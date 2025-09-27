@@ -111,7 +111,7 @@ class AttributeValidatorTest {
         var code = definition(AssetType.CRE, "code", AttributeType.STRING);
         ConstraintDefinition typeName = constraint(name, Rule.TYPE);
         ConstraintDefinition typeCode = constraint(code, Rule.TYPE);
-        ConstraintDefinition custom = constraint(name, Rule.CUSTOM, "MatchingAttributesRule");
+        ConstraintDefinition custom = constraint(name, Rule.CUSTOM, "matchingAttributes");
         Map<String, AttributeDefinition> defs = Map.of("name", name, "code", code);
         Map<String, List<ConstraintDefinition>> constraints = Map.of(
                 "name", List.of(typeName, custom),

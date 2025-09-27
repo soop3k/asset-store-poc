@@ -76,13 +76,13 @@ public class DatabaseAttributeDefinitionLoader implements AttributeDefinitionLoa
                     return normalizeName(node.get("name").asText());
                 }
                 if (node.hasNonNull("class")) {
-                    return simpleClassName(node.get("class").asText());
+                    throw new IllegalStateException("Custom constraint must define 'name' instead of 'class': " + rawValue);
                 }
             } catch (JsonProcessingException ex) {
                 throw new IllegalStateException("Unable to parse custom constraint value: " + rawValue, ex);
             }
         }
-        return simpleClassName(trimmed);
+        return normalizeName(trimmed);
     }
 
     private String normalizeName(String value) {
@@ -94,17 +94,5 @@ public class DatabaseAttributeDefinitionLoader implements AttributeDefinitionLoa
             return null;
         }
         return trimmed;
-    }
-
-    private String simpleClassName(String className) {
-        var normalized = normalizeName(className);
-        if (normalized == null) {
-            return null;
-        }
-        int lastDot = normalized.lastIndexOf('.');
-        if (lastDot >= 0 && lastDot < normalized.length() - 1) {
-            return normalized.substring(lastDot + 1);
-        }
-        return normalized;
     }
 }
