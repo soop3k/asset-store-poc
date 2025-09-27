@@ -51,7 +51,7 @@ class AttributeDefinitionRegistryImplIntegrationTest {
     void schemaDefinitionsOverrideDatabaseValues() {
         AttributeDefEntity city = new AttributeDefEntity(AssetType.CRE, "city", AttributeType.DECIMAL, false);
         city.getConstraints().add(new ConstraintDefEntity(city, ConstraintDefinition.Rule.CUSTOM,
-                "matchingAttributes"));
+                "{\"class\":\"MatchingAttributesRule\"}"));
         attributeDefRepository.save(city);
         attributeDefRepository.save(new AttributeDefEntity(AssetType.CRE, "custom", AttributeType.STRING, true));
 
@@ -64,7 +64,10 @@ class AttributeDefinitionRegistryImplIntegrationTest {
         assertThat(constraints.getOrDefault("city", List.of()))
                 .anyMatch(c -> c.rule() == ConstraintDefinition.Rule.REQUIRED);
         assertThat(constraints.getOrDefault("city", List.of()))
-                .anyMatch(c -> c.rule() == ConstraintDefinition.Rule.CUSTOM);
+                .anySatisfy(c -> {
+                    assertThat(c.rule()).isEqualTo(ConstraintDefinition.Rule.CUSTOM);
+                    assertThat(c.value()).isEqualTo("matchingAttributes");
+                });
 
         AttributeDefinition customDef = definitions.get("custom");
         assertThat(customDef.attributeType()).isEqualTo(AttributeType.STRING);

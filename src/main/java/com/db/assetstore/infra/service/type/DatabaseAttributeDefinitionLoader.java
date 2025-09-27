@@ -4,12 +4,14 @@ import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.service.type.AttributeDefinition;
 import com.db.assetstore.domain.service.type.AttributeDefinitionLoader;
 import com.db.assetstore.domain.service.type.ConstraintDefinition;
-import com.db.assetstore.infra.jpa.AttributeDefEntity;
 import com.db.assetstore.infra.mapper.AttributeDefinitionMapper;
 import com.db.assetstore.infra.repository.AttributeDefRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -23,6 +25,7 @@ public class DatabaseAttributeDefinitionLoader implements AttributeDefinitionLoa
 
     private final AttributeDefRepository attributeDefRepository;
     private final AttributeDefinitionMapper attributeDefinitionMapper;
+    private final ObjectMapper objectMapper;
 
     @Override
     public AttributeDefinitions load(AssetType type) {
@@ -40,10 +43,66 @@ public class DatabaseAttributeDefinitionLoader implements AttributeDefinitionLoa
                 attributeConstraints.add(new ConstraintDefinition(attributeDefinition, ConstraintDefinition.Rule.REQUIRED, null));
             }
             attributeConstraints.addAll(
-                    attributeDefinitionMapper.toDomainConstraints(attributeDefinition, entity.getConstraints()));
+                    attributeDefinitionMapper.toDomainConstraints(attributeDefinition, entity.getConstraints())
+                            .stream()
+                            .map(this::normalizeCustomConstraint)
+                            .toList());
             constraints.put(entity.getName(), List.copyOf(attributeConstraints));
         }
 
         return new AttributeDefinitions(definitions, constraints);
+    }
+
+    private ConstraintDefinition normalizeCustomConstraint(ConstraintDefinition constraint) {
+        if (constraint.rule() != ConstraintDefinition.Rule.CUSTOM) {
+            return constraint;
+        }
+        String name = extractCustomRuleName(constraint.value());
+        return new ConstraintDefinition(constraint.attribute(), constraint.rule(), name);
+    }
+
+    private String extractCustomRuleName(String rawValue) {
+        if (rawValue == null) {
+            return null;
+        }
+        var trimmed = rawValue.trim();
+        if (trimmed.isEmpty()) {
+            return null;
+        }
+        if (trimmed.startsWith("{")) {
+            try {
+                JsonNode node = objectMapper.readTree(trimmed);
+                if (node.hasNonNull("name")) {
+                    return node.get("name").asText();
+                }
+                if (node.hasNonNull("class")) {
+                    return toRegistryName(node.get("class").asText());
+                }
+            } catch (JsonProcessingException ex) {
+                throw new IllegalStateException("Unable to parse custom constraint value: " + rawValue, ex);
+            }
+        }
+        return trimmed;
+    }
+
+    private static String toRegistryName(String className) {
+        if (className == null) {
+            return null;
+        }
+        var trimmed = className.trim();
+        if (trimmed.isEmpty()) {
+            return null;
+        }
+        int lastDot = trimmed.lastIndexOf('.');
+        if (lastDot >= 0 && lastDot < trimmed.length() - 1) {
+            trimmed = trimmed.substring(lastDot + 1);
+        }
+        if (trimmed.endsWith("Rule") && trimmed.length() > 4) {
+            trimmed = trimmed.substring(0, trimmed.length() - 4);
+        }
+        if (trimmed.isEmpty()) {
+            return null;
+        }
+        return trimmed.substring(0, 1).toLowerCase() + trimmed.substring(1);
     }
 }
