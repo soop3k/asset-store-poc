@@ -60,10 +60,17 @@ public class AttributeValueAssembler {
         }
 
         return switch (expectedType) {
-            case STRING -> node.asText();
+            case STRING -> parseString(raw.name(), node);
             case DECIMAL -> parseDecimal(raw.name(), node);
             case BOOLEAN -> parseBoolean(raw.name(), node);
         };
+    }
+
+    private String parseString(String name, JsonNode node) {
+        if (node.isTextual() || node.isNumber() || node.isBoolean()) {
+            return node.asText();
+        }
+        throw AttributeParsingException.incompatibleType(name, AttributeType.STRING, node.getNodeType().name());
     }
 
     private BigDecimal parseDecimal(String name, JsonNode node) {

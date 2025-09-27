@@ -77,4 +77,26 @@ class AttributeJsonReaderTest {
                 .isInstanceOf(AttributeParsingException.class)
                 .hasMessageContaining("expects type BOOLEAN");
     }
+
+    @Test
+    void failsWhenStringValueIsObject() {
+        var payload = objectMapper.createObjectNode();
+        var nested = objectMapper.createObjectNode();
+        nested.put("city", "Warsaw");
+        payload.set("city", nested);
+
+        assertThatThrownBy(() -> reader.read(AssetType.CRE, payload))
+                .isInstanceOf(AttributeParsingException.class)
+                .hasMessageContaining("expects type STRING");
+    }
+
+    @Test
+    void failsWhenStringValueIsArray() {
+        var payload = objectMapper.createObjectNode();
+        payload.putArray("city").add("Warsaw");
+
+        assertThatThrownBy(() -> reader.read(AssetType.CRE, payload))
+                .isInstanceOf(AttributeParsingException.class)
+                .hasMessageContaining("expects type STRING");
+    }
 }
