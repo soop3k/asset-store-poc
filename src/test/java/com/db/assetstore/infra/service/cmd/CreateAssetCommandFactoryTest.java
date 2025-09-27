@@ -11,12 +11,12 @@ import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
 import com.db.assetstore.domain.service.validation.AttributeValidator;
 import com.db.assetstore.domain.service.validation.rule.CustomValidationRuleRegistry;
 import com.db.assetstore.domain.service.validation.rule.ValidationRuleFactory;
-import com.db.assetstore.testutil.TestAttributeDefinitionRegistry;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;
 import com.db.assetstore.infra.json.AttributeJsonReader;
 import com.db.assetstore.infra.json.AttributePayloadParser;
 import com.db.assetstore.infra.json.AttributeValueAssembler;
 import com.db.assetstore.testutil.validation.MatchingAttributesRule;
+import com.db.assetstore.testutil.InMemoryAttributeDefinitionLoader;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,12 +42,12 @@ class CreateAssetCommandFactoryTest {
         var area = definition(AssetType.CRE, "area", AttributeType.DECIMAL);
         var active = definition(AssetType.CRE, "active", AttributeType.BOOLEAN);
 
-        registry = TestAttributeDefinitionRegistry.builder()
+        registry = InMemoryAttributeDefinitionLoader.builder()
                 .withAttribute(city, constraint(city, TYPE))
                 .withAttribute(area, constraint(area, TYPE))
                 .withAttribute(active, constraint(active, TYPE))
                 .withAssetType(AssetType.SHIP)
-                .build();
+                .buildRegistry();
         customRegistry = new CustomValidationRuleRegistry(List.of(new MatchingAttributesRule()));
         var validator = new AttributeValidator(registry, ruleFactory(customRegistry));
         AttributeJsonReader reader = new AttributeJsonReader(

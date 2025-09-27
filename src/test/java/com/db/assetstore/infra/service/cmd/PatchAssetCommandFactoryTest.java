@@ -16,7 +16,7 @@ import com.db.assetstore.infra.api.dto.AssetPatchRequest;
 import com.db.assetstore.infra.json.AttributeJsonReader;
 import com.db.assetstore.infra.json.AttributePayloadParser;
 import com.db.assetstore.infra.json.AttributeValueAssembler;
-import com.db.assetstore.testutil.TestAttributeDefinitionRegistry;
+import com.db.assetstore.testutil.InMemoryAttributeDefinitionLoader;
 import com.db.assetstore.testutil.validation.MatchingAttributesRule;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -46,12 +46,12 @@ class PatchAssetCommandFactoryTest {
         var imo = definition(AssetType.SHIP, "imo", AttributeType.DECIMAL);
         var active = definition(AssetType.SHIP, "active", AttributeType.BOOLEAN);
 
-        registry = TestAttributeDefinitionRegistry.builder()
+        registry = InMemoryAttributeDefinitionLoader.builder()
                 .withAttribute(name, constraint(name, TYPE), constraint(name, REQUIRED))
                 .withAttribute(imo, constraint(imo, TYPE))
                 .withAttribute(active, constraint(active, TYPE))
                 .withAssetType(AssetType.CRE)
-                .build();
+                .buildRegistry();
         customRegistry = new CustomValidationRuleRegistry(List.of(new MatchingAttributesRule()));
         AttributeValidator validator = new AttributeValidator(registry, ruleFactory(customRegistry));
         AttributeJsonReader reader = new AttributeJsonReader(

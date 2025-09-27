@@ -12,7 +12,7 @@ import com.db.assetstore.domain.service.validation.rule.AttributeValidationError
 import com.db.assetstore.domain.service.validation.ValidationMode;
 import com.db.assetstore.domain.service.validation.rule.CustomValidationRuleRegistry;
 import com.db.assetstore.domain.service.validation.rule.ValidationRuleFactory;
-import com.db.assetstore.testutil.TestAttributeDefinitionRegistry;
+import com.db.assetstore.testutil.InMemoryAttributeDefinitionLoader;
 import com.db.assetstore.testutil.validation.MatchingAttributesRule;
 import org.junit.jupiter.api.Test;
 
@@ -250,9 +250,9 @@ class AttributeValidatorTest {
                                                 Map<String, List<ConstraintDefinition>> constraints) {
         var customRegistry = customRegistry();
         var factory = new ValidationRuleFactory(customRegistry);
-        var registry = TestAttributeDefinitionRegistry.builder()
+        var registry = InMemoryAttributeDefinitionLoader.builder()
                 .withAttributes(AssetType.CRE, defs, constraints)
-                .build();
+                .buildRegistry();
         return new AttributeValidator(registry, factory);
     }
 }

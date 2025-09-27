@@ -2,27 +2,28 @@ package com.db.assetstore.testutil;
 
 import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.service.type.AttributeDefinition;
+import com.db.assetstore.domain.service.type.AttributeDefinitionLoader;
 import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
 import com.db.assetstore.domain.service.type.ConstraintDefinition;
+import com.db.assetstore.domain.service.type.DefaultAttributeDefinitionRegistry;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.emptyMap;
-import static java.util.Collections.unmodifiableList;
-import static java.util.Collections.unmodifiableMap;
 
-public final class TestAttributeDefinitionRegistry implements AttributeDefinitionRegistry {
+public final class InMemoryAttributeDefinitionLoader implements AttributeDefinitionLoader {
 
-    private final Map<AssetType, Map<String, AttributeDefinition>> definitions;
-    private final Map<AssetType, Map<String, List<ConstraintDefinition>>> constraints;
+    private final Map<AssetType, AttributeDefinitions> definitions;
 
-    private TestAttributeDefinitionRegistry(Builder builder) {
-        this.definitions = toUnmodifiable(builder.definitions);
-        this.constraints = toUnmodifiable(builder.constraints);
+    private InMemoryAttributeDefinitionLoader(Map<AssetType, AttributeDefinitions> definitions) {
+        this.definitions = definitions;
     }
 
     public static Builder builder() {
@@ -30,41 +31,12 @@ public final class TestAttributeDefinitionRegistry implements AttributeDefinitio
     }
 
     @Override
-    public Map<String, AttributeDefinition> getDefinitions(AssetType type) {
-        return definitions.getOrDefault(type, emptyMap());
+    public AttributeDefinitions load(AssetType type) {
+        return definitions.getOrDefault(type, AttributeDefinitions.empty());
     }
 
-    @Override
-    public Map<String, List<ConstraintDefinition>> getConstraints(AssetType type) {
-        return constraints.getOrDefault(type, emptyMap());
-    }
-
-    @Override
-    public void refresh() {
-        // no-op for tests
-    }
-
-    private static Map<AssetType, Map<String, AttributeDefinition>> toUnmodifiable(
-            Map<AssetType, Map<String, AttributeDefinition>> source) {
-        Map<AssetType, Map<String, AttributeDefinition>> copy = new HashMap<>();
-        source.forEach((type, defs) -> copy.put(type, unmodifiableMap(new HashMap<>(defs))));
-        return unmodifiableMap(copy);
-    }
-
-    private static Map<AssetType, Map<String, List<ConstraintDefinition>>> toUnmodifiableConstraints(
-            Map<AssetType, Map<String, List<ConstraintDefinition>>> source) {
-        Map<AssetType, Map<String, List<ConstraintDefinition>>> copy = new HashMap<>();
-        source.forEach((type, values) -> {
-            Map<String, List<ConstraintDefinition>> attrConstraints = new HashMap<>();
-            values.forEach((name, constraintList) -> attrConstraints.put(name, unmodifiableList(new ArrayList<>(constraintList))));
-            copy.put(type, unmodifiableMap(attrConstraints));
-        });
-        return unmodifiableMap(copy);
-    }
-
-    private static Map<AssetType, Map<String, List<ConstraintDefinition>>> toUnmodifiable(
-            Map<AssetType, Map<String, List<ConstraintDefinition>>> source) {
-        return toUnmodifiableConstraints(source);
+    public AttributeDefinitionRegistry toRegistry() {
+        return new DefaultAttributeDefinitionRegistry(List.of(this));
     }
 
     public static final class Builder {
@@ -107,8 +79,29 @@ public final class TestAttributeDefinitionRegistry implements AttributeDefinitio
             return this;
         }
 
-        public TestAttributeDefinitionRegistry build() {
-            return new TestAttributeDefinitionRegistry(this);
+        public InMemoryAttributeDefinitionLoader build() {
+            Map<AssetType, AttributeDefinitions> prepared = new HashMap<>();
+            Set<AssetType> assetTypes = new HashSet<>();
+            assetTypes.addAll(definitions.keySet());
+            assetTypes.addAll(constraints.keySet());
+
+            for (AssetType type : assetTypes) {
+                Map<String, AttributeDefinition> typeDefinitions = definitions.getOrDefault(type, emptyMap());
+                Map<String, List<ConstraintDefinition>> typeConstraints = constraints.getOrDefault(type, emptyMap());
+
+                Map<String, AttributeDefinition> immutableDefinitions = Map.copyOf(new HashMap<>(typeDefinitions));
+                Map<String, List<ConstraintDefinition>> immutableConstraints = typeConstraints.entrySet().stream()
+                        .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey,
+                                entry -> List.copyOf(entry.getValue())));
+
+                prepared.put(type, new AttributeDefinitions(immutableDefinitions, immutableConstraints));
+            }
+
+            return new InMemoryAttributeDefinitionLoader(Map.copyOf(prepared));
+        }
+
+        public AttributeDefinitionRegistry buildRegistry() {
+            return build().toRegistry();
         }
     }
 }
