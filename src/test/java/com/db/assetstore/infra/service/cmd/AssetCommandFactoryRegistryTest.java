@@ -23,7 +23,6 @@ import com.db.assetstore.infra.json.AttributeJsonReader;
 import com.db.assetstore.infra.json.AttributePayloadParser;
 import com.db.assetstore.infra.json.AttributeValueAssembler;
 import com.db.assetstore.testutil.InMemoryAttributeDefinitionLoader;
-import com.db.assetstore.testutil.validation.MatchingAttributesRule;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,7 +43,6 @@ class AssetCommandFactoryRegistryTest {
     private AssetCommandFactoryRegistry registry;
     private AttributeDefinitionRegistry attributeDefinitionRegistry;
     private ValidationRuleFactory validationRuleFactory;
-    private CustomValidationRuleRegistry customRegistry;
     private AssetCreateRequest createRequest;
     private AssetPatchRequest patchRequest;
 
@@ -66,8 +64,7 @@ class AssetCommandFactoryRegistryTest {
                 .withAttribute(imo, constraint(imo, TYPE))
                 .withAttribute(shipActive, constraint(shipActive, TYPE))
                 .buildRegistry();
-        customRegistry = new CustomValidationRuleRegistry(List.of(new MatchingAttributesRule()));
-        validationRuleFactory = ruleFactory(customRegistry);
+        validationRuleFactory = ruleFactory();
         AttributeValidator attributeValidator = new AttributeValidator(attributeDefinitionRegistry, validationRuleFactory);
         AttributeJsonReader reader = new AttributeJsonReader(
                 new AttributePayloadParser(),
@@ -183,8 +180,8 @@ class AssetCommandFactoryRegistryTest {
                 .hasMessageContaining("match");
     }
 
-    private ValidationRuleFactory ruleFactory(CustomValidationRuleRegistry customRegistry) {
-        return new ValidationRuleFactory(customRegistry);
+    private ValidationRuleFactory ruleFactory() {
+        return new ValidationRuleFactory(new CustomValidationRuleRegistry(List.of()));
     }
 
     private ObjectNode createAttributesNode() {

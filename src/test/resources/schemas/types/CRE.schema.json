@@ -4,17 +4,9 @@
   "type": "object",
   "properties": {
     "id": { "type": "string" },
-    "city": {
-      "type": "string",
-      "x-customRules": [
-        "matchingAttributes"
-      ]
-    },
+    "city": { "type": "string" },
     "area": { "type": "number" },
-    "rooms": {
-      "type": "integer",
-      "x-customRules": "matchingAttributes"
-    },
+    "rooms": { "type": "integer" },
     "active": { "type": "boolean" }
   },
   "required": [ "city" ]

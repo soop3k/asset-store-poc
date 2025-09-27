@@ -17,7 +17,6 @@ import com.db.assetstore.infra.json.AttributeJsonReader;
 import com.db.assetstore.infra.json.AttributePayloadParser;
 import com.db.assetstore.infra.json.AttributeValueAssembler;
 import com.db.assetstore.testutil.InMemoryAttributeDefinitionLoader;
-import com.db.assetstore.testutil.validation.MatchingAttributesRule;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,7 +37,6 @@ class PatchAssetCommandFactoryTest {
     private PatchAssetCommandFactory factory;
     private AssetPatchRequest request;
     private AttributeDefinitionRegistry registry;
-    private CustomValidationRuleRegistry customRegistry;
 
     @BeforeEach
     void setUp() {
@@ -52,8 +50,7 @@ class PatchAssetCommandFactoryTest {
                 .withAttribute(active, constraint(active, TYPE))
                 .withAssetType(AssetType.CRE)
                 .buildRegistry();
-        customRegistry = new CustomValidationRuleRegistry(List.of(new MatchingAttributesRule()));
-        AttributeValidator validator = new AttributeValidator(registry, ruleFactory(customRegistry));
+        AttributeValidator validator = new AttributeValidator(registry, ruleFactory());
         AttributeJsonReader reader = new AttributeJsonReader(
                 new AttributePayloadParser(),
                 new AttributeValueAssembler(registry)
@@ -120,8 +117,8 @@ class PatchAssetCommandFactoryTest {
                 });
     }
 
-    private ValidationRuleFactory ruleFactory(CustomValidationRuleRegistry customRegistry) {
-        return new ValidationRuleFactory(customRegistry);
+    private ValidationRuleFactory ruleFactory() {
+        return new ValidationRuleFactory(new CustomValidationRuleRegistry(List.of()));
     }
 
     private ObjectNode attributesNode(String name, BigDecimal imo, boolean active) {
