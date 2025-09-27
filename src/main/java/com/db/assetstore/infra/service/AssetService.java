@@ -87,7 +87,8 @@ public class AssetService {
     private String persistAsset(@NonNull Asset asset) {
         log.info("Adding asset: type={}, id={}", asset.getType(), asset.getId());
         AssetEntity entity = assetMapper.toEntity(asset);
-        if (entity.getAttributes() != null && !entity.getAttributes().isEmpty()) {
+        var existingAttributes = entity.getAttributes();
+        if (existingAttributes != null && !existingAttributes.isEmpty()) {
             assetRepo.save(entity);
         } else {
             persistAttributes(entity, asset.getAttributesFlat());
@@ -110,8 +111,9 @@ public class AssetService {
         entity.setModifiedAt(Instant.now());
         entity = assetRepo.save(entity);
 
-        if (patch.attributes() != null) {
-            updateAsset(entity, patch.attributes());
+        var patchAttributes = patch.attributes();
+        if (patchAttributes != null && !patchAttributes.isEmpty()) {
+            updateAsset(entity, patchAttributes);
         }
     }
 
@@ -128,9 +130,12 @@ public class AssetService {
         }
 
         Map<String, AttributeEntity> existing = new HashMap<>();
-        for (AttributeEntity attribute : asset.getAttributes()) {
-            if (attribute != null) {
-                existing.put(attribute.getName(), attribute);
+        var currentEntities = asset.getAttributes();
+        if (currentEntities != null) {
+            for (var attribute : currentEntities) {
+                if (attribute != null) {
+                    existing.put(attribute.getName(), attribute);
+                }
             }
         }
 
@@ -157,14 +162,16 @@ public class AssetService {
     }
 
     private void persistAttributes(AssetEntity asset, Collection<AttributeValue<?>> attributes) {
-        if (attributes != null) {
-            for (AttributeValue<?> attributeValue : attributes) {
-                if (attributeValue == null) {
-                    continue;
-                }
-                AttributeEntity entity = attributeMapper.toEntity(asset, attributeValue);
-                asset.getAttributes().add(entity);
+        if (attributes == null || attributes.isEmpty()) {
+            assetRepo.save(asset);
+            return;
+        }
+        for (var attributeValue : attributes) {
+            if (attributeValue == null) {
+                continue;
             }
+            AttributeEntity entity = attributeMapper.toEntity(asset, attributeValue);
+            asset.getAttributes().add(entity);
         }
         assetRepo.save(asset);
     }
