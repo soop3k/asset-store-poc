@@ -1,46 +1,64 @@
 package com.db.assetstore.infra.service.cmd;
 
 import com.db.assetstore.AssetType;
-import com.db.assetstore.infra.json.AttributeJsonReader;
 import com.db.assetstore.domain.model.type.AVBoolean;
 import com.db.assetstore.domain.model.type.AVDecimal;
 import com.db.assetstore.domain.model.type.AVString;
+import com.db.assetstore.domain.model.type.AttributeType;
 import com.db.assetstore.domain.service.cmd.CreateAssetCommand;
 import com.db.assetstore.domain.service.cmd.factory.CreateAssetCommandFactory;
 import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
-import com.db.assetstore.domain.service.type.TypeSchemaRegistry;
+import com.db.assetstore.domain.service.validation.AttributeValidator;
+import com.db.assetstore.domain.service.validation.rule.CustomValidationRuleRegistry;
+import com.db.assetstore.domain.service.validation.rule.ValidationRuleFactory;
+import com.db.assetstore.testutil.TestAttributeDefinitionRegistry;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;
-import com.db.assetstore.infra.service.type.SchemaAttributeDefinitionLoader;
+import com.db.assetstore.infra.json.AttributeJsonReader;
+import com.db.assetstore.infra.json.AttributePayloadParser;
+import com.db.assetstore.infra.json.AttributeValueAssembler;
+import com.db.assetstore.testutil.validation.MatchingAttributesRule;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
-
+import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
+import static com.db.assetstore.testutil.AttributeTestHelpers.constraint;
+import static com.db.assetstore.testutil.AttributeTestHelpers.definition;
+import static com.db.assetstore.domain.service.type.ConstraintDefinition.Rule.TYPE;
 
 class CreateAssetCommandFactoryTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-
     private CreateAssetCommandFactory factory;
+    private AttributeDefinitionRegistry registry;
+    private CustomValidationRuleRegistry customRegistry;
 
     @BeforeEach
     void setUp() {
-        AttributeJsonReader attributeJsonReader = createJsonReader();
-        factory = new CreateAssetCommandFactory(attributeJsonReader);
+        var city = definition(AssetType.CRE, "city", AttributeType.STRING);
+        var area = definition(AssetType.CRE, "area", AttributeType.DECIMAL);
+        var active = definition(AssetType.CRE, "active", AttributeType.BOOLEAN);
+
+        registry = TestAttributeDefinitionRegistry.builder()
+                .withAttribute(city, constraint(city, TYPE))
+                .withAttribute(area, constraint(area, TYPE))
+                .withAttribute(active, constraint(active, TYPE))
+                .withAssetType(AssetType.SHIP)
+                .build();
+        customRegistry = new CustomValidationRuleRegistry(List.of(new MatchingAttributesRule()));
+        var validator = new AttributeValidator(registry, ruleFactory(customRegistry));
+        AttributeJsonReader reader = new AttributeJsonReader(
+                new AttributePayloadParser(),
+                new AttributeValueAssembler(registry)
+        );
+        factory = new CreateAssetCommandFactory(validator, reader);
     }
 
     @Test
     void populatesCommandAndParsesAttributes() {
-        ObjectNode attributes = objectMapper.createObjectNode();
-        attributes.put("city", "Frankfurt");
-        attributes.put("area", new BigDecimal("500.25"));
-        attributes.put("active", true);
-
         AssetCreateRequest request = new AssetCreateRequest(
                 "asset-1",
                 AssetType.CRE,
@@ -50,7 +68,7 @@ class CreateAssetCommandFactoryTest {
                 2024,
                 "Created",
                 "USD",
-                attributes,
+                attributesNode("Frankfurt", new BigDecimal("500.25"), true),
                 "creator"
         );
 
@@ -95,28 +113,16 @@ class CreateAssetCommandFactoryTest {
         assertThat(command.requestTime()).isNotNull();
     }
 
-    private AttributeJsonReader createJsonReader() {
-        TypeSchemaRegistry typeSchemaRegistry = new TypeSchemaRegistry(objectMapper);
-        typeSchemaRegistry.discover();
-
-        SchemaAttributeDefinitionLoader schemaLoader = new SchemaAttributeDefinitionLoader(typeSchemaRegistry);
-
-        AttributeDefinitionRegistry registry = new AttributeDefinitionRegistry() {
-            private final Map<AssetType, Map<String, AttributeDefinition>> cache = new HashMap<>();
-
-            @Override
-            public Map<String, AttributeDefinition> getDefinitions(AssetType type) {
-                return cache.computeIfAbsent(type,
-                        t -> schemaLoader.load(t).orElseGet(Map::of));
-            }
-
-            @Override
-            public void refresh() {
-                cache.clear();
-            }
-        };
-        registry.refresh();
-
-        return new AttributeJsonReader(objectMapper, registry);
+    private ValidationRuleFactory ruleFactory(CustomValidationRuleRegistry customRegistry) {
+        return new ValidationRuleFactory(customRegistry);
     }
+
+    private ObjectNode attributesNode(String city, BigDecimal area, boolean active) {
+        ObjectNode node = objectMapper.createObjectNode();
+        node.put("city", city);
+        node.put("area", area);
+        node.put("active", active);
+        return node;
+    }
+
 }

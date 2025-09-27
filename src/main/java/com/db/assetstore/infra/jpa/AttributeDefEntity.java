@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import com.db.assetstore.AssetType;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "asset_attribute_def")
 @Getter
@@ -29,6 +32,9 @@ public class AttributeDefEntity {
 
     @Column(name = "required", nullable = false)
     private boolean required = false;
+
+    @OneToMany(mappedBy = "attributeDefinition", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ConstraintDefEntity> constraints = new ArrayList<>();
 
     public AttributeDefEntity(AssetType type, String name, AttributeType valueType, boolean required) {
         this.type = type;

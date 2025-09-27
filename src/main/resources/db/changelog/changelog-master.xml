@@ -206,4 +206,22 @@
         </createIndex>
     </changeSet>
 
+    <changeSet id="10-attr-constraint-def" author="assistant">
+        <createTable tableName="asset_attribute_constraint_def">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="attribute_def_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value" type="varchar(2048)"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="asset_attribute_constraint_def" baseColumnNames="attribute_def_id"
+                                  referencedTableName="asset_attribute_def" referencedColumnNames="id"
+                                  constraintName="fk_attr_constraint_definition"/>
+    </changeSet>
+
 </databaseChangeLog>

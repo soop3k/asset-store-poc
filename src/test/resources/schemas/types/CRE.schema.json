@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Commercial Real Estate Asset",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string" },
+    "city": {
+      "type": "string",
+      "x-customRules": [
+        "matchingAttributes"
+      ]
+    },
+    "area": { "type": "number" },
+    "rooms": {
+      "type": "integer",
+      "x-customRules": "matchingAttributes"
+    },
+    "active": { "type": "boolean" }
+  },
+  "required": [ "city" ]
+}
