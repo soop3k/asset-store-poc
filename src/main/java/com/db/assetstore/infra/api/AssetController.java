@@ -77,21 +77,14 @@ public class AssetController {
     @PutMapping(path = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> updateAsset(@PathVariable("id") String id, @RequestBody AssetPatchRequest request) {
         log.info("HTTP PUT /assets/{} - updating asset", id);
-        var current = assetQueryService.get(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Asset %s not found".formatted(id)));
-
-        var cmd = commandFactoryRegistry.createPatchCommand(current.getType(), id, request);
-        commandService.update(cmd);
+        applyPatch(id, request);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping(path = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> patchAsset(@PathVariable("id") String id, @RequestBody AssetPatchRequest request) {
         log.info("HTTP PATCH /assets/{} - patch asset", id);
-        var current = assetQueryService.get(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Asset %s not found".formatted(id)));
-        var cmd = commandFactoryRegistry.createPatchCommand(current.getType(), id, request);
-        commandService.update(cmd);
+        applyPatch(id, request);
         return ResponseEntity.noContent().build();
     }
 
@@ -102,12 +95,7 @@ public class AssetController {
             return ResponseEntity.noContent().build();
         }
         log.info("HTTP PATCH /assets/bulk - patch {} assets", requests.size());
-        for (var item : requests) {
-            var current = assetQueryService.get(item.getId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Asset %s not found".formatted(item.getId())));
-            var cmd = commandFactoryRegistry.createPatchCommand(current.getType(), item);
-            commandService.update(cmd);
-        }
+        requests.forEach(item -> applyPatch(item.getId(), item));
         return ResponseEntity.noContent().build();
     }
 
@@ -118,5 +106,12 @@ public class AssetController {
         var cmd = commandFactoryRegistry.createDeleteCommand(id, request);
         commandService.delete(cmd);
         return ResponseEntity.noContent().build();
+    }
+
+    private void applyPatch(String id, AssetPatchRequest request) {
+        var current = assetQueryService.get(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Asset %s not found".formatted(id)));
+        var cmd = commandFactoryRegistry.createPatchCommand(current.getType(), id, request);
+        commandService.update(cmd);
     }
 }
