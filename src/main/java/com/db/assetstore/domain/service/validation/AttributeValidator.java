@@ -5,7 +5,6 @@ import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.model.attribute.AttributesCollection;
 import com.db.assetstore.domain.service.type.AttributeDefinition;
 import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
-import com.db.assetstore.domain.service.type.ConstraintDefinition;
 import com.db.assetstore.domain.service.validation.rule.AttributeValidationContext;
 import com.db.assetstore.domain.service.validation.rule.AttributeValidationException;
 import com.db.assetstore.domain.service.validation.rule.RuleViolationException;
@@ -52,21 +51,14 @@ public class AttributeValidator {
         enforceKnownAttributes(mode, definitionMap, values);
 
         for (var definition : definitionMap.values()) {
-            var providedValues = values.get(definition.name());
-            var attributeProvided = providedValues != null && !providedValues.isEmpty();
-
             var context = new AttributeValidationContext(type, definition, attributes);
 
             var constraints = constraintMap.getOrDefault(definition.name(), List.of());
             var rules = validationRuleFactory.build(definition, constraints);
             for (var rule : rules) {
-                if (!mode.enforceRequiredForMissing()
-                        && rule.rule() == ConstraintDefinition.Rule.REQUIRED
-                        && !attributeProvided) {
-                    continue;
+                if (rule.shouldValidate(context, mode)) {
+                    rule.validate(context);
                 }
-
-                rule.validate(context);
             }
         }
     }

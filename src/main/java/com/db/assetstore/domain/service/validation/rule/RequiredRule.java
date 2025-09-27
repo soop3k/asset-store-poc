@@ -1,5 +1,7 @@
 package com.db.assetstore.domain.service.validation.rule;
 
+import com.db.assetstore.domain.service.validation.ValidationMode;
+
 public final class RequiredRule implements ValidationRule {
 
     private final String attributeName;
@@ -11,6 +13,11 @@ public final class RequiredRule implements ValidationRule {
     @Override
     public ConstraintDefinition.Rule rule() {
         return ConstraintDefinition.Rule.REQUIRED;
+    }
+
+    @Override
+    public boolean shouldValidate(AttributeValidationContext context, ValidationMode mode) {
+        return mode.enforceRequiredForMissing() || !context.values().isEmpty();
     }
 
     @Override
