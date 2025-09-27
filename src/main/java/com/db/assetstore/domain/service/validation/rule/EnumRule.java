@@ -24,10 +24,7 @@ public final class EnumRule implements ValidationRule {
 
     @Override
     public void validate(AttributeValidationContext context) {
-        for (var value : context.values()) {
-            if (value == null || value.value() == null) {
-                continue;
-            }
+        RuleExecutionHelper.forEachPresentValue(context, value -> {
             var match = value.accept(new AttributeValueVisitor<Boolean>() {
                 @Override
                 public Boolean visitString(String v, String name) {
@@ -48,7 +45,7 @@ public final class EnumRule implements ValidationRule {
                 throw new RuleViolationException(rule().name(), attributeName,
                         "Value '" + value.value() + "' is not allowed");
             }
-        }
+        });
     }
 
     private AllowedValues parseAllowed(String raw) {

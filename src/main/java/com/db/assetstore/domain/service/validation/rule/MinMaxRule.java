@@ -25,10 +25,7 @@ public final class MinMaxRule implements ValidationRule {
 
     @Override
     public void validate(AttributeValidationContext context) {
-        for (var value : context.values()) {
-            if (value == null || value.value() == null) {
-                continue;
-            }
+        RuleExecutionHelper.forEachPresentValue(context, value -> {
             var number = toDecimal(value);
             if (min != null && number.compareTo(min) < 0) {
                 throw new RuleViolationException(rule().name(), attributeName,
@@ -38,7 +35,7 @@ public final class MinMaxRule implements ValidationRule {
                 throw new RuleViolationException(rule().name(), attributeName,
                         "Value " + number + " exceeds maximum " + max);
             }
-        }
+        });
     }
 
     private Bounds parseBounds(String raw) {

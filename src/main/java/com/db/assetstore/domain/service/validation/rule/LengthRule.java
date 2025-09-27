@@ -20,32 +20,28 @@ public final class LengthRule implements ValidationRule {
 
     @Override
     public void validate(AttributeValidationContext context) {
-        for (var value : context.values()) {
-            if (value == null || value.value() == null) {
-                continue;
-            }
-            value.accept(new AttributeValueVisitor<Void>() {
-                @Override
-                public Void visitString(String v, String name) {
-                    ensureLength(v == null ? 0 : v.length());
-                    return null;
-                }
+        RuleExecutionHelper.forEachPresentValue(context, value ->
+                value.accept(new AttributeValueVisitor<Void>() {
+                    @Override
+                    public Void visitString(String v, String name) {
+                        ensureLength(v == null ? 0 : v.length());
+                        return null;
+                    }
 
-                @Override
-                public Void visitDecimal(java.math.BigDecimal v, String name) {
-                    var text = v == null ? "" : v.toPlainString();
-                    ensureLength(text.length());
-                    return null;
-                }
+                    @Override
+                    public Void visitDecimal(java.math.BigDecimal v, String name) {
+                        var text = v == null ? "" : v.toPlainString();
+                        ensureLength(text.length());
+                        return null;
+                    }
 
-                @Override
-                public Void visitBoolean(Boolean v, String name) {
-                    var text = v == null ? "" : v.toString();
-                    ensureLength(text.length());
-                    return null;
-                }
-            });
-        }
+                    @Override
+                    public Void visitBoolean(Boolean v, String name) {
+                        var text = v == null ? "" : v.toString();
+                        ensureLength(text.length());
+                        return null;
+                    }
+                }));
     }
 
     private int parseMax(String raw) {
