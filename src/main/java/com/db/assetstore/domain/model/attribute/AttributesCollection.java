@@ -4,8 +4,6 @@ import com.db.assetstore.domain.model.type.AVBoolean;
 import com.db.assetstore.domain.model.type.AVDecimal;
 import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.domain.model.type.AttributeType;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -55,23 +53,15 @@ public final class AttributesCollection {
         return new AttributesCollection(copy);
     }
 
-    @JsonCreator
-    public static AttributesCollection jsonCreate(Map<String, List<AttributeValue<?>>> json) {
-        return fromMap(json);
-    }
 
-    @JsonValue
-    public Map<String, List<AttributeValue<?>>> json() {
-        return asMapView();
-    }
-
-    public Map<String, List<AttributeValue<?>>> asMapView() {
+    public Map<String, List<AttributeValue<?>>> asMap() {
         LinkedHashMap<String, List<AttributeValue<?>>> out = new LinkedHashMap<>();
-        data.forEach((k, v) -> out.put(k, Collections.unmodifiableList(v)));
+        data.forEach(
+                (k, v) -> out.put(k, Collections.unmodifiableList(v)));
         return Collections.unmodifiableMap(out);
     }
 
-    public List<AttributeValue<?>> asListView() {
+    public List<AttributeValue<?>> asList() {
         ArrayList<AttributeValue<?>> out = new ArrayList<>();
         data.values().forEach(out::addAll);
         return Collections.unmodifiableList(out);
@@ -80,9 +70,14 @@ public final class AttributesCollection {
     public boolean isEmpty() { return data.isEmpty(); }
     public int size() { return data.size(); }
 
-    public Optional<AttributeValue<?>> getFirst(String name) {
+    public Optional<AttributeValue<?>> get(String name) {
         var vs = data.get(name);
         return (vs == null || vs.isEmpty()) ? Optional.empty() : Optional.of(vs.get(0));
+    }
+
+    public Optional<AttributeValue<?>> get(String name, int index) {
+        var vs = data.get(name);
+        return (vs == null || vs.isEmpty()) ? Optional.empty() : Optional.of(vs.get(index));
     }
 
     public List<AttributeValue<?>> getAll(String name) {
@@ -93,8 +88,8 @@ public final class AttributesCollection {
         return Collections.unmodifiableList(vs);
     }
 
-    public <T> Optional<T> getOne(String name, Class<T> type) {
-        return getFirst(name).map(AttributeValue::value).map(type::cast);
+    public <T> Optional<T> get(String name, Class<T> type) {
+        return get(name).map(AttributeValue::value).map(type::cast);
     }
 
     public <T> List<T> getMany(String name, Class<T> type) {

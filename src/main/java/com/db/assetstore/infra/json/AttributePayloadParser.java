@@ -16,6 +16,7 @@ public class AttributePayloadParser {
         }
         var values = new ArrayList<ParsedAttributeValue>();
         var fieldNames = payload.fieldNames();
+
         while (fieldNames.hasNext()) {
             var name = fieldNames.next();
             var valueNode = payload.get(name);

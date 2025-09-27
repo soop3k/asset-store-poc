@@ -34,24 +34,5 @@ public class BootstrapService {
         }
 
         log.info("Supported asset types (schemas found): {}", typeSchemaRegistry.supportedTypes());
-
-        try {
-            List<String> names = getTransformFileNames();
-            Collections.sort(names);
-            log.info("Discovered transforms ({}): {}", names.size(), names);
-        } catch (Exception e) {
-            log.warn("Failed to scan transforms: {}", e.getMessage());
-        }
-    }
-
-    private static List<String> getTransformFileNames() throws IOException {
-        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-        Resource[] resources = resolver.getResources("classpath*:transforms/**/*.jslt");
-
-        return Arrays.stream(resources)
-                .map(Resource::getFilename)
-                .filter(Objects::nonNull)
-                .map(filename -> filename.substring(0, filename.lastIndexOf('.')))
-                .collect(Collectors.toList());
     }
 }

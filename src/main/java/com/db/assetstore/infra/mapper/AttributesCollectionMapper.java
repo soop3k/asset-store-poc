@@ -4,11 +4,8 @@ import com.db.assetstore.infra.jpa.AttributeEntity;
 import com.db.assetstore.infra.jpa.AssetEntity;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.model.attribute.AttributesCollection;
-import lombok.RequiredArgsConstructor;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Objects;
@@ -34,7 +31,7 @@ public interface AttributesCollectionMapper {
             return List.of();
         }
         AttributeMapper mapper = Mappers.getMapper(AttributeMapper.class);
-        return collection.asListView().stream()
+        return collection.asList().stream()
                 .map(av -> mapper.toEntity(parent, av))
                 .collect(Collectors.toList());
     }

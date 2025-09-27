@@ -50,7 +50,7 @@ public final class Asset {
 
     @JsonIgnore
     public List<AttributeValue<?>> getAttributesFlat() {
-        return attributes.asListView();
+        return attributes.asList();
     }
 
     @JsonProperty("attributes")
@@ -59,7 +59,7 @@ public final class Asset {
         if (attributes.isEmpty()) {
             return out;
         }
-        var grouped = attributes.asMapView();
+        var grouped = attributes.asMap();
         if (grouped.isEmpty()) {
             return out;
         }
@@ -73,11 +73,11 @@ public final class Asset {
 
     @JsonIgnore
     public Map<String, List<AttributeValue<?>>> getAttributesByName() {
-        return attributes.asMapView();
+        return attributes.asMap();
     }
 
     public <T> Optional<T> getAttr(String name, Class<T> type) {
-        return attributes.getOne(name, type);
+        return attributes.get(name, type);
     }
 
     public <T> List<T> getAttrs(String name, Class<T> type) {

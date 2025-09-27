@@ -24,9 +24,4 @@ public final class AttributeTestHelpers {
         return new ConstraintDefinition(definition, rule, value);
     }
 
-    public static List<ConstraintDefinition> constraints(AttributeDefinition definition, ConstraintDefinition.Rule... rules) {
-        return java.util.Arrays.stream(rules)
-                .map(rule -> constraint(definition, rule, null))
-                .toList();
-    }
 }

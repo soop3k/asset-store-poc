@@ -9,14 +9,12 @@ import com.db.assetstore.domain.service.validation.rule.AttributeValidationConte
 import com.db.assetstore.domain.service.validation.rule.AttributeValidationErrorsException;
 import com.db.assetstore.domain.service.validation.rule.RuleViolation;
 import com.db.assetstore.domain.service.validation.rule.RuleViolationException;
-import com.db.assetstore.domain.service.validation.rule.ValidationRule;
 import com.db.assetstore.domain.service.validation.rule.ValidationRuleFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 @Component
 public class AttributeValidator {
@@ -46,7 +44,7 @@ public class AttributeValidator {
         var definitionMap = attributeDefinitionRegistry.getDefinitions(type);
         var constraintMap = attributeDefinitionRegistry.getConstraints(type);
 
-        var values = attributes.asMapView();
+        var values = attributes.asMap();
         var violations = new ArrayList<RuleViolation>();
 
         enforceKnownAttributes(mode, definitionMap, values, violations);

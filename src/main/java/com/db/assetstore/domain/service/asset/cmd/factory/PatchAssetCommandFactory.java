@@ -36,7 +36,7 @@ public class PatchAssetCommandFactory {
 
         attributeValidator.validate(assetType, attributes, ValidationMode.PARTIAL);
 
-        List<AttributeValue<?>> attributeValues = attributes.asListView();
+        List<AttributeValue<?>> attributeValues = attributes.asList();
 
         return PatchAssetCommand.builder()
                 .assetId(assetId)

@@ -55,14 +55,14 @@ class AttributeJsonReaderTest {
         var result = reader.read(AssetType.CRE, payload);
 
         assertThat(result).extracting(
-                AttributesCollection::asListView
+                AttributesCollection::asList
         ).isEqualTo(
                 AttributesCollection.fromFlat(List.of(
                         new AVString("city", "Warsaw"),
                         new AVBoolean("active", true),
                         new AVDecimal("area", new BigDecimal("123.45")),
                         new AVDecimal("area", new BigDecimal("678.90"))
-                )).asListView()
+                )).asList()
         );
     }
 

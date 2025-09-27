@@ -69,7 +69,7 @@ class AssetQueryServiceTest {
         assertEquals("desc", found.getDescription());
         List<AttributeValue<?>> attrs = found.getAttributesFlat();
         assertEquals(1, attrs.size());
-        assertTrue(attrs.get(0) instanceof AVString);
+        assertInstanceOf(AVString.class, attrs.get(0));
         assertEquals("city", attrs.get(0).name());
         assertEquals("Warsaw", ((AVString) attrs.get(0)).value());
     }

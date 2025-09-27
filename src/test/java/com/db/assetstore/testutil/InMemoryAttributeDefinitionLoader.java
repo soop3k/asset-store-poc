@@ -74,10 +74,6 @@ public final class InMemoryAttributeDefinitionLoader implements AttributeDefinit
             return this;
         }
 
-        public Builder configure(Consumer<Builder> consumer) {
-            consumer.accept(this);
-            return this;
-        }
 
         public InMemoryAttributeDefinitionLoader build() {
             Map<AssetType, AttributeDefinitions> prepared = new HashMap<>();

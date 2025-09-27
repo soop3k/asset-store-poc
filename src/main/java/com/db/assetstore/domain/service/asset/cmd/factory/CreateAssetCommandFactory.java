@@ -30,7 +30,7 @@ public class CreateAssetCommandFactory {
 
         attributeValidator.validate(request.type(), attributes, ValidationMode.STRICT);
 
-        List<AttributeValue<?>> attributeValues = attributes.asListView();
+        List<AttributeValue<?>> attributeValues = attributes.asList();
 
         return CreateAssetCommand.builder()
                 .id(request.id())
