@@ -21,6 +21,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import com.db.assetstore.domain.service.validation.rule.CustomRuleNameResolver;
+
 @Slf4j
 @Component
 @Order(2)
@@ -72,6 +74,8 @@ public class SchemaAttributeDefinitionLoader implements AttributeDefinitionLoade
             readLengthRule(definitionNode)
                     .map(value -> new ConstraintDefinition(attributeDefinition, ConstraintDefinition.Rule.LENGTH, value))
                     .ifPresent(attributeConstraints::add);
+            readCustomRules(attributeDefinition, definitionNode)
+                    .forEach(attributeConstraints::add);
 
             constraints.put(name, List.copyOf(attributeConstraints));
         }
@@ -164,5 +168,47 @@ public class SchemaAttributeDefinitionLoader implements AttributeDefinitionLoade
             return Optional.empty();
         }
         return Optional.of(maxLength.asText());
+    }
+
+    private static List<ConstraintDefinition> readCustomRules(AttributeDefinition definition, JsonNode definitionNode) {
+        if (definitionNode == null || !definitionNode.isObject()) {
+            return List.of();
+        }
+
+        var customNode = definitionNode.get("x-customRules");
+        if (customNode == null || customNode.isNull()) {
+            return List.of();
+        }
+
+        var collected = new ArrayList<ConstraintDefinition>();
+        if (customNode.isArray()) {
+            customNode.forEach(node -> appendCustomRule(definition, node, collected));
+        } else {
+            appendCustomRule(definition, customNode, collected);
+        }
+        return List.copyOf(collected);
+    }
+
+    private static void appendCustomRule(AttributeDefinition definition,
+                                         JsonNode node,
+                                         List<ConstraintDefinition> target) {
+        if (node == null || node.isNull()) {
+            return;
+        }
+
+        String className = null;
+        if (node.isTextual()) {
+            className = node.asText();
+        } else if (node.isObject()) {
+            var classNode = node.get("class");
+            if (classNode != null && classNode.isTextual()) {
+                className = classNode.asText();
+            }
+        }
+
+        var resolved = CustomRuleNameResolver.fromClassName(className);
+        if (resolved != null && !resolved.isBlank()) {
+            target.add(new ConstraintDefinition(definition, ConstraintDefinition.Rule.CUSTOM, resolved));
+        }
     }
 }

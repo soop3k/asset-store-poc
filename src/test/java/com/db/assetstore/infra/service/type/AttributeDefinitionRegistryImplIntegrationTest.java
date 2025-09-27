@@ -76,6 +76,17 @@ class AttributeDefinitionRegistryImplIntegrationTest {
     }
 
     @Test
+    void schemaCustomRulesAreResolvedByClassName() {
+        Map<String, List<ConstraintDefinition>> constraints = registry.getConstraints(AssetType.CRE);
+
+        assertThat(constraints.getOrDefault("rooms", List.of()))
+                .anySatisfy(c -> {
+                    assertThat(c.rule()).isEqualTo(ConstraintDefinition.Rule.CUSTOM);
+                    assertThat(c.value()).isEqualTo("matchingAttributes");
+                });
+    }
+
+    @Test
     void fallsBackToDatabaseWhenSchemaIsMissing() {
         attributeDefRepository.save(new AttributeDefEntity(AssetType.AV, "tailNumber", AttributeType.STRING, true));
         attributeDefRepository.save(new AttributeDefEntity(AssetType.AV, "manufacturer", AttributeType.STRING, false));
