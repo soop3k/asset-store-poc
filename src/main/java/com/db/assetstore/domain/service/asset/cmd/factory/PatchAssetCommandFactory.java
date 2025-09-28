@@ -7,7 +7,7 @@ import com.db.assetstore.domain.service.asset.cmd.PatchAssetCommand;
 import com.db.assetstore.domain.service.validation.AttributeValidator;
 import com.db.assetstore.domain.service.validation.ValidationMode;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;
-import com.db.assetstore.infra.json.AttributeJsonReader;
+import com.db.assetstore.infra.json.reader.AttributeJsonReader;
 import lombok.NonNull;
 import org.springframework.stereotype.Component;
 
@@ -28,10 +28,6 @@ public class PatchAssetCommandFactory {
 
     public PatchAssetCommand createCommand(@NonNull AssetType assetType, @NonNull String assetId,
                                            @NonNull AssetPatchRequest request) {
-        if (assetId.isBlank()) {
-            throw new IllegalArgumentException("assetId must not be blank");
-        }
-
         AttributesCollection attributes = attributeJsonReader.read(assetType, request.getAttributes());
 
         attributeValidator.validate(assetType, attributes, ValidationMode.PARTIAL);

@@ -57,10 +57,7 @@ public final class RuleViolation {
         return actual;
     }
 
-    /**
-     * Human readable representation that includes attribute names and
-     * expected/actual context when available.
-     */
+
     public String format() {
         var prefix = attributes.isEmpty()
                 ? ""

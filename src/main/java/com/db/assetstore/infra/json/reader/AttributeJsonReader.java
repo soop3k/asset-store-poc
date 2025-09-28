@@ -1,4 +1,4 @@
-package com.db.assetstore.infra.json;
+package com.db.assetstore.infra.json.reader;
 
 import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.model.attribute.AttributesCollection;

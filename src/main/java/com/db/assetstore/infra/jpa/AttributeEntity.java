@@ -45,6 +45,9 @@ public class AttributeEntity {
     @Column(name = "value_num", precision = 38, scale = 10)
     private BigDecimal valueNum;
 
+    @Column(name = "value_date")
+    private Instant valueDate;
+
     @Column(name = "updated_at")
     private Instant updatedAt;
 
@@ -73,6 +76,14 @@ public class AttributeEntity {
         this.updatedAt=when;
         this.valueType=AttributeType.BOOLEAN;
         this.valueBool=v;
+    }
+
+    public AttributeEntity(AssetEntity a, String n, Instant v, Instant when) {
+        this.asset=a;
+        this.name=n;
+        this.updatedAt=when;
+        this.valueType=AttributeType.DATE;
+        this.valueDate=v;
     }
 
     public void addHistory(Instant when) {

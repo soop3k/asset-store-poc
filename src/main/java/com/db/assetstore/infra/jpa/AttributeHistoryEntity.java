@@ -23,7 +23,6 @@ public class AttributeHistoryEntity {
     @JoinColumn(name = "attribute_id", nullable = false)
     private AttributeEntity attribute;
 
-    // redundancja dla wygodnych zapytań
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "asset_id", nullable = false)
     private AssetEntity asset;
@@ -40,6 +39,9 @@ public class AttributeHistoryEntity {
     @Column(name = "value_num", precision = 38, scale = 10)
     private BigDecimal valueNum;
 
+    @Column(name = "value_date")
+    private Instant valueDate;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "value_type", length = 32, nullable = false)
     private AttributeType valueType;
@@ -49,12 +51,13 @@ public class AttributeHistoryEntity {
 
     public AttributeHistoryEntity(@NonNull AttributeEntity attribute, @NonNull Instant when) {
         this.attribute = attribute;
-        this.asset     = attribute.getAsset();
-        this.name      = attribute.getName();
-        this.valueType = attribute.getValueType();
-        this.valueStr  = attribute.getValueStr();
-        this.valueNum  = attribute.getValueNum();
-        this.valueBool = attribute.getValueBool();
-        this.changedAt = when;
+        asset     = attribute.getAsset();
+        name      = attribute.getName();
+        valueType = attribute.getValueType();
+        valueStr  = attribute.getValueStr();
+        valueNum  = attribute.getValueNum();
+        valueBool = attribute.getValueBool();
+        valueDate = attribute.getValueDate();
+        changedAt = when;
     }
 }

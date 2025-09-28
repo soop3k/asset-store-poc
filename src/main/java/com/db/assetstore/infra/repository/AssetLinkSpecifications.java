@@ -13,7 +13,7 @@ public final class AssetLinkSpecifications {
     }
 
     public static final class Builder {
-        private Specification<AssetLinkEntity> spec = Specification.where(null);
+        private Specification<AssetLinkEntity> spec = Specification.unrestricted();
 
         public Builder assetId(String assetId) {
             if (assetId != null) {

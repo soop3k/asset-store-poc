@@ -1,7 +1,6 @@
-package com.db.assetstore.infra.json;
+package com.db.assetstore.infra.json.reader;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import lombok.NonNull;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;

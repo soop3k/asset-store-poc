@@ -1,9 +1,6 @@
 package com.db.assetstore.domain.model.attribute;
 
-import com.db.assetstore.domain.model.type.AVBoolean;
-import com.db.assetstore.domain.model.type.AVDecimal;
-import com.db.assetstore.domain.model.type.AVString;
-import com.db.assetstore.domain.model.type.AttributeType;
+import com.db.assetstore.domain.model.type.*;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
@@ -11,7 +8,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonSubTypes({
         @JsonSubTypes.Type(value = AVString.class,  name = "STRING"),
         @JsonSubTypes.Type(value = AVDecimal.class, name = "DECIMAL"),
-        @JsonSubTypes.Type(value = AVBoolean.class, name = "BOOLEAN")
+        @JsonSubTypes.Type(value = AVBoolean.class, name = "BOOLEAN"),
+        @JsonSubTypes.Type(value = AVDate.class, name = "DATE")
 })
 public interface AttributeValue<T> {
 

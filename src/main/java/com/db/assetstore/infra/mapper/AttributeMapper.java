@@ -1,5 +1,6 @@
 package com.db.assetstore.infra.mapper;
 
+import com.db.assetstore.domain.model.type.AVDate;
 import com.db.assetstore.infra.jpa.AssetEntity;
 import com.db.assetstore.infra.jpa.AttributeEntity;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
@@ -12,10 +13,7 @@ import org.mapstruct.Mapper;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-/**
- * MapStruct-backed mapper for attribute conversions between JPA entity and domain model.
- * Only three attribute types are supported system-wide: String, Decimal (BigDecimal), and Boolean.
- */
+
 @Mapper(componentModel = "spring")
 public interface AttributeMapper {
 
@@ -28,7 +26,8 @@ public interface AttributeMapper {
         return switch (e.getValueType()) {
             case BOOLEAN -> new AVBoolean(e.getName(), e.getValueBool());
             case DECIMAL -> new AVDecimal(e.getName(), e.getValueNum());
-            default -> new AVString(e.getName(), e.getValueStr());
+            case DATE -> new AVDate(e.getName(), e.getValueDate());
+            case STRING -> new AVString(e.getName(), e.getValueStr());
         };
     }
 
@@ -40,7 +39,10 @@ public interface AttributeMapper {
         @Override
         public AttributeEntity visitDecimal(BigDecimal v, String name) { return new AttributeEntity(parent, name, v, when);}
         @Override
-        public AttributeEntity visitBoolean(Boolean v, String name) { return new AttributeEntity(parent, name, v, when);}    }
+        public AttributeEntity visitBoolean(Boolean v, String name) { return new AttributeEntity(parent, name, v, when);}
+        @Override
+        public AttributeEntity visitDate(Instant v, String name) { return new AttributeEntity(parent, name, v, when); }
+    }
 }
 
 

@@ -2,6 +2,7 @@ package com.db.assetstore.domain.service.validation.rule;
 
 import com.db.assetstore.domain.service.type.AttributeDefinition;
 import com.db.assetstore.domain.service.type.ConstraintDefinition;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -9,24 +10,20 @@ import java.util.List;
 import java.util.Objects;
 
 @Component
+@RequiredArgsConstructor
 public class ValidationRuleFactory {
 
     private final CustomValidationRuleRegistry customRegistry;
 
-    public ValidationRuleFactory(CustomValidationRuleRegistry customRegistry) {
-        this.customRegistry = customRegistry;
-    }
-
     public List<ValidationRule> build(AttributeDefinition definition,
                                       List<ConstraintDefinition> constraints) {
-        Objects.requireNonNull(definition, "attribute definition must not be null");
-        Objects.requireNonNull(constraints, "constraints must not be null");
-        var rules = new ArrayList<ValidationRule>();
+
         if (constraints.isEmpty()) {
-            return List.copyOf(rules);
+            return List.of();
         }
+
+        var rules = new ArrayList<ValidationRule>();
         for (var constraint : constraints) {
-            Objects.requireNonNull(constraint, "constraint definition must not be null");
             switch (constraint.rule()) {
                 case TYPE -> rules.add(new TypeRule(definition));
                 case REQUIRED -> rules.add(new RequiredRule(definition.name()));
@@ -37,7 +34,7 @@ public class ValidationRuleFactory {
                 default -> throw new AttributeValidationException("Unsupported rule: " + constraint.rule());
             }
         }
-        return List.copyOf(rules);
+        return rules;
     }
 
     private ValidationRule resolveCustom(ConstraintDefinition constraint) {

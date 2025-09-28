@@ -1,20 +1,21 @@
-package com.db.assetstore.infra.json;
+package com.db.assetstore.infra.json.reader;
 
 import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.model.attribute.AttributesCollection;
-import com.db.assetstore.domain.model.type.AVBoolean;
-import com.db.assetstore.domain.model.type.AVDecimal;
-import com.db.assetstore.domain.model.type.AVString;
-import com.db.assetstore.domain.model.type.AttributeType;
+import com.db.assetstore.domain.model.type.*;
 import com.db.assetstore.domain.service.type.AttributeDefinition;
 import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 @Component
 public class AttributeValueAssembler {
@@ -34,7 +35,7 @@ public class AttributeValueAssembler {
             if (definition == null) {
                 throw AttributeParsingException.missingDefinition(raw.name());
             }
-            values.add(createValue(raw, definition));
+            Optional.ofNullable(createValue(raw, definition)).ifPresent(values::add);
         }
 
         return AttributesCollection.fromFlat(values);
@@ -42,25 +43,30 @@ public class AttributeValueAssembler {
 
     private AttributeValue<?> createValue(ParsedAttributeValue raw, AttributeDefinition definition) {
         var type = definition.attributeType();
-        var converted = convert(raw, type);
+        var node = raw.node();
+        var name = raw.name();
+
         return switch (type) {
-            case STRING -> new AVString(raw.name(), (String) converted);
-            case DECIMAL -> new AVDecimal(raw.name(), (BigDecimal) converted);
-            case BOOLEAN -> new AVBoolean(raw.name(), (Boolean) converted);
+            case STRING -> AVString.of(name, valueFromNode(name, node, this::parseString));
+            case DECIMAL -> AVDecimal.of(name, valueFromNode(name, node, this::parseDecimal));
+            case BOOLEAN -> AVBoolean.of(name, valueFromNode(name, node, this::parseBoolean));
+            case DATE -> AVDate.of(name, valueFromNode(name, node, this::parseDate));
         };
     }
 
-    private Object convert(ParsedAttributeValue raw, AttributeType expectedType) {
-        JsonNode node = raw.node();
+    private <R> R valueFromNode(String name, JsonNode node, BiFunction<String, JsonNode, R> parser) {
         if (node == null || node.isNull()) {
             return null;
         }
 
-        return switch (expectedType) {
-            case STRING -> parseString(raw.name(), node);
-            case DECIMAL -> parseDecimal(raw.name(), node);
-            case BOOLEAN -> parseBoolean(raw.name(), node);
-        };
+        return parser.apply(name, node);
+    }
+
+    private Instant parseDate(String name, JsonNode node) {
+        if (node.isTextual()) {
+            return Instant.parse(node.textValue());
+        }
+        throw AttributeParsingException.incompatibleType(name, AttributeType.DATE, node.getNodeType().name());
     }
 
     private String parseString(String name, JsonNode node) {

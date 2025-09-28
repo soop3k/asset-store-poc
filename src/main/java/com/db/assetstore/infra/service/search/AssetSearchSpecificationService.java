@@ -16,7 +16,7 @@ public class AssetSearchSpecificationService {
 
     public <T> Specification<T> buildSpec(SearchCriteria criteria) {
         return (root, query, cb) -> {
-            List<Predicate> preds = new ArrayList<>();
+            var preds = new ArrayList<Predicate>();
             preds.add(cb.equal(root.get("deleted"), 0));
 
             if (criteria != null) {
@@ -24,7 +24,7 @@ public class AssetSearchSpecificationService {
                     preds.add(cb.equal(root.get("type"), criteria.type()));
                 }
                 var conditions = criteria.conditions();
-                if (conditions != null && !conditions.isEmpty()) {
+                if (!conditions.isEmpty()) {
                     for (var c : conditions) {
                         preds.add(attributeMatch(cb, root, c));
                     }

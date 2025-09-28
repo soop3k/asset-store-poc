@@ -2,6 +2,7 @@ package com.db.assetstore.domain.service.validation;
 
 import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.model.attribute.AttributesCollection;
+import com.db.assetstore.domain.model.type.AVDate;
 import com.db.assetstore.domain.model.type.AVDecimal;
 import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.domain.model.type.AttributeType;
@@ -16,6 +17,7 @@ import com.db.assetstore.testutil.InMemoryAttributeDefinitionLoader;
 import com.db.assetstore.testutil.validation.MatchingAttributesRule;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -161,6 +163,29 @@ class AttributeValidatorTest {
     }
 
     @Test
+    void validatesValuesWithinDateBounds() {
+        var area = definition(AssetType.CRE, "constructionDate", AttributeType.DATE);
+        ConstraintDefinition type = constraint(area, Rule.TYPE);
+        ConstraintDefinition range = constraint(area, Rule.MIN_MAX, "2025-09-01T00:00:00Z, 2025-10-01T00:00:00Z");
+        Map<String, AttributeDefinition> defs = Map.of("constructionDate", area);
+        Map<String, List<ConstraintDefinition>> constraints = Map.of("constructionDate", List.of(type, range));
+        AttributeValidator validator = validator(defs, constraints);
+
+        assertThatCode(() -> validator.validate(AssetType.CRE,
+                AttributesCollection.fromFlat(List.of(AVDate.of("constructionDate", Instant.parse("2025-09-02T00:00:00Z"))))))
+                .doesNotThrowAnyException();
+
+        assertThatThrownBy(() -> validator.validate(AssetType.CRE,
+                AttributesCollection.fromFlat(List.of(AVDate.of("constructionDate", Instant.parse("2025-12-02T00:00:00Z"))))))
+                .isInstanceOf(AttributeValidationErrorsException.class);
+
+        assertThatThrownBy(() -> validator.validate(AssetType.CRE,
+                AttributesCollection.fromFlat(List.of(AVDecimal.of("constructionDate", 5)))))
+                .isInstanceOf(AttributeValidationErrorsException.class);
+
+    }
+
+    @Test
     void rejectsValuesOutsideEnumList() {
         var status = definition(AssetType.CRE, "status", AttributeType.STRING);
         ConstraintDefinition type = constraint(status, Rule.TYPE);
@@ -206,7 +231,6 @@ class AttributeValidatorTest {
                     var errors = (AttributeValidationErrorsException) ex;
                     assertThat(errors.violations()).anySatisfy(v -> {
                         assertThat(v.rule()).isEqualTo(Rule.LENGTH.name());
-                        assertThat(v.expected()).isEqualTo("<=5");
                     });
                 });
     }

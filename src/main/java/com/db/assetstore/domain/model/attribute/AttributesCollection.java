@@ -1,13 +1,11 @@
 package com.db.assetstore.domain.model.attribute;
 
-import com.db.assetstore.domain.model.type.AVBoolean;
-import com.db.assetstore.domain.model.type.AVDecimal;
-import com.db.assetstore.domain.model.type.AVString;
-import com.db.assetstore.domain.model.type.AttributeType;
+import com.db.assetstore.domain.model.type.*;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -107,48 +105,34 @@ public final class AttributesCollection {
         return Collections.unmodifiableList(out);
     }
 
-    public AttributesCollection set(String name, String v)      { return putOne(new AVString(req(name), v)); }
-    public AttributesCollection set(String name, Boolean v)     { return putOne(new AVBoolean(req(name), v)); }
-    public AttributesCollection set(String name, BigDecimal v)  { return putOne(new AVDecimal(req(name), v)); }
+    public AttributesCollection set(String name, String v)      { return putOne(new AVString(name, v)); }
+    public AttributesCollection set(String name, Boolean v)     { return putOne(new AVBoolean(name, v)); }
+    public AttributesCollection set(String name, BigDecimal v)  { return putOne(new AVDecimal(name, v)); }
+    public AttributesCollection set(String name, Instant v)    { return putOne(new AVDate(name, v));}
     public AttributesCollection set(String name, Number v) {
         BigDecimal bd = (v == null) ? null : new BigDecimal(v.toString());
-        return putOne(new AVDecimal(req(name), bd));
+        return putOne(new AVDecimal(name, bd));
     }
 
-    public AttributesCollection add(String name, String v)      { return append(new AVString(req(name), v)); }
-    public AttributesCollection add(String name, Boolean v)     { return append(new AVBoolean(req(name), v)); }
-    public AttributesCollection add(String name, BigDecimal v)  { return append(new AVDecimal(req(name), v)); }
+    public AttributesCollection add(String name, String v)      { return append(new AVString(name, v)); }
+    public AttributesCollection add(String name, Boolean v)     { return append(new AVBoolean(name, v)); }
+    public AttributesCollection add(String name, BigDecimal v)  { return append(new AVDecimal(name, v)); }
     public AttributesCollection add(String name, Number v) {
         BigDecimal bd = (v == null) ? null : new BigDecimal(v.toString());
-        return append(new AVDecimal(req(name), bd));
+        return append(new AVDecimal(name, bd));
     }
+
+    public AttributesCollection add(String name, Instant v)     { return append(new AVDate(name, v));}
     public AttributesCollection add(AttributeValue<?> av)       { return append(av); }
 
-    public AttributesCollection clear(String name, @NonNull AttributeType type) {
-        return switch (type) {
-            case STRING  -> set(name, (String) null);
-            case DECIMAL -> set(name, (BigDecimal) null);
-            case BOOLEAN -> set(name, (Boolean) null);
-        };
-    }
-
     private AttributesCollection putOne(AttributeValue<?> av) {
-        LinkedHashMap<String, List<AttributeValue<?>>> copy = copyData();
-        copy.put(av.name(), new ArrayList<>(List.of(av)));
-        return new AttributesCollection(copy);
+        data.put(av.name(), new ArrayList<>(List.of(av)));
+        return this;
     }
 
     private AttributesCollection append(@NonNull AttributeValue<?> av) {
-        LinkedHashMap<String, List<AttributeValue<?>>> copy = copyData();
-        copy.computeIfAbsent(av.name(), k -> new ArrayList<>()).add(av);
-        return new AttributesCollection(copy);
+        data.computeIfAbsent(av.name(), k -> new ArrayList<>()).add(av);
+        return this;
     }
 
-    private LinkedHashMap<String, List<AttributeValue<?>>> copyData() {
-        LinkedHashMap<String, List<AttributeValue<?>>> copy = new LinkedHashMap<>(data.size());
-        data.forEach((k, v) -> copy.put(k, new ArrayList<>(v)));
-        return copy;
-    }
-
-    private static String req(@NonNull String n) { return n; }
 }

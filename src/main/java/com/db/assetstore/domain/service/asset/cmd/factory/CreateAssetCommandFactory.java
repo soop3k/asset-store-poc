@@ -6,7 +6,7 @@ import com.db.assetstore.domain.service.asset.cmd.CreateAssetCommand;
 import com.db.assetstore.domain.service.validation.AttributeValidator;
 import com.db.assetstore.domain.service.validation.ValidationMode;
 import com.db.assetstore.infra.api.dto.AssetCreateRequest;
-import com.db.assetstore.infra.json.AttributeJsonReader;
+import com.db.assetstore.infra.json.reader.AttributeJsonReader;
 import lombok.NonNull;
 import org.springframework.stereotype.Component;
 

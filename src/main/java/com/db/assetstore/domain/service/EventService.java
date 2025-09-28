@@ -25,7 +25,7 @@ public final class EventService {
 
     public String generate(@NonNull String eventName, @NonNull Asset asset) throws JsonProcessingException {
         log.debug("Generating event '{}' for asset id={} type={}", eventName, asset.getId(), asset.getType());
-        String canonical = canonicalizer.toCanonicalJson(asset);
+        String canonical = canonicalizer.toJson(asset);
 
         ObjectNode ctx = objectMapper.createObjectNode();
         ctx.put("eventName", eventName);

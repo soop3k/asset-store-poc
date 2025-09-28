@@ -13,9 +13,9 @@ import com.db.assetstore.domain.service.validation.rule.AttributeValidationError
 import com.db.assetstore.domain.service.validation.rule.CustomValidationRuleRegistry;
 import com.db.assetstore.domain.service.validation.rule.ValidationRuleFactory;
 import com.db.assetstore.infra.api.dto.AssetPatchRequest;
-import com.db.assetstore.infra.json.AttributeJsonReader;
-import com.db.assetstore.infra.json.AttributePayloadParser;
-import com.db.assetstore.infra.json.AttributeValueAssembler;
+import com.db.assetstore.infra.json.reader.AttributeJsonReader;
+import com.db.assetstore.infra.json.reader.AttributePayloadParser;
+import com.db.assetstore.infra.json.reader.AttributeValueAssembler;
 import com.db.assetstore.testutil.InMemoryAttributeDefinitionLoader;
 import com.db.assetstore.testutil.validation.MatchingAttributesRule;
 import com.fasterxml.jackson.databind.ObjectMapper;

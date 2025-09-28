@@ -3,6 +3,9 @@ package com.db.assetstore.domain.service.validation.rule;
 import com.db.assetstore.domain.model.attribute.AttributeValueVisitor;
 import com.db.assetstore.domain.service.type.ConstraintDefinition;
 
+import java.math.BigDecimal;
+import java.time.Instant;
+
 public final class LengthRule implements ValidationRule {
 
     private final String attributeName;
@@ -20,28 +23,36 @@ public final class LengthRule implements ValidationRule {
 
     @Override
     public void validate(AttributeValidationContext context) {
-        forEachPresentValue(context, value ->
-                value.accept(new AttributeValueVisitor<Void>() {
-                    @Override
-                    public Void visitString(String v, String name) {
-                        ensureLength(v == null ? 0 : v.length());
-                        return null;
-                    }
+        forEachPresentValue(context, value -> {
+            boolean tooLong = value.accept(new AttributeValueVisitor<>() {
+                @Override
+                public Boolean visitString(String v, String name) {
+                    return ensureLength(v == null ? 0 : v.length());
+                }
 
-                    @Override
-                    public Void visitDecimal(java.math.BigDecimal v, String name) {
-                        var text = v == null ? "" : v.toPlainString();
-                        ensureLength(text.length());
-                        return null;
-                    }
+                @Override
+                public Boolean visitDecimal(BigDecimal v, String name) {
+                    var text = v == null ? "" : v.toPlainString();
+                    return ensureLength(text.length());
+                }
 
-                    @Override
-                    public Void visitBoolean(Boolean v, String name) {
-                        var text = v == null ? "" : v.toString();
-                        ensureLength(text.length());
-                        return null;
-                    }
-                }));
+                @Override
+                public Boolean visitBoolean(Boolean v, String name) {
+                    var text = v == null ? "" : v.toString();
+                    return ensureLength(text.length());
+                }
+
+                @Override
+                public Boolean visitDate(Instant v, String name) {
+                    return false;
+                }
+            });
+
+            if (tooLong) {
+                throw new RuleViolationException(rule().name(), attributeName,
+                        "Length exceeds the maximum");
+            }
+        });
     }
 
     private int parseMax(String raw) {
@@ -55,10 +66,7 @@ public final class LengthRule implements ValidationRule {
         }
     }
 
-    private void ensureLength(int length) {
-        if (length > max) {
-            throw new RuleViolationException(rule().name(), attributeName,
-                    "Length exceeds the maximum", "<=" + max, length);
-        }
+    private boolean ensureLength(int length) {
+        return length > max;
     }
 }

@@ -8,6 +8,7 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 
 /**
  * Domain-level builder that converts an attribute Condition into a JPA Criteria Predicate
@@ -52,6 +53,17 @@ public final class AttributePredicateVisitor {
                 };
             }
 
+            @Override
+            public Predicate visitDate(Instant d, String name) {
+                Path<Instant> p = attr.get("valueDate");
+                return switch (op) {
+                    case EQ -> (d == null) ? cb.isNull(p) : cb.equal(p, d);
+                    case GT -> (d == null) ? unsupported("GT on null DATE") : cb.greaterThan(p, d);
+                    case LT -> (d == null) ? unsupported("LT on null DATE") : cb.lessThan(p, d);
+                    case LIKE -> unsupported("LIKE on DATE");
+                };
+            }
+
             private Predicate unsupported(String kind) {
                 throw new IllegalArgumentException("Operator " + op + " unsupported for " + kind + " (attr=" + cond.attribute() + ")");
             }
@@ -61,9 +73,6 @@ public final class AttributePredicateVisitor {
     }
 
     private static String ensureLikePattern(String s) {
-        if (s == null) {
-            return null;
-        }
         String norm = s.toLowerCase();
         return (norm.indexOf('%') >= 0 || norm.indexOf('_') >= 0) ? norm : "%" + norm + "%";
     }

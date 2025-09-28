@@ -13,9 +13,6 @@ public final class AttributeUpdater {
     private AttributeUpdater() {}
 
     public static void apply(AttributeEntity e, AttributeValue<?> av) {
-        if (e == null || av == null) {
-            return;
-        }
         e.addHistory(Instant.now());
         av.accept(new AttributeValueVisitor<AttributeEntity>() {
             @Override public AttributeEntity visitString(String v, String name) {
@@ -28,6 +25,12 @@ public final class AttributeUpdater {
             }
             @Override public AttributeEntity visitBoolean(Boolean v, String name) {
                 e.setValueBool(v);
+                return e;
+            }
+
+            @Override
+            public AttributeEntity visitDate(Instant v, String name) {
+                e.setValueDate(v);
                 return e;
             }
         });

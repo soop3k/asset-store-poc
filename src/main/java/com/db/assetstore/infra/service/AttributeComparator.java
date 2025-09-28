@@ -2,15 +2,15 @@ package com.db.assetstore.infra.service;
 
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.model.attribute.AttributeValueVisitor;
-import com.db.assetstore.domain.model.type.AttributeType;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Objects;
 
 public final class AttributeComparator {
     private AttributeComparator() {}
 
-    public static boolean checkforUpdates(AttributeValue<?> existing, AttributeValue<?> incoming) {
+    public static boolean checkForUpdates(AttributeValue<?> existing, AttributeValue<?> incoming) {
         if (existing == null || incoming == null) {
             return existing != incoming;
         }
@@ -34,6 +34,12 @@ public final class AttributeComparator {
             public Boolean visitBoolean(Boolean v, String name) {
                 Boolean a = (Boolean) existing.value();
                 return !Objects.equals(a, v);
+            }
+
+            @Override
+            public Boolean visitDate(Instant v, String name) {
+                Instant a = (Instant) existing.value();
+                return a.compareTo(v) != 0;
             }
         });
     }

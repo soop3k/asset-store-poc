@@ -111,6 +111,7 @@
             <column name="value_str" type="varchar(1024)"/>
             <column name="value_bool" type="boolean"/>
             <column name="value_num" type="decimal(38,10)"/>
+            <column name="value_date" type="timestamp with time zone"/>
         </addColumn>
         <dropColumn tableName="asset_attribute" columnName="attr_value"/>
     </changeSet>
@@ -119,6 +120,7 @@
             <column name="value_str" type="varchar(1024)"/>
             <column name="value_bool" type="boolean"/>
             <column name="value_num" type="decimal(38,10)"/>
+            <column name="value_date" type="timestamp with time zone"/>
         </addColumn>
         <dropColumn tableName="asset_attribute_history" columnName="attr_value"/>
     </changeSet>

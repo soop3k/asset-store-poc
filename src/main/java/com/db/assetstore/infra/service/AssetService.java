@@ -151,7 +151,7 @@ public class AssetService {
                 existing.put(current.getName(), current);
 
                 AttributeValue<?> currentValue = attributeMapper.toModel(current);
-                if (AttributeComparator.checkforUpdates(currentValue, incoming)) {
+                if (AttributeComparator.checkForUpdates(currentValue, incoming)) {
                     AttributeUpdater.apply(current, incoming);
                     attributeRepo.save(current);
                 }

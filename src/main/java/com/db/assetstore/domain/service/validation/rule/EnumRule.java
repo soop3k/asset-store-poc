@@ -4,6 +4,7 @@ import com.db.assetstore.domain.model.attribute.AttributeValueVisitor;
 import com.db.assetstore.domain.service.type.ConstraintDefinition;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -41,7 +42,11 @@ public final class EnumRule implements ValidationRule {
                 public Boolean visitBoolean(Boolean v, String name) {
                     return allowedValues.booleans.contains(v);
                 }
+
+                @Override
+                public Boolean visitDate(Instant v, String name) { return false; }
             });
+
             if (!match) {
                 throw new RuleViolationException(rule().name(), attributeName,
                         "Value is not in the allowed list", allowedValues.describe(), value.value());

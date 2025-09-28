@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 
 @Component
 @RequiredArgsConstructor
@@ -17,7 +18,7 @@ public final class AssetSerializer {
 
     private final ObjectMapper mapper;
 
-    public String toCanonicalJson(Asset asset) {
+    public String toJson(Asset asset) {
         ObjectNode root = mapper.valueToTree(asset);
 
         ObjectNode attrs = mapper.createObjectNode();
@@ -75,5 +76,16 @@ public final class AssetSerializer {
             }
             return null;
         }
+
+        @Override
+        public Void visitDate(Instant value, String name) {
+            if (value == null) {
+                target.putNull(field);
+            } else {
+                target.put(field, value.toString());
+            }
+            return null;
+        }
+
     }
 }

@@ -1,7 +1,6 @@
 package com.db.assetstore.domain.service.validation.rule;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.LinkedHashMap;
@@ -10,19 +9,17 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ArrayList;
 
+@Slf4j
 @Component
 public final class CustomValidationRuleRegistry {
-
-    private static final Logger log = LoggerFactory.getLogger(CustomValidationRuleRegistry.class);
 
     private final Map<String, CustomValidationRule> rulesByName;
 
     public CustomValidationRuleRegistry(List<CustomValidationRule> customRules) {
-        var map = new LinkedHashMap<String, CustomValidationRule>();
+        rulesByName = new LinkedHashMap<String, CustomValidationRule>();
         for (var rule : customRules) {
-            register(map, rule.name(), rule);
+            register(rulesByName, rule.name(), rule);
         }
-        this.rulesByName = Map.copyOf(map);
         logLoadedRules(this.rulesByName);
     }
 

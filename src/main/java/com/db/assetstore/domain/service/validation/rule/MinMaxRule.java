@@ -5,6 +5,12 @@ import com.db.assetstore.domain.model.attribute.AttributeValueVisitor;
 import com.db.assetstore.domain.service.type.ConstraintDefinition;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.Optional;
 
 public final class MinMaxRule implements ValidationRule {
 
@@ -64,14 +70,23 @@ public final class MinMaxRule implements ValidationRule {
             return null;
         }
         try {
-            return new BigDecimal(token);
+            return tryParseDate(token).orElseGet(() -> new BigDecimal(token));
         } catch (NumberFormatException ex) {
-            throw new AttributeValidationException("MIN_MAX rule requires numeric values", ex);
+            throw new AttributeValidationException("MIN_MAX rule requires numeric/date values", ex);
+        }
+    }
+
+    @SuppressWarnings("PMD")
+    private Optional<BigDecimal> tryParseDate(String token) {
+        try {
+            return Optional.of(BigDecimal.valueOf(Instant.parse(token).toEpochMilli()));
+        } catch (DateTimeParseException e){
+            return Optional.empty();
         }
     }
 
     private BigDecimal toDecimal(AttributeValue<?> value) {
-        return value.accept(new AttributeValueVisitor<BigDecimal>() {
+        return value.accept(new AttributeValueVisitor<>() {
             @Override
             public BigDecimal visitString(String v, String name) {
                 try {
@@ -91,6 +106,11 @@ public final class MinMaxRule implements ValidationRule {
             public BigDecimal visitBoolean(Boolean v, String name) {
                 throw new RuleViolationException(rule().name(), name,
                         "Boolean value not allowed for numeric constraint", "numeric", v);
+            }
+
+            @Override
+            public BigDecimal visitDate(Instant v, String name) {
+                return BigDecimal.valueOf(v.toEpochMilli());
             }
         });
     }

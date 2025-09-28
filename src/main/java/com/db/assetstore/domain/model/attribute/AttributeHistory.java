@@ -11,6 +11,7 @@ public record AttributeHistory(
         String valueStr,
         BigDecimal valueNum,
         Boolean valueBool,
+        Instant valueDate,
         AttributeType valueType,
         Instant changedAt
 ) {

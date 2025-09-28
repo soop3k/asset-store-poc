@@ -66,7 +66,6 @@ class AssetTest {
         assertEquals(new java.math.BigDecimal("2"), attrSet.get("rooms").orElseThrow().value());
         assertEquals(Boolean.TRUE, attrSet.get("active").orElseThrow().value());
 
-        // Missing attribute -> empty
         assertTrue(attrSet.get("price").isEmpty());
     }
 }

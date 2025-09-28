@@ -42,7 +42,7 @@ public class JsonMapperProvider {
                 .enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)
                 .enable(DeserializationFeature.USE_BIG_INTEGER_FOR_INTS)
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                .enable(SerializationFeature.WRITE_DATES_WITH_CONTEXT_TIME_ZONE)
                 .enable(JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN)
                 .serializationInclusion(JsonInclude.Include.NON_NULL);
 

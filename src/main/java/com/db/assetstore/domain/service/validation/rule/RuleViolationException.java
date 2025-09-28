@@ -18,10 +18,6 @@ public class RuleViolationException extends AttributeValidationException {
         this(rule, attribute == null ? Set.of() : Set.of(attribute), message, expected, actual);
     }
 
-    public RuleViolationException(String rule, Set<String> attributes, String message) {
-        this(rule, attributes, message, null, null);
-    }
-
     public RuleViolationException(String rule,
                                   Set<String> attributes,
                                   String message,
@@ -41,14 +37,6 @@ public class RuleViolationException extends AttributeValidationException {
 
     public RuleViolation violation() {
         return violation;
-    }
-
-    public Object expected() {
-        return violation.expected();
-    }
-
-    public Object actual() {
-        return violation.actual();
     }
 
     @Override

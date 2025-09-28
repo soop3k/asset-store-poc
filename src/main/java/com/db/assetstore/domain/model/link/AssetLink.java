@@ -2,6 +2,7 @@ package com.db.assetstore.domain.model.link;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Value;
 
 import java.time.Instant;
@@ -19,7 +20,7 @@ public class AssetLink {
     private final boolean active;
     private final Instant createdAt;
     private final String createdBy;
-    @Builder.Default
+    @Default
     private final Optional<Instant> deactivatedAt = Optional.empty();
     private final String deactivatedBy;
 }
