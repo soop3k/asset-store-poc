@@ -1,5 +1,7 @@
 package com.db.assetstore.infra.config;
 
+import com.db.assetstore.domain.model.attribute.AttributesCollection;
+import com.db.assetstore.infra.json.AttributesCollectionSerializer;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -32,13 +34,14 @@ public class JsonMapperProvider {
 
     @Bean
     public ObjectMapper objectMapper() {
-        SimpleModule numbers = new SimpleModule()
-                .addSerializer(BigDecimal.class, new BigDecimalPlainSerializer());
+        SimpleModule serializers = new SimpleModule()
+                .addSerializer(BigDecimal.class, new BigDecimalPlainSerializer())
+                .addSerializer(AttributesCollection.class, new AttributesCollectionSerializer());
 
         JsonMapper.Builder b = JsonMapper.builder()
                 .addModule(new JavaTimeModule())
-                .addModule(numbers)
                 .addModule(new Jdk8Module())
+                .addModule(serializers)
                 .enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)
                 .enable(DeserializationFeature.USE_BIG_INTEGER_FOR_INTS)
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)

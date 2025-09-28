@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -63,10 +64,11 @@ public class AttributeValueAssembler {
     }
 
     private Instant parseDate(String name, JsonNode node) {
-        if (node.isTextual()) {
+        try {
             return Instant.parse(node.textValue());
+        } catch(DateTimeParseException ex){
+            throw AttributeParsingException.invalidValue(name, node.textValue(), AttributeType.DATE);
         }
-        throw AttributeParsingException.incompatibleType(name, AttributeType.DATE, node.getNodeType().name());
     }
 
     private String parseString(String name, JsonNode node) {
@@ -84,7 +86,7 @@ public class AttributeValueAssembler {
             try {
                 return new BigDecimal(node.textValue());
             } catch (NumberFormatException ex) {
-                throw AttributeParsingException.incompatibleType(name, AttributeType.DECIMAL, node.toString());
+                throw AttributeParsingException.invalidValue(name, node.asText(""), AttributeType.DECIMAL);
             }
         }
         throw AttributeParsingException.incompatibleType(name, AttributeType.DECIMAL, node.getNodeType().name());
@@ -102,7 +104,7 @@ public class AttributeValueAssembler {
             if ("false".equalsIgnoreCase(text)) {
                 return Boolean.FALSE;
             }
-            throw AttributeParsingException.incompatibleType(name, AttributeType.BOOLEAN, node.toString());
+            throw AttributeParsingException.invalidValue(name, node.asText(""), AttributeType.BOOLEAN);
         }
         throw AttributeParsingException.incompatibleType(name, AttributeType.BOOLEAN, node.getNodeType().name());
     }

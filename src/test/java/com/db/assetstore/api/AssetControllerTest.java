@@ -69,10 +69,10 @@ class AssetControllerTest {
                 .andExpect(jsonPath("$.year", is(2023)))
                 .andExpect(jsonPath("$.description", is("Premium office building")))
                 .andExpect(jsonPath("$.currency", is("USD")))
-                .andExpect(jsonPath("$.attributes.city.value", is("New York")))
-                .andExpect(jsonPath("$.attributes.rooms.value", is(25)))
-                .andExpect(jsonPath("$.attributes.area.value", is(closeTo(5000.5, 0.01))))
-                .andExpect(jsonPath("$.attributes.active.value", is(true)));
+                .andExpect(jsonPath("$.attributes.city", is("New York")))
+                .andExpect(jsonPath("$.attributes.rooms", is(25)))
+                .andExpect(jsonPath("$.attributes.area", is(closeTo(5000.5, 0.01))))
+                .andExpect(jsonPath("$.attributes.active", is(true)));
     }
 
     @Test
@@ -101,8 +101,8 @@ class AssetControllerTest {
                 .andExpect(jsonPath("$.type", is("SHIP")))
                 .andExpect(jsonPath("$.status").doesNotExist())
                 .andExpect(jsonPath("$.subtype").doesNotExist())
-                .andExpect(jsonPath("$.attributes.name.value", is("Cargo Vessel")))
-                .andExpect(jsonPath("$.attributes.imo.value", is(1234567)));
+                .andExpect(jsonPath("$.attributes.name", is("Cargo Vessel")))
+                .andExpect(jsonPath("$.attributes.imo", is(1234567)));
     }
 
     @Test
@@ -184,12 +184,12 @@ class AssetControllerTest {
         mockMvc.perform(get("/assets/bulk-cre-1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.type", is("CRE")))
-                .andExpect(jsonPath("$.attributes.city.value", is("Paris")));
+                .andExpect(jsonPath("$.attributes.city", is("Paris")));
 
         mockMvc.perform(get("/assets/bulk-ship-1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.type", is("SHIP")))
-                .andExpect(jsonPath("$.attributes.name.value", is("Ocean Liner")));
+                .andExpect(jsonPath("$.attributes.name", is("Ocean Liner")));
     }
 
     @Test
@@ -231,9 +231,9 @@ class AssetControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(2))))
                 .andExpect(jsonPath("$[?(@.id=='list-cre-1')].type", contains("CRE")))
-                .andExpect(jsonPath("$[?(@.id=='list-cre-1')].attributes.city.value", contains("Berlin")))
+                .andExpect(jsonPath("$[?(@.id=='list-cre-1')].attributes.city", contains("Berlin")))
                 .andExpect(jsonPath("$[?(@.id=='list-ship-1')].type", contains("SHIP")))
-                .andExpect(jsonPath("$[?(@.id=='list-ship-1')].attributes.name.value", contains("Tanker")));
+                .andExpect(jsonPath("$[?(@.id=='list-ship-1')].attributes.name", contains("Tanker")));
     }
 
     @Test
@@ -272,9 +272,9 @@ class AssetControllerTest {
                 .andExpect(jsonPath("$.status", is("PENDING")))
                 .andExpect(jsonPath("$.currency", is("EUR")))
                 .andExpect(jsonPath("$.notionalAmount", is(750000)))
-                .andExpect(jsonPath("$.attributes.city.value", is("Amsterdam")))
-                .andExpect(jsonPath("$.attributes.rooms.value", is(15)))
-                .andExpect(jsonPath("$.attributes.active.value", is(false)));
+                .andExpect(jsonPath("$.attributes.city", is("Amsterdam")))
+                .andExpect(jsonPath("$.attributes.rooms", is(15)))
+                .andExpect(jsonPath("$.attributes.active", is(false)));
     }
 
     @Test
@@ -326,9 +326,9 @@ class AssetControllerTest {
                 .andExpect(jsonPath("$.status", is("ACTIVE")))
                 .andExpect(jsonPath("$.currency", is("EUR")))
                 .andExpect(jsonPath("$.description", is("Updated description")))
-                .andExpect(jsonPath("$.attributes.city.value", is("Brussels")))
-                .andExpect(jsonPath("$.attributes.rooms.value", is(25)))
-                .andExpect(jsonPath("$.attributes.area.value", is(2500)));
+                .andExpect(jsonPath("$.attributes.city", is("Brussels")))
+                .andExpect(jsonPath("$.attributes.rooms", is(25)))
+                .andExpect(jsonPath("$.attributes.area", is(2500)));
     }
 
     @Test
@@ -387,9 +387,9 @@ class AssetControllerTest {
                 .andExpect(jsonPath("$.status", is("ACTIVE")))
                 .andExpect(jsonPath("$.currency", is("USD")))
                 .andExpect(jsonPath("$.description", is("Original description")))
-                .andExpect(jsonPath("$.attributes.city.value", is("Toronto")))
-                .andExpect(jsonPath("$.attributes.rooms.value", is(18)))
-                .andExpect(jsonPath("$.attributes.active.value", is(true)));
+                .andExpect(jsonPath("$.attributes.city", is("Toronto")))
+                .andExpect(jsonPath("$.attributes.rooms", is(18)))
+                .andExpect(jsonPath("$.attributes.active", is(true)));
     }
 
     @Test
@@ -454,14 +454,14 @@ class AssetControllerTest {
         mockMvc.perform(get("/assets/bulk-patch-1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status", is("ACTIVE")))
-                .andExpect(jsonPath("$.attributes.city.value", is("Vienna"))) // Preserved
-                .andExpect(jsonPath("$.attributes.rooms.value", is(12))); // Updated
+                .andExpect(jsonPath("$.attributes.city", is("Vienna"))) // Preserved
+                .andExpect(jsonPath("$.attributes.rooms", is(12))); // Updated
 
         mockMvc.perform(get("/assets/bulk-patch-2"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status", is("OPERATIONAL")))
-                .andExpect(jsonPath("$.attributes.name.value", is("Freighter"))) // Preserved
-                .andExpect(jsonPath("$.attributes.imo.value", is(2222222))); // Updated
+                .andExpect(jsonPath("$.attributes.name", is("Freighter"))) // Preserved
+                .andExpect(jsonPath("$.attributes.imo", is(2222222))); // Updated
     }
 
     @Test
@@ -513,9 +513,9 @@ class AssetControllerTest {
 
         mockMvc.perform(get("/assets/" + assetId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.attributes.city.value", is("Prague")))
-                .andExpect(jsonPath("$.attributes.rooms.value").doesNotExist())
-                .andExpect(jsonPath("$.attributes.active.value").doesNotExist());
+                .andExpect(jsonPath("$.attributes.city", is("Prague")))
+                .andExpect(jsonPath("$.attributes.rooms").doesNotExist())
+                .andExpect(jsonPath("$.attributes.active").doesNotExist());
     }
 
     @Test
@@ -543,10 +543,10 @@ class AssetControllerTest {
 
         mockMvc.perform(get("/assets/" + assetId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.attributes.city.value", is("Stockholm")))
-                .andExpect(jsonPath("$.attributes.rooms.value", is(30)))
-                .andExpect(jsonPath("$.attributes.area.value", is(closeTo(3500.75, 0.01))))
-                .andExpect(jsonPath("$.attributes.active.value", is(true)));
+                .andExpect(jsonPath("$.attributes.city", is("Stockholm")))
+                .andExpect(jsonPath("$.attributes.rooms", is(30)))
+                .andExpect(jsonPath("$.attributes.area", is(closeTo(3500.75, 0.01))))
+                .andExpect(jsonPath("$.attributes.active", is(true)));
     }
 
 

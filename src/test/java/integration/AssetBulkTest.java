@@ -20,7 +20,7 @@ class AssetBulkTest {
     MockMvc mockMvc;
 
     @Test
-    void bulkCreateAndFetch_creType_requestDtoArray() throws Exception {
+    void bulkCreateAndFetch() throws Exception {
         String payload = """
                 [
                 {"id":"cre-1","type":"CRE","attributes":{"city":"Warsaw","area":100.5,"rooms":3,"active":true}},
@@ -42,12 +42,12 @@ class AssetBulkTest {
                 .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(2))))
 
                 .andExpect(jsonPath("$[?(@.id=='cre-1')].type", contains("CRE")))
-                .andExpect(jsonPath("$[?(@.id=='cre-1')].attributes.city.value", contains("Warsaw")))
-                .andExpect(jsonPath("$[?(@.id=='cre-1')].attributes.rooms.value", contains(3)))
-                .andExpect(jsonPath("$[?(@.id=='cre-1')].attributes.active.value", contains(true)))
+                .andExpect(jsonPath("$[?(@.id=='cre-1')].attributes.city", contains("Warsaw")))
+                .andExpect(jsonPath("$[?(@.id=='cre-1')].attributes.rooms", contains(3)))
+                .andExpect(jsonPath("$[?(@.id=='cre-1')].attributes.active", contains(true)))
 
                 .andExpect(jsonPath("$[?(@.id=='cre-2')].type", contains("CRE")))
-                .andExpect(jsonPath("$[?(@.id=='cre-2')].attributes.city.value", contains("Gdansk")))
-                .andExpect(jsonPath("$[?(@.id=='cre-2')].attributes.rooms.value", contains(2)));
+                .andExpect(jsonPath("$[?(@.id=='cre-2')].attributes.city", contains("Gdansk")))
+                .andExpect(jsonPath("$[?(@.id=='cre-2')].attributes.rooms", contains(2)));
     }
 }

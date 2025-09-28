@@ -10,7 +10,6 @@ import com.db.assetstore.domain.service.type.AttributeDefinition;
 import com.db.assetstore.domain.service.type.ConstraintDefinition;
 import com.db.assetstore.domain.service.type.ConstraintDefinition.Rule;
 import com.db.assetstore.domain.service.validation.rule.AttributeValidationErrorsException;
-import com.db.assetstore.domain.service.validation.ValidationMode;
 import com.db.assetstore.domain.service.validation.rule.CustomValidationRuleRegistry;
 import com.db.assetstore.domain.service.validation.rule.ValidationRuleFactory;
 import com.db.assetstore.testutil.InMemoryAttributeDefinitionLoader;

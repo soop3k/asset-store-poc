@@ -50,8 +50,8 @@ class AssetEventTest {
                 .andExpect(jsonPath("$.currency", is("USD")))
                 .andExpect(jsonPath("$.notionalAmount", is(closeTo(123.45, 0.0001))))
                 .andExpect(jsonPath("$.status", is("ACTIVE")))
-                .andExpect(jsonPath("$.attributes.city.value", is("Warsaw")))
-                .andExpect(jsonPath("$.attributes.rooms.value", is(3)));
+                .andExpect(jsonPath("$.attributes.city", is("Warsaw")))
+                .andExpect(jsonPath("$.attributes.rooms", is(3)));
 
         mockMvc.perform(get("/events/" + id + "/asset-cre")
                         .accept(MediaType.APPLICATION_JSON))

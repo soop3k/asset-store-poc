@@ -54,8 +54,7 @@ public final class AttributesCollection {
 
     public Map<String, List<AttributeValue<?>>> asMap() {
         LinkedHashMap<String, List<AttributeValue<?>>> out = new LinkedHashMap<>();
-        data.forEach(
-                (k, v) -> out.put(k, Collections.unmodifiableList(v)));
+        data.forEach((k, v) -> out.put(k, Collections.unmodifiableList(v)));
         return Collections.unmodifiableMap(out);
     }
 
@@ -88,21 +87,6 @@ public final class AttributesCollection {
 
     public <T> Optional<T> get(String name, Class<T> type) {
         return get(name).map(AttributeValue::value).map(type::cast);
-    }
-
-    public <T> List<T> getMany(String name, Class<T> type) {
-        var vs = data.get(name);
-        if (vs == null || vs.isEmpty()) {
-            return List.of();
-        }
-        var out = new ArrayList<T>(vs.size());
-        for (var av : vs) {
-            Object v = av.value();
-            if (v != null) {
-                out.add(type.cast(v));
-            }
-        }
-        return Collections.unmodifiableList(out);
     }
 
     public AttributesCollection set(String name, String v)      { return putOne(new AVString(name, v)); }
