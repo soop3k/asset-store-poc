@@ -46,8 +46,7 @@ class AssetQueryServiceTest {
     }
 
     @Test
-    void get_returnsMappedAsset_andPopulatesAttributesWhenMapperReturnsEmpty() {
-        // given entity with one attribute
+    void singleGet() {
         AssetEntity e = AssetEntity.builder()
                 .id("q-1")
                 .type(AssetType.CRE)
@@ -75,7 +74,7 @@ class AssetQueryServiceTest {
     }
 
     @Test
-    void search_nonPaged_returnsMappedList() {
+    void singleSearch() {
         AssetEntity e1 = AssetEntity.builder()
                 .id("s-1")
                 .type(AssetType.CRE)

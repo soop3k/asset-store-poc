@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class JsonSchemaValidatorTest {
 
     @Test
-    void ignoresUnknownProperties_whenSchemaDisallowsThem() {
+    void ignoresUnknownProperties() {
         String payload = """ 
            {
              "foo":"bar",
@@ -21,7 +21,7 @@ class JsonSchemaValidatorTest {
     }
 
     @Test
-    void stillFailsOnRealSchemaErrors_likeTypeMismatch() {
+    void failsOnSchemaErrors() {
         String payload = """
              {
                "foo": 123

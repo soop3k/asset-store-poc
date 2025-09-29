@@ -31,7 +31,7 @@ class AssetHistoryServiceTest {
     }
 
     @Test
-    void history_mapsEntitiesToModels_andPreservesOrder() {
+    void historyForAsset() {
         // given
         AssetEntity asset = AssetEntity.builder().id("h-1").build();
         AttributeEntity attr = new AttributeEntity(asset, "city", "Gdansk", Instant.now());

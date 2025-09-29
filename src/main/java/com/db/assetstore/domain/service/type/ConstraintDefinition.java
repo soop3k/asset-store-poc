@@ -17,13 +17,5 @@ public record ConstraintDefinition(@NonNull AttributeDefinition attribute,
         ENUM,
         LENGTH,
         CUSTOM;
-
-        public static Rule from(@NonNull String name) {
-            try {
-                return Rule.valueOf(name.toUpperCase());
-            } catch (IllegalArgumentException ex) {
-                throw new IllegalArgumentException("Unsupported rule: " + name, ex);
-            }
-        }
     }
 }
