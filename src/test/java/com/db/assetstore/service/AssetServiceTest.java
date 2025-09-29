@@ -1,6 +1,6 @@
 package com.db.assetstore.service;
 
-import com.db.assetstore.AssetType;
+import com.db.assetstore.domain.model.asset.AssetType;
 import com.db.assetstore.domain.service.cmd.CommandResult;
 import com.db.assetstore.domain.service.asset.cmd.CreateAssetCommand;
 import com.db.assetstore.domain.service.asset.cmd.DeleteAssetCommand;

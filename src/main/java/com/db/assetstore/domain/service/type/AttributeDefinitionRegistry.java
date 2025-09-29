@@ -1,6 +1,6 @@
 package com.db.assetstore.domain.service.type;
 
-import com.db.assetstore.AssetType;
+import com.db.assetstore.domain.model.asset.AssetType;
 
 import java.util.List;
 import java.util.Map;

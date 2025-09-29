@@ -1,6 +1,6 @@
 package com.db.assetstore.infra.service.type;
 
-import com.db.assetstore.AssetType;
+import com.db.assetstore.domain.model.asset.AssetType;
 import com.db.assetstore.domain.service.type.AttributeDefinition;
 import com.db.assetstore.domain.service.type.AttributeDefinitionLoader;
 import com.db.assetstore.domain.service.type.ConstraintDefinition;
@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -34,7 +33,7 @@ public class DatabaseAttributeDefinitionLoader implements AttributeDefinitionLoa
 
         var entities = attributeDefRepository.findAllByTypeWithConstraints(type);
         for (var entity : entities) {
-            var attributeDefinition = attributeDefinitionMapper.toDomain(entity);
+            var attributeDefinition = attributeDefinitionMapper.toModel(entity);
             definitions.put(entity.getName(), attributeDefinition);
 
             var attributeConstraints = new ArrayList<ConstraintDefinition>();
@@ -43,7 +42,7 @@ public class DatabaseAttributeDefinitionLoader implements AttributeDefinitionLoa
                 attributeConstraints.add(new ConstraintDefinition(attributeDefinition, ConstraintDefinition.Rule.REQUIRED, null));
             }
             attributeConstraints.addAll(
-                    attributeDefinitionMapper.toDomainConstraints(attributeDefinition, entity.getConstraints())
+                    attributeDefinitionMapper.toModelConstraints(attributeDefinition, entity.getConstraints())
                             .stream()
                             .map(this::normalizeCustomConstraint)
                             .toList());

@@ -1,7 +1,7 @@
 package com.db.assetstore.infra.service;
 
-import com.db.assetstore.domain.model.Asset;
-import com.db.assetstore.domain.model.AssetPatch;
+import com.db.assetstore.domain.model.asset.Asset;
+import com.db.assetstore.domain.model.asset.AssetPatch;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.service.cmd.CommandResult;
 import com.db.assetstore.domain.service.asset.cmd.CreateAssetCommand;

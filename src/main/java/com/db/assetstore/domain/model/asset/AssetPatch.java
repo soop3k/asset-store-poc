@@ -1,4 +1,4 @@
-package com.db.assetstore.domain.model;
+package com.db.assetstore.domain.model.asset;
 
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import lombok.Builder;

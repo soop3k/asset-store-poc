@@ -1,6 +1,6 @@
 package com.db.assetstore.domain.service.asset.cmd.factory;
 
-import com.db.assetstore.AssetType;
+import com.db.assetstore.domain.model.asset.AssetType;
 import com.db.assetstore.domain.service.asset.cmd.CreateAssetCommand;
 import com.db.assetstore.domain.service.asset.cmd.DeleteAssetCommand;
 import com.db.assetstore.domain.service.asset.cmd.PatchAssetCommand;

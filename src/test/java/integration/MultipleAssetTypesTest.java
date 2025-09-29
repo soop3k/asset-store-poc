@@ -1,6 +1,6 @@
 package integration;
 
-import com.db.assetstore.AssetType;
+import com.db.assetstore.domain.model.asset.AssetType;
 import com.db.assetstore.domain.model.type.AVDecimal;
 import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.domain.service.asset.AssetCommandService;

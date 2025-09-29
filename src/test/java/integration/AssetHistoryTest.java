@@ -1,7 +1,7 @@
 package integration;
 
-import com.db.assetstore.AssetType;
-import com.db.assetstore.domain.model.Asset;
+import com.db.assetstore.domain.model.asset.AssetType;
+import com.db.assetstore.domain.model.asset.Asset;
 import com.db.assetstore.domain.model.attribute.AttributeHistory;
 import com.db.assetstore.domain.model.type.AVBoolean;
 import com.db.assetstore.domain.model.type.AVDecimal;

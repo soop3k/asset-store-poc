@@ -1,6 +1,6 @@
 package com.db.assetstore.infra.service;
 
-import com.db.assetstore.AssetType;
+import com.db.assetstore.domain.model.asset.AssetType;
 import com.db.assetstore.domain.model.link.LinkCardinality;
 import com.db.assetstore.domain.service.cmd.CommandResult;
 import com.db.assetstore.domain.service.link.cmd.CreateAssetLinkCommand;

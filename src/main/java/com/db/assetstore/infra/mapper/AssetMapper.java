@@ -1,7 +1,7 @@
 package com.db.assetstore.infra.mapper;
 
 import com.db.assetstore.infra.jpa.AssetEntity;
-import com.db.assetstore.domain.model.Asset;
+import com.db.assetstore.domain.model.asset.Asset;
 
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;

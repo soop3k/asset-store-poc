@@ -1,6 +1,5 @@
-package com.db.assetstore.domain.model;
+package com.db.assetstore.domain.model.asset;
 
-import com.db.assetstore.AssetType;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.model.attribute.AttributesCollection;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -11,10 +10,8 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)

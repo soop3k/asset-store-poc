@@ -1,6 +1,6 @@
 package com.db.assetstore.infra.api;
 
-import com.db.assetstore.domain.model.Asset;
+import com.db.assetstore.domain.model.asset.Asset;
 import com.db.assetstore.domain.service.asset.AssetQueryService;
 import com.db.assetstore.domain.service.EventService;
 import com.fasterxml.jackson.core.JsonProcessingException;

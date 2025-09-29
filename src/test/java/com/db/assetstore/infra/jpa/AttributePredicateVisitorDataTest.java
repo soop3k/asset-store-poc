@@ -1,6 +1,6 @@
 package com.db.assetstore.infra.jpa;
 
-import com.db.assetstore.AssetType;
+import com.db.assetstore.domain.model.asset.AssetType;
 import com.db.assetstore.domain.model.type.AVBoolean;
 import com.db.assetstore.domain.model.type.AVDate;
 import com.db.assetstore.domain.model.type.AVDecimal;

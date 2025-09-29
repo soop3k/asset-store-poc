@@ -1,6 +1,6 @@
 package com.db.assetstore.domain.service.validation;
 
-import com.db.assetstore.AssetType;
+import com.db.assetstore.domain.model.asset.AssetType;
 import com.db.assetstore.domain.model.attribute.AttributesCollection;
 import com.db.assetstore.domain.model.type.AVDate;
 import com.db.assetstore.domain.model.type.AVDecimal;

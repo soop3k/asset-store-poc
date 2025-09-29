@@ -1,6 +1,6 @@
 package com.db.assetstore.infra.api.dto;
 
-import com.db.assetstore.AssetType;
+import com.db.assetstore.domain.model.asset.AssetType;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.lang.NonNull;
 

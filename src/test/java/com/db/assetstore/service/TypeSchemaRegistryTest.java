@@ -2,9 +2,8 @@ package com.db.assetstore.service;
 
 import com.db.assetstore.domain.service.type.TypeSchemaRegistry;
 
-import com.db.assetstore.AssetType;
+import com.db.assetstore.domain.model.asset.AssetType;
 import com.db.assetstore.infra.config.JsonMapperProvider;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;

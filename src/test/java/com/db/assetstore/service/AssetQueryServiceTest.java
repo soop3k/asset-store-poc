@@ -1,7 +1,7 @@
 package com.db.assetstore.service;
 
-import com.db.assetstore.AssetType;
-import com.db.assetstore.domain.model.Asset;
+import com.db.assetstore.domain.model.asset.AssetType;
+import com.db.assetstore.domain.model.asset.Asset;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.domain.search.SearchCriteria;

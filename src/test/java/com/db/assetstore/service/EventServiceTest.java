@@ -1,8 +1,8 @@
 package com.db.assetstore.service;
 
-import com.db.assetstore.AssetType;
+import com.db.assetstore.domain.model.asset.AssetType;
 import com.db.assetstore.infra.json.AssetSerializer;
-import com.db.assetstore.domain.model.Asset;
+import com.db.assetstore.domain.model.asset.Asset;
 import com.db.assetstore.domain.model.type.AVBoolean;
 import com.db.assetstore.domain.model.type.AVDecimal;
 import com.db.assetstore.domain.model.type.AVString;

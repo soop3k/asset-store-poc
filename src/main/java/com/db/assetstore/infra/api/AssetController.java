@@ -1,6 +1,6 @@
 package com.db.assetstore.infra.api;
 
-import com.db.assetstore.domain.model.Asset;
+import com.db.assetstore.domain.model.asset.Asset;
 import com.db.assetstore.domain.search.SearchCriteria;
 import com.db.assetstore.domain.service.asset.AssetCommandService;
 import com.db.assetstore.domain.service.asset.AssetQueryService;

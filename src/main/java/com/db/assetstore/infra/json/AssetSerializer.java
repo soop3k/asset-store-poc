@@ -1,6 +1,6 @@
 package com.db.assetstore.infra.json;
 
-import com.db.assetstore.domain.model.Asset;
+import com.db.assetstore.domain.model.asset.Asset;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.model.attribute.AttributeValueVisitor;
 import com.fasterxml.jackson.core.JsonProcessingException;

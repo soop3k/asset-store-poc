@@ -1,6 +1,6 @@
 package com.db.assetstore.domain.service.type;
 
-import com.db.assetstore.AssetType;
+import com.db.assetstore.domain.model.asset.AssetType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.JsonSchema;
@@ -23,14 +23,12 @@ import java.util.Set;
 @RequiredArgsConstructor
 public final class TypeSchemaRegistry {
 
-    private static final String SCHEMA_PATH_PATTERN = "schemas/types/%s.schema.json";
+    private static final String pathPattern = "schemas/types/%s.schema.json";
 
     private final ObjectMapper om;
+
     private final JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7);
-
     private final Map<AssetType, Entry> entries = new LinkedHashMap<>();
-
-    public record Entry(String path, JsonNode node, JsonSchema compiled) {}
 
     public void discover() { rebuild(); }
 
@@ -39,15 +37,14 @@ public final class TypeSchemaRegistry {
 
         ClassLoader cl = TypeSchemaRegistry.class.getClassLoader();
         for (AssetType t : AssetType.values()) {
-            String path = String.format(SCHEMA_PATH_PATTERN, t.name());
+            String path = String.format(pathPattern, t.name());
             try (InputStream is = cl.getResourceAsStream(path)) {
-                if (is == null) {
-                    continue;
+                if (is != null) {
+                    var node = om.readTree(is);
+                    var compiled = factory.getSchema(node,
+                            SchemaValidatorsConfig.builder().failFast(true).typeLoose(true).build());
+                    entries.put(t, new Entry(path, node, compiled));
                 }
-                JsonNode node = om.readTree(is);
-                JsonSchema compiled = factory.getSchema(node,
-                        SchemaValidatorsConfig.builder().failFast(true).typeLoose(true).build());
-                entries.put(t, new Entry(path, node, compiled));
             } catch (Exception e) {
                 log.warn("Failed to load/compile schema for {} from {}: {}", t, path, e.getMessage());
             }
@@ -63,5 +60,7 @@ public final class TypeSchemaRegistry {
         Entry e = entries.get(type);
         return e == null ? Optional.empty() : Optional.of(e.node());
     }
+
+    public record Entry(String path, JsonNode node, JsonSchema compiled) {}
 
 }

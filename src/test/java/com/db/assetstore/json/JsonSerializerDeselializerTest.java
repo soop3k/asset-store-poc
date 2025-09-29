@@ -1,32 +1,22 @@
 package com.db.assetstore.json;
 
-import com.db.assetstore.AssetType;
-import com.db.assetstore.domain.model.Asset;
+import com.db.assetstore.domain.model.asset.AssetType;
+import com.db.assetstore.domain.model.asset.Asset;
 import com.db.assetstore.domain.model.attribute.AttributesCollection;
 import com.db.assetstore.domain.model.type.*;
-import com.db.assetstore.domain.service.transform.JsonTransformer;
-import com.db.assetstore.domain.service.validation.AttributeValidator;
-import com.db.assetstore.domain.service.validation.JsonSchemaValidator;
-import com.db.assetstore.domain.service.validation.rule.CustomValidationRuleRegistry;
-import com.db.assetstore.domain.service.validation.rule.ValidationRuleFactory;
 import com.db.assetstore.infra.config.JsonMapperProvider;
 import com.db.assetstore.infra.json.AssetSerializer;
 import com.db.assetstore.infra.json.reader.AttributeJsonReader;
 import com.db.assetstore.infra.json.reader.AttributePayloadParser;
 import com.db.assetstore.infra.json.reader.AttributeValueAssembler;
 import com.db.assetstore.testutil.InMemoryAttributeDefinitionLoader;
-import com.db.assetstore.testutil.validation.MatchingAttributesRule;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonSerializer;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
-import static com.db.assetstore.domain.service.type.ConstraintDefinition.Rule.REQUIRED;
 import static com.db.assetstore.domain.service.type.ConstraintDefinition.Rule.TYPE;
 import static com.db.assetstore.testutil.AttributeTestHelpers.constraint;
 import static com.db.assetstore.testutil.AttributeTestHelpers.definition;

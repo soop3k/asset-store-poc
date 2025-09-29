@@ -14,17 +14,17 @@ public interface AttributeDefinitionMapper {
 
     @Mapping(target = "assetType", source = "type")
     @Mapping(target = "attributeType", source = "valueType")
-    AttributeDefinition toDomain(AttributeDefEntity entity);
+    AttributeDefinition toModel(AttributeDefEntity entity);
 
     @Mapping(target = "attribute", source = "attribute")
     @Mapping(target = "rule", source = "entity.rule")
     @Mapping(target = "value", source = "entity.value")
-    ConstraintDefinition toDomainConstraint(AttributeDefinition attribute, ConstraintDefEntity entity);
+    ConstraintDefinition toModelConstraint(AttributeDefinition attribute, ConstraintDefEntity entity);
 
-    default List<ConstraintDefinition> toDomainConstraints(AttributeDefinition attribute,
+    default List<ConstraintDefinition> toModelConstraints(AttributeDefinition attribute,
                                                           List<ConstraintDefEntity> entities) {
         return entities.stream()
-                .map(entity -> toDomainConstraint(attribute, entity))
+                .map(entity -> toModelConstraint(attribute, entity))
                 .toList();
     }
 

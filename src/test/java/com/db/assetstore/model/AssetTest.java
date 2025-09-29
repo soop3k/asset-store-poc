@@ -1,7 +1,7 @@
 package com.db.assetstore.model;
 
-import com.db.assetstore.AssetType;
-import com.db.assetstore.domain.model.Asset;
+import com.db.assetstore.domain.model.asset.AssetType;
+import com.db.assetstore.domain.model.asset.Asset;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.model.attribute.AttributesCollection;
 import com.db.assetstore.domain.model.type.AVBoolean;

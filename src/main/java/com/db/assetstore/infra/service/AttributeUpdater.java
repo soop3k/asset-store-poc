@@ -1,9 +1,7 @@
 package com.db.assetstore.infra.service;
 
-import com.db.assetstore.domain.model.Asset;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.model.attribute.AttributeValueVisitor;
-import com.db.assetstore.domain.model.type.AttributeType;
 import com.db.assetstore.infra.jpa.AttributeEntity;
 
 import java.math.BigDecimal;

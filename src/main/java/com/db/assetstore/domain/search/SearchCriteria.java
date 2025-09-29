@@ -1,6 +1,6 @@
 package com.db.assetstore.domain.search;
 
-import com.db.assetstore.AssetType;
+import com.db.assetstore.domain.model.asset.AssetType;
 import com.db.assetstore.domain.model.attribute.AttributeValue;
 import lombok.RequiredArgsConstructor;
 

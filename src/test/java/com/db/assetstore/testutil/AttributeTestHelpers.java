@@ -1,11 +1,9 @@
 package com.db.assetstore.testutil;
 
-import com.db.assetstore.AssetType;
+import com.db.assetstore.domain.model.asset.AssetType;
 import com.db.assetstore.domain.model.type.AttributeType;
 import com.db.assetstore.domain.service.type.AttributeDefinition;
 import com.db.assetstore.domain.service.type.ConstraintDefinition;
-
-import java.util.List;
 
 public final class AttributeTestHelpers {
 

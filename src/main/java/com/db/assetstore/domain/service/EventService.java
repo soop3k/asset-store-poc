@@ -1,7 +1,7 @@
 package com.db.assetstore.domain.service;
 
 import com.db.assetstore.infra.json.AssetSerializer;
-import com.db.assetstore.domain.model.Asset;
+import com.db.assetstore.domain.model.asset.Asset;
 import com.db.assetstore.domain.service.transform.JsonTransformer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

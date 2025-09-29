@@ -1,6 +1,6 @@
 package com.db.assetstore.infra.json;
 
-import com.db.assetstore.AssetType;
+import com.db.assetstore.domain.model.asset.AssetType;
 import com.db.assetstore.domain.model.attribute.AttributesCollection;
 import com.db.assetstore.domain.model.type.*;
 import com.db.assetstore.domain.service.type.AttributeDefinitionRegistry;

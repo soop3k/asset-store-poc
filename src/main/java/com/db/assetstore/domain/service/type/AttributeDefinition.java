@@ -1,6 +1,6 @@
 package com.db.assetstore.domain.service.type;
 
-import com.db.assetstore.AssetType;
+import com.db.assetstore.domain.model.asset.AssetType;
 import com.db.assetstore.domain.model.type.AttributeType;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;

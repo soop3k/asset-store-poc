@@ -2,7 +2,7 @@ package com.db.assetstore.infra.jpa;
 
 import jakarta.persistence.*;
 import lombok.*;
-import com.db.assetstore.AssetType;
+import com.db.assetstore.domain.model.asset.AssetType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.math.BigDecimal;

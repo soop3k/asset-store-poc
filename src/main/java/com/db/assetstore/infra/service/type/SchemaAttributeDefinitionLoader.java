@@ -1,6 +1,6 @@
 package com.db.assetstore.infra.service.type;
 
-import com.db.assetstore.AssetType;
+import com.db.assetstore.domain.model.asset.AssetType;
 import com.db.assetstore.domain.model.type.AttributeType;
 import com.db.assetstore.domain.service.type.AttributeDefinition;
 import com.db.assetstore.domain.service.type.AttributeDefinitionLoader;
@@ -14,10 +14,8 @@ import org.springframework.core.annotation.Order;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -48,10 +46,9 @@ public class SchemaAttributeDefinitionLoader implements AttributeDefinitionLoade
             return new AttributeDefinitions(definitions, constraints);
         }
 
-        var fieldNames = properties.fieldNames();
-        while (fieldNames.hasNext()) {
-            var name = fieldNames.next();
-            var definitionNode = properties.get(name);
+        for (var entry : properties.properties()) {
+            var name = entry.getKey();
+            var definitionNode = entry.getValue();
             var attributeType = readAttributeType(definitionNode);
             var attributeDefinition = new AttributeDefinition(assetType, name, attributeType);
             definitions.put(name, attributeDefinition);
@@ -101,6 +98,7 @@ public class SchemaAttributeDefinitionLoader implements AttributeDefinitionLoade
         return switch (typeNode.asText()) {
             case "integer", "number" -> AttributeType.DECIMAL;
             case "boolean" -> AttributeType.BOOLEAN;
+            case "date" -> AttributeType.DATE;
             default -> AttributeType.STRING;
         };
     }
@@ -177,16 +175,12 @@ public class SchemaAttributeDefinitionLoader implements AttributeDefinitionLoade
         } else {
             appendCustomRule(definition, customNode, collected);
         }
-        return List.copyOf(collected);
+        return collected;
     }
 
     private static void appendCustomRule(AttributeDefinition definition,
                                          JsonNode node,
                                          List<ConstraintDefinition> target) {
-        if (node == null || node.isNull()) {
-            return;
-        }
-
         if (!node.isTextual()) {
             return;
         }

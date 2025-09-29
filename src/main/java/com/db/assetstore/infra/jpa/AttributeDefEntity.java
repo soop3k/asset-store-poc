@@ -5,12 +5,10 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import com.db.assetstore.AssetType;
+import com.db.assetstore.domain.model.asset.AssetType;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import java.util.Collections;
 
 @Entity
 @Table(name = "asset_attribute_def")
