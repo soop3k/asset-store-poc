@@ -11,6 +11,7 @@ import com.db.assetstore.domain.service.asset.AssetCommandService;
 import com.db.assetstore.domain.service.asset.AssetHistoryService;
 import com.db.assetstore.domain.service.asset.AssetQueryService;
 import com.db.assetstore.domain.service.asset.cmd.CreateAssetCommand;
+import com.db.assetstore.domain.service.asset.cmd.DeleteAssetCommand;
 import com.db.assetstore.domain.service.asset.cmd.PatchAssetCommand;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -116,9 +117,39 @@ class AssetHistoryTest {
         assertEquals("NEW", initial.status());
         assertFalse(initial.deleted());
 
-        AssetHistory beforeFinalUpdate = assetHistory.get(assetHistory.size() - 1);
-        assertEquals("IN_REVIEW", beforeFinalUpdate.status());
-        assertEquals("cre-int-hist", beforeFinalUpdate.assetId());
-        assertNotNull(beforeFinalUpdate.changedAt());
+        AssetHistory finalSnapshot = assetHistory.get(assetHistory.size() - 1);
+        assertEquals("ACTIVE", finalSnapshot.status());
+        assertEquals("cre-int-hist", finalSnapshot.assetId());
+        assertFalse(finalSnapshot.deleted());
+        assertNotNull(finalSnapshot.changedAt());
+
+        boolean sawInReviewState = assetHistory.stream()
+                .anyMatch(historyEntry -> "IN_REVIEW".equals(historyEntry.status()));
+        assertTrue(sawInReviewState, "Expected to capture the intermediate IN_REVIEW state");
+    }
+
+    @Test
+    void deleteOperationIsCapturedInHistory() {
+        CreateAssetCommand createCmd = CreateAssetCommand.builder()
+                .id("cre-int-delete")
+                .type(AssetType.CRE)
+                .status("ACTIVE")
+                .build();
+        String id = commandService.create(createCmd);
+        assertEquals("cre-int-delete", id);
+
+        DeleteAssetCommand deleteCmd = DeleteAssetCommand.builder()
+                .assetId(id)
+                .executedBy("deleter")
+                .build();
+        commandService.delete(deleteCmd);
+
+        List<AssetHistory> assetHistory = historyService.assetHistory(id);
+        assertTrue(assetHistory.size() >= 2, "Expected create and delete snapshots");
+
+        AssetHistory deletionSnapshot = assetHistory.get(assetHistory.size() - 1);
+        assertTrue(deletionSnapshot.deleted(), "Deletion should be recorded in history");
+        assertEquals("deleter", deletionSnapshot.modifiedBy());
+        assertNotNull(deletionSnapshot.changedAt());
     }
 }

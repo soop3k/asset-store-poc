@@ -61,7 +61,7 @@ public class AssetService {
 
     public CommandResult<Void> delete(@NonNull DeleteAssetCommand command) {
         String assetId = command.assetId();
-        deleteAsset(assetId);
+        deleteAsset(assetId, command.executedBy());
         return CommandResult.noResult(assetId);
     }
 
@@ -89,7 +89,7 @@ public class AssetService {
         AssetEntity entity = assetRepo.findByIdAndDeleted(id, 0)
                 .orElseThrow(() -> new IllegalArgumentException("Asset not found: " + id));
 
-        recordHistory(entity, Instant.now());
+        Instant changeTime = Instant.now();
         Optional.ofNullable(patch.status()).ifPresent(entity::setStatus);
         Optional.ofNullable(patch.subtype()).ifPresent(entity::setSubtype);
         Optional.ofNullable(patch.notionalAmount()).ifPresent(entity::setNotionalAmount);
@@ -97,21 +97,28 @@ public class AssetService {
         Optional.ofNullable(patch.description()).ifPresent(entity::setDescription);
         Optional.ofNullable(patch.currency()).ifPresent(entity::setCurrency);
         entity.setModifiedBy(executedBy);
-        entity.setModifiedAt(Instant.now());
+        entity.setModifiedAt(changeTime);
         entity = assetRepo.save(entity);
 
         var patchAttributes = patch.attributes();
         if (patchAttributes != null && !patchAttributes.isEmpty()) {
             updateAsset(entity, patchAttributes);
         }
+
+        recordHistory(entity, changeTime);
     }
 
-    private void deleteAsset(@NonNull String id) {
+    private void deleteAsset(@NonNull String id, String executedBy) {
         AssetEntity entity = assetRepo.findByIdAndDeleted(id, 0)
                 .orElseThrow(() -> new IllegalArgumentException("Asset not found: " + id));
-        recordHistory(entity, Instant.now());
+
+        Instant deletionTime = Instant.now();
         entity.setDeleted(1);
-        assetRepo.save(entity);
+        entity.setModifiedAt(deletionTime);
+        entity.setModifiedBy(executedBy);
+        entity = assetRepo.save(entity);
+
+        recordHistory(entity, deletionTime);
     }
 
     private void recordHistory(AssetEntity entity, Instant when) {
