@@ -6,11 +6,9 @@ import com.db.assetstore.domain.model.attribute.AttributeValue;
 import com.db.assetstore.domain.model.attribute.AttributesCollection;
 import com.db.assetstore.domain.service.asset.cmd.CreateAssetCommand;
 import com.db.assetstore.domain.service.asset.cmd.PatchAssetCommand;
-import org.mapstruct.AfterMapping;
 import org.mapstruct.InjectionStrategy;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
 
 import java.time.Instant;
 import java.util.List;
@@ -30,19 +28,16 @@ public interface AssetCommandMapper {
     @Mapping(target = "currency", source = "command.currency")
     @Mapping(target = "createdBy", source = "command.executedBy")
     @Mapping(target = "modifiedBy", source = "command.executedBy")
-    @Mapping(target = "attributes", ignore = true)
+    @Mapping(target = "attributes", source = "command.attributes")
     Asset fromCreateCommand(CreateAssetCommand command, String assetId, Instant createdAt, Instant modifiedAt);
-
-    @AfterMapping
-    default void mapAttributes(CreateAssetCommand command, @MappingTarget Asset.AssetBuilder builder) {
-        List<AttributeValue<?>> attributes = command.attributes();
-        if (attributes == null || attributes.isEmpty()) {
-            builder.attributes(AttributesCollection.empty());
-            return;
-        }
-        builder.attributes(AttributesCollection.fromFlat(attributes));
-    }
 
     @Mapping(target = "attributes", source = "attributes")
     AssetPatch toPatch(PatchAssetCommand command);
+
+    default AttributesCollection mapAttributes(List<AttributeValue<?>> attributes) {
+        if (attributes == null || attributes.isEmpty()) {
+            return AttributesCollection.empty();
+        }
+        return AttributesCollection.fromFlat(attributes);
+    }
 }
