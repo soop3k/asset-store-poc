@@ -1,5 +1,6 @@
 package com.db.assetstore.service;
 
+import com.db.assetstore.domain.model.asset.AssetPatch;
 import com.db.assetstore.domain.model.asset.AssetType;
 import com.db.assetstore.domain.service.cmd.CommandResult;
 import com.db.assetstore.domain.service.asset.cmd.CreateAssetCommand;
@@ -8,8 +9,11 @@ import com.db.assetstore.domain.service.asset.cmd.PatchAssetCommand;
 import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.infra.jpa.AssetEntity;
 import com.db.assetstore.infra.jpa.AttributeEntity;
+import com.db.assetstore.infra.mapper.AssetCommandMapper;
+import com.db.assetstore.infra.mapper.AssetHistoryMapper;
 import com.db.assetstore.infra.mapper.AssetMapper;
 import com.db.assetstore.infra.mapper.AttributeMapper;
+import com.db.assetstore.infra.repository.AssetHistoryRepository;
 import com.db.assetstore.infra.repository.AssetRepository;
 import com.db.assetstore.infra.repository.AttributeRepository;
 import com.db.assetstore.infra.service.AssetService;
@@ -31,6 +35,9 @@ class AssetServiceTest {
     AttributeMapper attributeMapper;
     AssetRepository assetRepo;
     AttributeRepository attributeRepo;
+    AssetHistoryRepository assetHistoryRepo;
+    AssetHistoryMapper assetHistoryMapper;
+    AssetCommandMapper assetCommandMapper;
 
     AssetService service;
 
@@ -40,11 +47,57 @@ class AssetServiceTest {
         attributeMapper = mock(AttributeMapper.class, Mockito.withSettings().defaultAnswer(Mockito.CALLS_REAL_METHODS));
         assetRepo = mock(AssetRepository.class);
         attributeRepo = mock(AttributeRepository.class);
+        assetHistoryRepo = mock(AssetHistoryRepository.class);
+        assetHistoryMapper = mock(AssetHistoryMapper.class);
+        assetCommandMapper = mock(AssetCommandMapper.class);
 
-        service = new AssetService(assetMapper, attributeMapper, assetRepo, attributeRepo);
+        service = new AssetService(
+                assetMapper,
+                assetCommandMapper,
+                attributeMapper,
+                assetRepo,
+                attributeRepo,
+                assetHistoryRepo,
+                assetHistoryMapper);
 
         when(assetRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(attributeRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(assetHistoryRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(assetHistoryMapper.toEntity(any(), any())).thenReturn(new com.db.assetstore.infra.jpa.AssetHistoryEntity());
+        when(assetCommandMapper.fromCreateCommand(any(), any(), any(), any())).thenAnswer(inv -> {
+            CreateAssetCommand cmd = inv.getArgument(0);
+            String assetId = inv.getArgument(1);
+            java.time.Instant createdAt = inv.getArgument(2);
+            java.time.Instant modifiedAt = inv.getArgument(3);
+            com.db.assetstore.domain.model.asset.Asset asset = com.db.assetstore.domain.model.asset.Asset.builder()
+                    .id(assetId)
+                    .type(cmd.type())
+                    .createdAt(createdAt)
+                    .status(cmd.status())
+                    .subtype(cmd.subtype())
+                    .notionalAmount(cmd.notionalAmount())
+                    .year(cmd.year())
+                    .description(cmd.description())
+                    .currency(cmd.currency())
+                    .createdBy(cmd.executedBy())
+                    .modifiedBy(cmd.executedBy())
+                    .modifiedAt(modifiedAt)
+                    .build();
+            asset.setAttributes(cmd.attributes());
+            return asset;
+        });
+        when(assetCommandMapper.toPatch(any())).thenAnswer(inv -> {
+            PatchAssetCommand cmd = inv.getArgument(0);
+            return AssetPatch.builder()
+                    .status(cmd.status())
+                    .subtype(cmd.subtype())
+                    .notionalAmount(cmd.notionalAmount())
+                    .year(cmd.year())
+                    .description(cmd.description())
+                    .currency(cmd.currency())
+                    .attributes(cmd.attributes())
+                    .build();
+        });
     }
 
     @Test
@@ -70,6 +123,7 @@ class AssetServiceTest {
         assertEquals("a-1", result.assetId());
         verify(assetRepo, times(1)).save(entity);
         verifyNoInteractions(attributeRepo);
+        verify(assetHistoryRepo, times(1)).save(any());
     }
 
     @Test
@@ -95,6 +149,7 @@ class AssetServiceTest {
         verify(attributeRepo, never()).save(any());
         assertFalse(entity.getAttributes().isEmpty());
         assertEquals("city", entity.getAttributes().get(0).getName());
+        verify(assetHistoryRepo, times(1)).save(any());
     }
 
     @Test
@@ -115,6 +170,7 @@ class AssetServiceTest {
         assertEquals("INACTIVE", entity.getStatus());
         verify(assetRepo, times(1)).save(entity);
         verify(attributeRepo, never()).save(any());
+        verify(assetHistoryRepo, times(1)).save(any());
     }
 
     @Test
@@ -134,6 +190,7 @@ class AssetServiceTest {
 
         assertEquals("Warsaw", parent.getAttributes().get(0).getValueStr());
         verify(attributeRepo, times(1)).save(parent.getAttributes().get(0));
+        verify(assetHistoryRepo, times(1)).save(any());
     }
 
     @Test
@@ -153,6 +210,7 @@ class AssetServiceTest {
 
         assertEquals("Warsaw", parent.getAttributes().get(0).getValueStr());
         verify(attributeRepo, never()).save(any());
+        verify(assetHistoryRepo, times(1)).save(any());
     }
 
     @Test
@@ -166,5 +224,6 @@ class AssetServiceTest {
         assertEquals("a-6", result.assetId());
         assertEquals(1, entity.getDeleted());
         verify(assetRepo, times(1)).save(entity);
+        verify(assetHistoryRepo, times(1)).save(any());
     }
 }

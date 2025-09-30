@@ -1,9 +1,21 @@
 package com.db.assetstore.infra.jpa;
 
-import jakarta.persistence.*;
-import lombok.*;
 import com.db.assetstore.domain.model.asset.AssetType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -86,6 +98,4 @@ public class AssetEntity {
         this.type = type;
         this.createdAt = createdAt;
     }
-
-
 }

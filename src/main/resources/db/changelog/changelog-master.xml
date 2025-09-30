@@ -226,4 +226,41 @@
                                   constraintName="fk_attr_constraint_definition"/>
     </changeSet>
 
+    <changeSet id="11-asset-history" author="assistant">
+        <createTable tableName="asset_history">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="asset_id" type="varchar(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(64)"/>
+            <column name="subtype" type="varchar(64)"/>
+            <column name="status_effective_time" type="timestamp"/>
+            <column name="modified_at" type="timestamp"/>
+            <column name="modified_by" type="varchar(64)"/>
+            <column name="created_at" type="timestamp"/>
+            <column name="created_by" type="varchar(64)"/>
+            <column name="notional_amount" type="decimal(19,4)"/>
+            <column name="asset_year" type="int"/>
+            <column name="description" type="varchar(1024)"/>
+            <column name="currency" type="varchar(8)"/>
+            <column name="wh" type="varchar(64)"/>
+            <column name="source_system_name" type="varchar(64)"/>
+            <column name="external_reference" type="varchar(128)"/>
+            <column name="deleted" type="int" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed_at" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="asset_history" baseColumnNames="asset_id"
+                                  referencedTableName="assets" referencedColumnNames="id"
+                                  constraintName="fk_asset_history_asset"/>
+        <createIndex tableName="asset_history" indexName="idx_asset_history_asset">
+            <column name="asset_id"/>
+        </createIndex>
+    </changeSet>
+
 </databaseChangeLog>

@@ -8,9 +8,13 @@ import com.db.assetstore.domain.service.asset.cmd.CreateAssetCommand;
 import com.db.assetstore.domain.service.asset.cmd.DeleteAssetCommand;
 import com.db.assetstore.domain.service.asset.cmd.PatchAssetCommand;
 import com.db.assetstore.infra.jpa.AssetEntity;
+import com.db.assetstore.infra.jpa.AssetHistoryEntity;
 import com.db.assetstore.infra.jpa.AttributeEntity;
+import com.db.assetstore.infra.mapper.AssetCommandMapper;
+import com.db.assetstore.infra.mapper.AssetHistoryMapper;
 import com.db.assetstore.infra.mapper.AssetMapper;
 import com.db.assetstore.infra.mapper.AttributeMapper;
+import com.db.assetstore.infra.repository.AssetHistoryRepository;
 import com.db.assetstore.infra.repository.AssetRepository;
 import com.db.assetstore.infra.repository.AttributeRepository;
 import lombok.NonNull;
@@ -19,7 +23,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -27,27 +35,17 @@ import java.util.*;
 public class AssetService {
 
     private final AssetMapper assetMapper;
+    private final AssetCommandMapper assetCommandMapper;
     private final AttributeMapper attributeMapper;
     private final AssetRepository assetRepo;
     private final AttributeRepository attributeRepo;
+    private final AssetHistoryRepository assetHistoryRepo;
+    private final AssetHistoryMapper assetHistoryMapper;
 
     public CommandResult<String> create(@NonNull CreateAssetCommand command) {
         String assetId = resolveAssetId(command);
-        Asset asset = Asset.builder()
-                .id(assetId)
-                .type(command.type())
-                .createdAt(Instant.now())
-                .status(command.status())
-                .subtype(command.subtype())
-                .notionalAmount(command.notionalAmount())
-                .year(command.year())
-                .description(command.description())
-                .currency(command.currency())
-                .createdBy(command.executedBy())
-                .modifiedBy(command.executedBy())
-                .modifiedAt(Instant.now())
-                .build();
-        asset.setAttributes(command.attributes());
+        Instant now = Instant.now();
+        Asset asset = assetCommandMapper.fromCreateCommand(command, assetId, now, now);
 
         String persistedId = persistAsset(asset);
         return new CommandResult<>(persistedId, persistedId);
@@ -55,15 +53,7 @@ public class AssetService {
 
     public CommandResult<Void> patch(@NonNull PatchAssetCommand command) {
         String assetId = command.assetId();
-        AssetPatch patch = AssetPatch.builder()
-                .status(command.status())
-                .subtype(command.subtype())
-                .notionalAmount(command.notionalAmount())
-                .year(command.year())
-                .description(command.description())
-                .currency(command.currency())
-                .attributes(command.attributes())
-                .build();
+        AssetPatch patch = assetCommandMapper.toPatch(command);
 
         applyPatch(assetId, patch, command.executedBy());
         return CommandResult.noResult(assetId);
@@ -71,7 +61,7 @@ public class AssetService {
 
     public CommandResult<Void> delete(@NonNull DeleteAssetCommand command) {
         String assetId = command.assetId();
-        deleteAsset(assetId);
+        deleteAsset(assetId, command.executedBy());
         return CommandResult.noResult(assetId);
     }
 
@@ -91,6 +81,7 @@ public class AssetService {
         } else {
             persistAttributes(entity, asset.getAttributesFlat());
         }
+        recordHistory(entity, Instant.now());
         return entity.getId();
     }
 
@@ -98,28 +89,42 @@ public class AssetService {
         AssetEntity entity = assetRepo.findByIdAndDeleted(id, 0)
                 .orElseThrow(() -> new IllegalArgumentException("Asset not found: " + id));
 
+        Instant changeTime = Instant.now();
         Optional.ofNullable(patch.status()).ifPresent(entity::setStatus);
         Optional.ofNullable(patch.subtype()).ifPresent(entity::setSubtype);
         Optional.ofNullable(patch.notionalAmount()).ifPresent(entity::setNotionalAmount);
         Optional.ofNullable(patch.year()).ifPresent(entity::setYear);
         Optional.ofNullable(patch.description()).ifPresent(entity::setDescription);
         Optional.ofNullable(patch.currency()).ifPresent(entity::setCurrency);
-
         entity.setModifiedBy(executedBy);
-        entity.setModifiedAt(Instant.now());
+        entity.setModifiedAt(changeTime);
         entity = assetRepo.save(entity);
 
         var patchAttributes = patch.attributes();
         if (patchAttributes != null && !patchAttributes.isEmpty()) {
             updateAsset(entity, patchAttributes);
         }
+
+        recordHistory(entity, changeTime);
     }
 
-    private void deleteAsset(@NonNull String id) {
+    private void deleteAsset(@NonNull String id, String executedBy) {
         AssetEntity entity = assetRepo.findByIdAndDeleted(id, 0)
                 .orElseThrow(() -> new IllegalArgumentException("Asset not found: " + id));
+
+        Instant deletionTime = Instant.now();
         entity.setDeleted(1);
-        assetRepo.save(entity);
+        entity.setModifiedAt(deletionTime);
+        entity.setModifiedBy(executedBy);
+        entity = assetRepo.save(entity);
+
+        recordHistory(entity, deletionTime);
+    }
+
+    private void recordHistory(AssetEntity entity, Instant when) {
+        Instant timestamp = when != null ? when : Instant.now();
+        AssetHistoryEntity historyEntity = assetHistoryMapper.toEntity(entity, timestamp);
+        assetHistoryRepo.save(historyEntity);
     }
 
     private void updateAsset(@NonNull AssetEntity asset, @NonNull Collection<AttributeValue<?>> attributes) {

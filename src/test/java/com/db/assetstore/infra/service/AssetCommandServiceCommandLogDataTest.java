@@ -12,12 +12,15 @@ import com.db.assetstore.infra.jpa.AssetEntity;
 import com.db.assetstore.infra.jpa.AttributeEntity;
 import com.db.assetstore.infra.jpa.CommandLogEntity;
 import com.db.assetstore.infra.repository.CommandLogRepository;
+import com.db.assetstore.infra.repository.AssetHistoryRepository;
+import com.db.assetstore.infra.repository.AssetLinkRepo;
 import com.db.assetstore.infra.repository.AssetRepository;
 import com.db.assetstore.infra.repository.AttributeRepository;
-import com.db.assetstore.infra.repository.AssetLinkRepo;
 import com.db.assetstore.infra.repository.LinkDefinitionRepo;
 import com.db.assetstore.infra.service.cmd.CommandLogService;
 import com.db.assetstore.infra.service.cmd.CommandServiceImpl;
+import com.db.assetstore.infra.mapper.AssetCommandMapper;
+import com.db.assetstore.infra.mapper.AssetHistoryMapper;
 import com.db.assetstore.infra.mapper.AssetMapper;
 import com.db.assetstore.infra.mapper.AssetMapperImpl;
 import com.db.assetstore.infra.mapper.AttributeMapper;
@@ -57,6 +60,9 @@ class AssetCommandServiceCommandLogDataTest {
     @Autowired
     LinkDefinitionRepo linkDefinitionRepo;
 
+    @Autowired
+    AssetHistoryRepository assetHistoryRepository;
+
     ObjectMapper objectMapper = new JsonMapperProvider().objectMapper();
 
     CommandServiceImpl service;
@@ -65,13 +71,18 @@ class AssetCommandServiceCommandLogDataTest {
     void setUp() {
         AttributesCollectionMapper collectionMapper = Mappers.getMapper(AttributesCollectionMapper.class);
         AssetMapper assetMapper = new AssetMapperImpl(collectionMapper);
+        AssetCommandMapper assetCommandMapper = Mappers.getMapper(AssetCommandMapper.class);
+        AssetHistoryMapper assetHistoryMapper = Mappers.getMapper(AssetHistoryMapper.class);
         AttributeMapper attributeMapper = Mappers.getMapper(AttributeMapper.class);
         AssetLinkCommandValidator assetLinkCommandValidator = new AssetLinkCommandValidator(assetLinkRepo);
         AssetService assetService = new AssetService(
                 assetMapper,
+                assetCommandMapper,
                 attributeMapper,
                 assetRepository,
-                attributeRepository);
+                attributeRepository,
+                assetHistoryRepository,
+                assetHistoryMapper);
         AssetLinkService assetLinkService = new AssetLinkService(
                 assetLinkRepo,
                 linkDefinitionRepo,

@@ -2,6 +2,7 @@ package integration;
 
 import com.db.assetstore.domain.model.asset.AssetType;
 import com.db.assetstore.domain.model.asset.Asset;
+import com.db.assetstore.domain.model.asset.AssetHistory;
 import com.db.assetstore.domain.model.attribute.AttributeHistory;
 import com.db.assetstore.domain.model.type.AVBoolean;
 import com.db.assetstore.domain.model.type.AVDecimal;
@@ -10,6 +11,7 @@ import com.db.assetstore.domain.service.asset.AssetCommandService;
 import com.db.assetstore.domain.service.asset.AssetHistoryService;
 import com.db.assetstore.domain.service.asset.AssetQueryService;
 import com.db.assetstore.domain.service.asset.cmd.CreateAssetCommand;
+import com.db.assetstore.domain.service.asset.cmd.DeleteAssetCommand;
 import com.db.assetstore.domain.service.asset.cmd.PatchAssetCommand;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +43,7 @@ class AssetHistoryTest {
         CreateAssetCommand createCmd = CreateAssetCommand.builder()
                 .id("cre-int-hist")
                 .type(AssetType.CRE)
+                .status("NEW")
                 .attributes(List.of(
                         new AVString("city", "Gdansk"),
                         new AVDecimal("rooms", new BigDecimal("1")),
@@ -53,6 +56,7 @@ class AssetHistoryTest {
         // 1st update: change city
         PatchAssetCommand patchCity = PatchAssetCommand.builder()
                 .assetId(id)
+                .status("IN_REVIEW")
                 .attributes(List.of(new AVString("city", "Warsaw")))
                 .build();
         commandService.update(patchCity);
@@ -67,6 +71,7 @@ class AssetHistoryTest {
         // 3rd update: change active
         PatchAssetCommand patchActive = PatchAssetCommand.builder()
                 .assetId(id)
+                .status("ACTIVE")
                 .attributes(List.of(new AVBoolean("active", false)))
                 .build();
         commandService.update(patchActive);
@@ -83,9 +88,10 @@ class AssetHistoryTest {
         assertEquals("Warsaw", city.value());
         assertEquals(new BigDecimal("2"), rooms.value());
         assertEquals(Boolean.FALSE, active.value());
+        assertEquals("ACTIVE", after.getStatus());
 
         // verify history
-        List<AttributeHistory> history = historyService.history(id);
+        List<AttributeHistory> history = historyService.attributeHistory(id);
         assertTrue(history.size() >= 3, "Expected at least 3 history entries");
 
         AttributeHistory last = history.get(history.size() - 1);
@@ -103,5 +109,47 @@ class AssetHistoryTest {
         assertNotNull(last.changedAt());
         assertNotNull(prev.changedAt());
         assertNotNull(prev2.changedAt());
+
+        List<AssetHistory> assetHistory = historyService.assetHistory(id);
+        assertTrue(assetHistory.size() >= 4, "Expected asset-level history entries");
+
+        AssetHistory initial = assetHistory.get(0);
+        assertEquals("NEW", initial.status());
+        assertFalse(initial.deleted());
+
+        AssetHistory finalSnapshot = assetHistory.get(assetHistory.size() - 1);
+        assertEquals("ACTIVE", finalSnapshot.status());
+        assertEquals("cre-int-hist", finalSnapshot.assetId());
+        assertFalse(finalSnapshot.deleted());
+        assertNotNull(finalSnapshot.changedAt());
+
+        boolean sawInReviewState = assetHistory.stream()
+                .anyMatch(historyEntry -> "IN_REVIEW".equals(historyEntry.status()));
+        assertTrue(sawInReviewState, "Expected to capture the intermediate IN_REVIEW state");
+    }
+
+    @Test
+    void deleteOperationIsCapturedInHistory() {
+        CreateAssetCommand createCmd = CreateAssetCommand.builder()
+                .id("cre-int-delete")
+                .type(AssetType.CRE)
+                .status("ACTIVE")
+                .build();
+        String id = commandService.create(createCmd);
+        assertEquals("cre-int-delete", id);
+
+        DeleteAssetCommand deleteCmd = DeleteAssetCommand.builder()
+                .assetId(id)
+                .executedBy("deleter")
+                .build();
+        commandService.delete(deleteCmd);
+
+        List<AssetHistory> assetHistory = historyService.assetHistory(id);
+        assertTrue(assetHistory.size() >= 2, "Expected create and delete snapshots");
+
+        AssetHistory deletionSnapshot = assetHistory.get(assetHistory.size() - 1);
+        assertTrue(deletionSnapshot.deleted(), "Deletion should be recorded in history");
+        assertEquals("deleter", deletionSnapshot.modifiedBy());
+        assertNotNull(deletionSnapshot.changedAt());
     }
 }

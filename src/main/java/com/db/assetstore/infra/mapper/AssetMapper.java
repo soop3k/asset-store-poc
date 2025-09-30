@@ -3,7 +3,12 @@ package com.db.assetstore.infra.mapper;
 import com.db.assetstore.infra.jpa.AssetEntity;
 import com.db.assetstore.domain.model.asset.Asset;
 
-import org.mapstruct.*;
+import org.mapstruct.AfterMapping;
+import org.mapstruct.InjectionStrategy;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.Mappings;
 import org.mapstruct.factory.Mappers;
 
 import java.util.List;
