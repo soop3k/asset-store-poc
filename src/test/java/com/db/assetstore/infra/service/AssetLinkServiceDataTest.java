@@ -9,6 +9,7 @@ import com.db.assetstore.infra.config.JsonMapperProvider;
 import com.db.assetstore.infra.jpa.AssetEntity;
 import com.db.assetstore.infra.jpa.AssetLinkEntity;
 import com.db.assetstore.infra.jpa.LinkDefinitionEntity;
+import com.db.assetstore.infra.mapper.AssetCommandMapper;
 import com.db.assetstore.infra.mapper.AssetHistoryMapper;
 import com.db.assetstore.infra.mapper.AssetMapper;
 import com.db.assetstore.infra.mapper.AssetMapperImpl;
@@ -75,11 +76,13 @@ class AssetLinkServiceDataTest {
 
         AttributesCollectionMapper collectionMapper = Mappers.getMapper(AttributesCollectionMapper.class);
         AssetMapper assetMapper = new AssetMapperImpl(collectionMapper);
+        AssetCommandMapper assetCommandMapper = Mappers.getMapper(AssetCommandMapper.class);
         AssetHistoryMapper assetHistoryMapper = Mappers.getMapper(AssetHistoryMapper.class);
         AttributeMapper attributeMapper = Mappers.getMapper(AttributeMapper.class);
 
         AssetService assetService = new AssetService(
                 assetMapper,
+                assetCommandMapper,
                 attributeMapper,
                 assetRepository,
                 attributeRepository,

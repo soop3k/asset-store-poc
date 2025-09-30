@@ -1,5 +1,6 @@
 package com.db.assetstore.service;
 
+import com.db.assetstore.domain.model.asset.AssetPatch;
 import com.db.assetstore.domain.model.asset.AssetType;
 import com.db.assetstore.domain.service.cmd.CommandResult;
 import com.db.assetstore.domain.service.asset.cmd.CreateAssetCommand;
@@ -8,6 +9,7 @@ import com.db.assetstore.domain.service.asset.cmd.PatchAssetCommand;
 import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.infra.jpa.AssetEntity;
 import com.db.assetstore.infra.jpa.AttributeEntity;
+import com.db.assetstore.infra.mapper.AssetCommandMapper;
 import com.db.assetstore.infra.mapper.AssetHistoryMapper;
 import com.db.assetstore.infra.mapper.AssetMapper;
 import com.db.assetstore.infra.mapper.AttributeMapper;
@@ -35,6 +37,7 @@ class AssetServiceTest {
     AttributeRepository attributeRepo;
     AssetHistoryRepository assetHistoryRepo;
     AssetHistoryMapper assetHistoryMapper;
+    AssetCommandMapper assetCommandMapper;
 
     AssetService service;
 
@@ -46,13 +49,55 @@ class AssetServiceTest {
         attributeRepo = mock(AttributeRepository.class);
         assetHistoryRepo = mock(AssetHistoryRepository.class);
         assetHistoryMapper = mock(AssetHistoryMapper.class);
+        assetCommandMapper = mock(AssetCommandMapper.class);
 
-        service = new AssetService(assetMapper, attributeMapper, assetRepo, attributeRepo, assetHistoryRepo, assetHistoryMapper);
+        service = new AssetService(
+                assetMapper,
+                assetCommandMapper,
+                attributeMapper,
+                assetRepo,
+                attributeRepo,
+                assetHistoryRepo,
+                assetHistoryMapper);
 
         when(assetRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(attributeRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(assetHistoryRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(assetHistoryMapper.toEntity(any(), any())).thenReturn(new com.db.assetstore.infra.jpa.AssetHistoryEntity());
+        when(assetCommandMapper.fromCreateCommand(any(), any(), any(), any())).thenAnswer(inv -> {
+            CreateAssetCommand cmd = inv.getArgument(0);
+            String assetId = inv.getArgument(1);
+            java.time.Instant createdAt = inv.getArgument(2);
+            java.time.Instant modifiedAt = inv.getArgument(3);
+            com.db.assetstore.domain.model.asset.Asset asset = com.db.assetstore.domain.model.asset.Asset.builder()
+                    .id(assetId)
+                    .type(cmd.type())
+                    .createdAt(createdAt)
+                    .status(cmd.status())
+                    .subtype(cmd.subtype())
+                    .notionalAmount(cmd.notionalAmount())
+                    .year(cmd.year())
+                    .description(cmd.description())
+                    .currency(cmd.currency())
+                    .createdBy(cmd.executedBy())
+                    .modifiedBy(cmd.executedBy())
+                    .modifiedAt(modifiedAt)
+                    .build();
+            asset.setAttributes(cmd.attributes());
+            return asset;
+        });
+        when(assetCommandMapper.toPatch(any())).thenAnswer(inv -> {
+            PatchAssetCommand cmd = inv.getArgument(0);
+            return AssetPatch.builder()
+                    .status(cmd.status())
+                    .subtype(cmd.subtype())
+                    .notionalAmount(cmd.notionalAmount())
+                    .year(cmd.year())
+                    .description(cmd.description())
+                    .currency(cmd.currency())
+                    .attributes(cmd.attributes())
+                    .build();
+        });
     }
 
     @Test
