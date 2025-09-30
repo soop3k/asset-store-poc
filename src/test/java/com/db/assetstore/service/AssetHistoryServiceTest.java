@@ -18,8 +18,12 @@ import org.mapstruct.factory.Mappers;
 import java.time.Instant;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class AssetHistoryServiceTest {
 
@@ -72,7 +76,7 @@ class AssetHistoryServiceTest {
                 .createdAt(Instant.now().minusSeconds(10))
                 .createdBy("creator")
                 .build();
-        AssetHistoryEntity h1 = new AssetHistoryEntity(asset, Instant.now());
+        AssetHistoryEntity h1 = assetHistoryMapper.toEntity(asset, Instant.now());
         when(assetHistoryRepository.findAllByAsset_IdOrderByChangedAt("h-asset"))
                 .thenReturn(List.of(h1));
 

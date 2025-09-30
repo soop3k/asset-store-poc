@@ -11,7 +11,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 import lombok.Setter;
 
 import java.math.BigDecimal;
@@ -80,23 +79,4 @@ public class AssetHistoryEntity {
     @Column(name = "changed_at", nullable = false)
     private Instant changedAt;
 
-    public AssetHistoryEntity(@NonNull AssetEntity asset, @NonNull Instant when) {
-        this.asset = asset;
-        this.status = asset.getStatus();
-        this.subtype = asset.getSubtype();
-        this.statusEffectiveTime = asset.getStatusEffectiveTime();
-        this.modifiedAt = asset.getModifiedAt();
-        this.modifiedBy = asset.getModifiedBy();
-        this.createdAt = asset.getCreatedAt();
-        this.createdBy = asset.getCreatedBy();
-        this.notionalAmount = asset.getNotionalAmount();
-        this.year = asset.getYear();
-        this.description = asset.getDescription();
-        this.currency = asset.getCurrency();
-        this.wh = asset.getWh();
-        this.sourceSystemName = asset.getSourceSystemName();
-        this.externalReference = asset.getExternalReference();
-        this.deleted = asset.getDeleted();
-        this.changedAt = when;
-    }
 }
