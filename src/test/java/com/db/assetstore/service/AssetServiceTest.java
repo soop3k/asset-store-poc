@@ -8,6 +8,7 @@ import com.db.assetstore.domain.service.asset.cmd.PatchAssetCommand;
 import com.db.assetstore.domain.model.type.AVString;
 import com.db.assetstore.infra.jpa.AssetEntity;
 import com.db.assetstore.infra.jpa.AttributeEntity;
+import com.db.assetstore.infra.mapper.AssetHistoryMapper;
 import com.db.assetstore.infra.mapper.AssetMapper;
 import com.db.assetstore.infra.mapper.AttributeMapper;
 import com.db.assetstore.infra.repository.AssetHistoryRepository;
@@ -33,6 +34,7 @@ class AssetServiceTest {
     AssetRepository assetRepo;
     AttributeRepository attributeRepo;
     AssetHistoryRepository assetHistoryRepo;
+    AssetHistoryMapper assetHistoryMapper;
 
     AssetService service;
 
@@ -43,12 +45,14 @@ class AssetServiceTest {
         assetRepo = mock(AssetRepository.class);
         attributeRepo = mock(AttributeRepository.class);
         assetHistoryRepo = mock(AssetHistoryRepository.class);
+        assetHistoryMapper = mock(AssetHistoryMapper.class);
 
-        service = new AssetService(assetMapper, attributeMapper, assetRepo, attributeRepo, assetHistoryRepo);
+        service = new AssetService(assetMapper, attributeMapper, assetRepo, attributeRepo, assetHistoryRepo, assetHistoryMapper);
 
         when(assetRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(attributeRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(assetHistoryRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(assetHistoryMapper.toEntity(any(), any())).thenReturn(new com.db.assetstore.infra.jpa.AssetHistoryEntity());
     }
 
     @Test

@@ -10,6 +10,7 @@ import com.db.assetstore.domain.service.asset.cmd.PatchAssetCommand;
 import com.db.assetstore.infra.jpa.AssetEntity;
 import com.db.assetstore.infra.jpa.AssetHistoryEntity;
 import com.db.assetstore.infra.jpa.AttributeEntity;
+import com.db.assetstore.infra.mapper.AssetHistoryMapper;
 import com.db.assetstore.infra.mapper.AssetMapper;
 import com.db.assetstore.infra.mapper.AttributeMapper;
 import com.db.assetstore.infra.repository.AssetHistoryRepository;
@@ -37,6 +38,7 @@ public class AssetService {
     private final AssetRepository assetRepo;
     private final AttributeRepository attributeRepo;
     private final AssetHistoryRepository assetHistoryRepo;
+    private final AssetHistoryMapper assetHistoryMapper;
 
     public CommandResult<String> create(@NonNull CreateAssetCommand command) {
         String assetId = resolveAssetId(command);
@@ -133,7 +135,8 @@ public class AssetService {
 
     private void recordHistory(AssetEntity entity, Instant when) {
         Instant timestamp = when != null ? when : Instant.now();
-        assetHistoryRepo.save(new AssetHistoryEntity(entity, timestamp));
+        AssetHistoryEntity historyEntity = assetHistoryMapper.toEntity(entity, timestamp);
+        assetHistoryRepo.save(historyEntity);
     }
 
     private void updateAsset(@NonNull AssetEntity asset, @NonNull Collection<AttributeValue<?>> attributes) {

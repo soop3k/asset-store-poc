@@ -19,6 +19,7 @@ import com.db.assetstore.infra.repository.AttributeRepository;
 import com.db.assetstore.infra.repository.LinkDefinitionRepo;
 import com.db.assetstore.infra.service.cmd.CommandLogService;
 import com.db.assetstore.infra.service.cmd.CommandServiceImpl;
+import com.db.assetstore.infra.mapper.AssetHistoryMapper;
 import com.db.assetstore.infra.mapper.AssetMapper;
 import com.db.assetstore.infra.mapper.AssetMapperImpl;
 import com.db.assetstore.infra.mapper.AttributeMapper;
@@ -69,6 +70,7 @@ class AssetCommandServiceCommandLogDataTest {
     void setUp() {
         AttributesCollectionMapper collectionMapper = Mappers.getMapper(AttributesCollectionMapper.class);
         AssetMapper assetMapper = new AssetMapperImpl(collectionMapper);
+        AssetHistoryMapper assetHistoryMapper = Mappers.getMapper(AssetHistoryMapper.class);
         AttributeMapper attributeMapper = Mappers.getMapper(AttributeMapper.class);
         AssetLinkCommandValidator assetLinkCommandValidator = new AssetLinkCommandValidator(assetLinkRepo);
         AssetService assetService = new AssetService(
@@ -76,7 +78,8 @@ class AssetCommandServiceCommandLogDataTest {
                 attributeMapper,
                 assetRepository,
                 attributeRepository,
-                assetHistoryRepository);
+                assetHistoryRepository,
+                assetHistoryMapper);
         AssetLinkService assetLinkService = new AssetLinkService(
                 assetLinkRepo,
                 linkDefinitionRepo,

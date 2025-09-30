@@ -1,10 +1,12 @@
 package com.db.assetstore.infra.mapper;
 
 import com.db.assetstore.domain.model.asset.AssetHistory;
+import com.db.assetstore.infra.jpa.AssetEntity;
 import com.db.assetstore.infra.jpa.AssetHistoryEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.time.Instant;
 import java.util.List;
 
 @Mapper(componentModel = "spring")
@@ -15,4 +17,9 @@ public interface AssetHistoryMapper {
     AssetHistory toModel(AssetHistoryEntity entity);
 
     List<AssetHistory> toModels(List<AssetHistoryEntity> entities);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "asset", source = "asset")
+    @Mapping(target = "changedAt", source = "changedAt")
+    AssetHistoryEntity toEntity(AssetEntity asset, Instant changedAt);
 }
