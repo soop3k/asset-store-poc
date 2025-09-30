@@ -13,6 +13,7 @@ import com.db.assetstore.infra.mapper.AssetMapper;
 import com.db.assetstore.infra.mapper.AssetMapperImpl;
 import com.db.assetstore.infra.mapper.AttributeMapper;
 import com.db.assetstore.infra.mapper.AttributesCollectionMapper;
+import com.db.assetstore.infra.repository.AssetHistoryRepository;
 import com.db.assetstore.infra.repository.AssetLinkRepo;
 import com.db.assetstore.infra.repository.AssetRepository;
 import com.db.assetstore.infra.repository.AttributeRepository;
@@ -57,6 +58,9 @@ class AssetLinkServiceDataTest {
     @Autowired
     AssetLinkCommandValidator assetLinkCommandValidator;
 
+    @Autowired
+    AssetHistoryRepository assetHistoryRepository;
+
     CommandServiceImpl service;
 
     ObjectMapper objectMapper = new JsonMapperProvider().objectMapper();
@@ -76,7 +80,8 @@ class AssetLinkServiceDataTest {
                 assetMapper,
                 attributeMapper,
                 assetRepository,
-                attributeRepository);
+                attributeRepository,
+                assetHistoryRepository);
         AssetLinkService assetLinkService = new AssetLinkService(
                 assetLinkRepo,
                 linkDefinitionRepo,

@@ -2,6 +2,7 @@ package integration;
 
 import com.db.assetstore.domain.model.asset.AssetType;
 import com.db.assetstore.domain.model.asset.Asset;
+import com.db.assetstore.domain.model.asset.AssetHistory;
 import com.db.assetstore.domain.model.attribute.AttributeHistory;
 import com.db.assetstore.domain.model.type.AVBoolean;
 import com.db.assetstore.domain.model.type.AVDecimal;
@@ -41,6 +42,7 @@ class AssetHistoryTest {
         CreateAssetCommand createCmd = CreateAssetCommand.builder()
                 .id("cre-int-hist")
                 .type(AssetType.CRE)
+                .status("NEW")
                 .attributes(List.of(
                         new AVString("city", "Gdansk"),
                         new AVDecimal("rooms", new BigDecimal("1")),
@@ -53,6 +55,7 @@ class AssetHistoryTest {
         // 1st update: change city
         PatchAssetCommand patchCity = PatchAssetCommand.builder()
                 .assetId(id)
+                .status("IN_REVIEW")
                 .attributes(List.of(new AVString("city", "Warsaw")))
                 .build();
         commandService.update(patchCity);
@@ -67,6 +70,7 @@ class AssetHistoryTest {
         // 3rd update: change active
         PatchAssetCommand patchActive = PatchAssetCommand.builder()
                 .assetId(id)
+                .status("ACTIVE")
                 .attributes(List.of(new AVBoolean("active", false)))
                 .build();
         commandService.update(patchActive);
@@ -83,9 +87,10 @@ class AssetHistoryTest {
         assertEquals("Warsaw", city.value());
         assertEquals(new BigDecimal("2"), rooms.value());
         assertEquals(Boolean.FALSE, active.value());
+        assertEquals("ACTIVE", after.getStatus());
 
         // verify history
-        List<AttributeHistory> history = historyService.history(id);
+        List<AttributeHistory> history = historyService.attributeHistory(id);
         assertTrue(history.size() >= 3, "Expected at least 3 history entries");
 
         AttributeHistory last = history.get(history.size() - 1);
@@ -103,5 +108,17 @@ class AssetHistoryTest {
         assertNotNull(last.changedAt());
         assertNotNull(prev.changedAt());
         assertNotNull(prev2.changedAt());
+
+        List<AssetHistory> assetHistory = historyService.assetHistory(id);
+        assertTrue(assetHistory.size() >= 4, "Expected asset-level history entries");
+
+        AssetHistory initial = assetHistory.get(0);
+        assertEquals("NEW", initial.status());
+        assertFalse(initial.deleted());
+
+        AssetHistory beforeFinalUpdate = assetHistory.get(assetHistory.size() - 1);
+        assertEquals("IN_REVIEW", beforeFinalUpdate.status());
+        assertEquals("cre-int-hist", beforeFinalUpdate.assetId());
+        assertNotNull(beforeFinalUpdate.changedAt());
     }
 }

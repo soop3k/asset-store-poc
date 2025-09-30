@@ -10,6 +10,7 @@ import com.db.assetstore.infra.jpa.AssetEntity;
 import com.db.assetstore.infra.jpa.AttributeEntity;
 import com.db.assetstore.infra.mapper.AssetMapper;
 import com.db.assetstore.infra.mapper.AttributeMapper;
+import com.db.assetstore.infra.repository.AssetHistoryRepository;
 import com.db.assetstore.infra.repository.AssetRepository;
 import com.db.assetstore.infra.repository.AttributeRepository;
 import com.db.assetstore.infra.service.AssetService;
@@ -31,6 +32,7 @@ class AssetServiceTest {
     AttributeMapper attributeMapper;
     AssetRepository assetRepo;
     AttributeRepository attributeRepo;
+    AssetHistoryRepository assetHistoryRepo;
 
     AssetService service;
 
@@ -40,11 +42,13 @@ class AssetServiceTest {
         attributeMapper = mock(AttributeMapper.class, Mockito.withSettings().defaultAnswer(Mockito.CALLS_REAL_METHODS));
         assetRepo = mock(AssetRepository.class);
         attributeRepo = mock(AttributeRepository.class);
+        assetHistoryRepo = mock(AssetHistoryRepository.class);
 
-        service = new AssetService(assetMapper, attributeMapper, assetRepo, attributeRepo);
+        service = new AssetService(assetMapper, attributeMapper, assetRepo, attributeRepo, assetHistoryRepo);
 
         when(assetRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(attributeRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(assetHistoryRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
     }
 
     @Test
@@ -70,6 +74,7 @@ class AssetServiceTest {
         assertEquals("a-1", result.assetId());
         verify(assetRepo, times(1)).save(entity);
         verifyNoInteractions(attributeRepo);
+        verify(assetHistoryRepo, times(1)).save(any());
     }
 
     @Test
@@ -95,6 +100,7 @@ class AssetServiceTest {
         verify(attributeRepo, never()).save(any());
         assertFalse(entity.getAttributes().isEmpty());
         assertEquals("city", entity.getAttributes().get(0).getName());
+        verify(assetHistoryRepo, times(1)).save(any());
     }
 
     @Test
@@ -115,6 +121,7 @@ class AssetServiceTest {
         assertEquals("INACTIVE", entity.getStatus());
         verify(assetRepo, times(1)).save(entity);
         verify(attributeRepo, never()).save(any());
+        verify(assetHistoryRepo, times(1)).save(any());
     }
 
     @Test
@@ -134,6 +141,7 @@ class AssetServiceTest {
 
         assertEquals("Warsaw", parent.getAttributes().get(0).getValueStr());
         verify(attributeRepo, times(1)).save(parent.getAttributes().get(0));
+        verify(assetHistoryRepo, times(1)).save(any());
     }
 
     @Test
@@ -153,6 +161,7 @@ class AssetServiceTest {
 
         assertEquals("Warsaw", parent.getAttributes().get(0).getValueStr());
         verify(attributeRepo, never()).save(any());
+        verify(assetHistoryRepo, times(1)).save(any());
     }
 
     @Test
@@ -166,5 +175,6 @@ class AssetServiceTest {
         assertEquals("a-6", result.assetId());
         assertEquals(1, entity.getDeleted());
         verify(assetRepo, times(1)).save(entity);
+        verify(assetHistoryRepo, times(1)).save(any());
     }
 }

@@ -8,9 +8,11 @@ import com.db.assetstore.domain.service.asset.cmd.CreateAssetCommand;
 import com.db.assetstore.domain.service.asset.cmd.DeleteAssetCommand;
 import com.db.assetstore.domain.service.asset.cmd.PatchAssetCommand;
 import com.db.assetstore.infra.jpa.AssetEntity;
+import com.db.assetstore.infra.jpa.AssetHistoryEntity;
 import com.db.assetstore.infra.jpa.AttributeEntity;
 import com.db.assetstore.infra.mapper.AssetMapper;
 import com.db.assetstore.infra.mapper.AttributeMapper;
+import com.db.assetstore.infra.repository.AssetHistoryRepository;
 import com.db.assetstore.infra.repository.AssetRepository;
 import com.db.assetstore.infra.repository.AttributeRepository;
 import lombok.NonNull;
@@ -19,7 +21,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -30,6 +36,7 @@ public class AssetService {
     private final AttributeMapper attributeMapper;
     private final AssetRepository assetRepo;
     private final AttributeRepository attributeRepo;
+    private final AssetHistoryRepository assetHistoryRepo;
 
     public CommandResult<String> create(@NonNull CreateAssetCommand command) {
         String assetId = resolveAssetId(command);
@@ -91,6 +98,7 @@ public class AssetService {
         } else {
             persistAttributes(entity, asset.getAttributesFlat());
         }
+        recordHistory(entity, Instant.now());
         return entity.getId();
     }
 
@@ -98,13 +106,13 @@ public class AssetService {
         AssetEntity entity = assetRepo.findByIdAndDeleted(id, 0)
                 .orElseThrow(() -> new IllegalArgumentException("Asset not found: " + id));
 
+        recordHistory(entity, Instant.now());
         Optional.ofNullable(patch.status()).ifPresent(entity::setStatus);
         Optional.ofNullable(patch.subtype()).ifPresent(entity::setSubtype);
         Optional.ofNullable(patch.notionalAmount()).ifPresent(entity::setNotionalAmount);
         Optional.ofNullable(patch.year()).ifPresent(entity::setYear);
         Optional.ofNullable(patch.description()).ifPresent(entity::setDescription);
         Optional.ofNullable(patch.currency()).ifPresent(entity::setCurrency);
-
         entity.setModifiedBy(executedBy);
         entity.setModifiedAt(Instant.now());
         entity = assetRepo.save(entity);
@@ -118,8 +126,14 @@ public class AssetService {
     private void deleteAsset(@NonNull String id) {
         AssetEntity entity = assetRepo.findByIdAndDeleted(id, 0)
                 .orElseThrow(() -> new IllegalArgumentException("Asset not found: " + id));
+        recordHistory(entity, Instant.now());
         entity.setDeleted(1);
         assetRepo.save(entity);
+    }
+
+    private void recordHistory(AssetEntity entity, Instant when) {
+        Instant timestamp = when != null ? when : Instant.now();
+        assetHistoryRepo.save(new AssetHistoryEntity(entity, timestamp));
     }
 
     private void updateAsset(@NonNull AssetEntity asset, @NonNull Collection<AttributeValue<?>> attributes) {

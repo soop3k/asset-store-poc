@@ -12,9 +12,10 @@ import com.db.assetstore.infra.jpa.AssetEntity;
 import com.db.assetstore.infra.jpa.AttributeEntity;
 import com.db.assetstore.infra.jpa.CommandLogEntity;
 import com.db.assetstore.infra.repository.CommandLogRepository;
+import com.db.assetstore.infra.repository.AssetHistoryRepository;
+import com.db.assetstore.infra.repository.AssetLinkRepo;
 import com.db.assetstore.infra.repository.AssetRepository;
 import com.db.assetstore.infra.repository.AttributeRepository;
-import com.db.assetstore.infra.repository.AssetLinkRepo;
 import com.db.assetstore.infra.repository.LinkDefinitionRepo;
 import com.db.assetstore.infra.service.cmd.CommandLogService;
 import com.db.assetstore.infra.service.cmd.CommandServiceImpl;
@@ -57,6 +58,9 @@ class AssetCommandServiceCommandLogDataTest {
     @Autowired
     LinkDefinitionRepo linkDefinitionRepo;
 
+    @Autowired
+    AssetHistoryRepository assetHistoryRepository;
+
     ObjectMapper objectMapper = new JsonMapperProvider().objectMapper();
 
     CommandServiceImpl service;
@@ -71,7 +75,8 @@ class AssetCommandServiceCommandLogDataTest {
                 assetMapper,
                 attributeMapper,
                 assetRepository,
-                attributeRepository);
+                attributeRepository,
+                assetHistoryRepository);
         AssetLinkService assetLinkService = new AssetLinkService(
                 assetLinkRepo,
                 linkDefinitionRepo,
