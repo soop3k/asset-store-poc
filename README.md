@@ -5,30 +5,51 @@ Asset Store PoC
 
 This proof of concept demonstrates how to store, validate, and publish assets such as CRE or SHIP deals. It is a Spring Boot service that relies on JSON Schemas and JSLT templates, so new asset types and event payloads can be introduced by adding files instead of Java code. Attribute definitions can be bootstrapped from JSON schemas or loaded directly from the database, allowing teams to evolve the model without redeploying the service.
 
+At a high level, the application consists of a REST API backed by domain services that coordinate persistence, validation, and event generation. Assets are persisted in a relational database through JPA, schemas and templates are loaded from the classpath to guarantee deterministic bootstrapping, and each adapter is isolated so the domain can be exercised consistently in tests and production.
+
 ## Architecture
 
-The application follows a hexagonal architecture:
+The application follows a hexagonal architecture in which the domain layer owns the core asset lifecycle logic and infrastructure concerns are pushed to adapters. Controllers submit commands into the orchestration layer, where transactions, validation, and audit logging are coordinated before touching persistence. Outbound adapters supply the domain with repositories, schema registries, and transformation utilities, each isolated behind interfaces so they can be swapped or tested independently.
 
-* **Domain services** live at the centre and encapsulate the business logic.
-* **Inbound adapters** consist of REST controllers and scheduled jobs.
-* **Outbound adapters** include database repositories, schema registries, and message builders.
-
-This separation keeps the domain independent from framework concerns and simplifies adding new adapters.
+At runtime a typical request flows through the REST controller into the command service, which resolves validators, invokes the appropriate asset or link service, persists state through JPA repositories, and records history snapshots. Event generation reuses the same domain model by reading the persisted asset, applying a JSLT template, and validating the output with the JSON Schema validator before returning it to the caller. Bootstrapping ties these paths together by loading schema resources and attribute definitions into in-memory registries when the application starts, allowing subsequent commands and queries to rely on consistent metadata.
 
 ## Key components
 
-* **AssetController** – Exposes the `/assets` endpoints for create, bulk create, search, read, update, patch, bulk patch, and delete requests.
-* **EventController** – Loads an asset, selects the right JSLT template, and returns the generated event payload.
-* **CommandServiceImpl** – Routes asset commands to **AssetService** and link commands to **AssetLinkService** while recording the audit log of executed commands.
-* **AttributeDefinitionsBootstrapService** – Stores missing attribute definitions at startup so attributes can be introduced through schema files or database seeding.
-* **AssetQueryServiceImpl** – Reads assets by id or by search criteria that translate into JPA specifications.
-* **TypeSchemaRegistry** – Scans classpath schemas, compiles them, and records which asset types provide schema files.
-* **AttributeDefinitionRegistry** – Parses schemas and builds the catalogue of attribute definitions for each asset type.
-* **StartupInfoService** – Triggers the bootstrap step after startup and reports available asset types together with the discovered JSLT templates.
-* **JsonTransformer** – Loads and caches event templates, applies them to payloads, and validates the output when a schema is present.
-* **JsonSchemaValidator** – Wraps the JSON Schema validator and turns failures into readable error messages.
+### API layer
+
+* **AssetController** – Hosts the `/assets` endpoints that front every lifecycle operation. Besides basic CRUD, it dispatches bulk create and bulk patch requests to the command pipeline and maps validation issues into HTTP responses that clients can understand.
+* **EventController** – Delegates event generation to the domain layer. It resolves an asset, identifies the correct template based on `{eventName}`, and streams back the transformed payload so downstream systems can publish it.
+
+### Command and orchestration services
+
+* **CommandServiceImpl** – Implements both `AssetCommandService` and the visitor that handles individual commands. It determines which specialised service should execute each command, wraps the call in a transaction, and persists an audit trail through **CommandLogService** when the command succeeds.
+* **AssetService** – Persists assets and their dynamic attributes. It resolves identifiers, maps incoming commands into domain models, records historical snapshots after every mutation, and delegates JSON attribute conversions to **AttributeMapper**. Soft deletes are handled by toggling the `deleted` flag while keeping history entries in sync.
+* **AssetLinkService** – Manages creation and deletion of relationships between assets. It enforces link definitions through `AssetLinkCommandValidator`, prevents duplicates, honours cardinality rules, and can reactivate previously deactivated links instead of creating duplicates.
+* **AssetHistoryServiceImpl** – Provides read access to the change log accumulated by **AssetService**, giving consumers a chronological trail of state transitions for auditing.
+
+### Query services
+
+* **AssetQueryServiceImpl** – Serves read scenarios by translating `SearchCriteria` objects into JPA specifications. It supports direct lookups by identifier as well as filtered searches, returning domain objects that controllers can serialise.
+* **AssetLinkQueryServiceImpl** – Resolves inbound and outbound links for a given asset id, optionally including inactive links, so the controller layer does not need to interact with repositories directly.
+
+### Bootstrap and registry services
+
+* **BootstrapService** – Listens for `ApplicationReadyEvent`, triggers the registry rebuild via **AttributeBootstrapService**, and logs the asset types that were discovered so operators can verify configuration at startup.
+* **AttributeBootstrapService** – Rebuilds type schemas and attribute definitions by invoking **TypeSchemaRegistry** and **AttributeDefinitionRegistry**, ensuring the in-memory caches reflect the latest resources bundled with the application.
+* **TypeSchemaRegistry** – Scans the classpath for JSON Schema files, compiles them up front, and tracks which asset types expose which schemas to prevent runtime lookups from failing.
+* **AttributeDefinitionRegistry** – Parses the compiled schemas (through its loaders) to build an in-memory catalogue of attribute definitions and constraints. The registry is reused during validation and when materialising new attributes from payloads.
+
+### Transformation and validation services
+
+* **JsonTransformer** – Loads and caches JSLT templates, applies them to the canonical JSON produced for each asset, and optionally validates the result against the schema advertised for the event.
+* **EventService** – Orchestrates event generation by wrapping the canonical asset payload with metadata (event name and timestamp) before invoking **JsonTransformer**. It centralises error handling so template or schema issues surface as meaningful exceptions.
+* **JsonSchemaValidator** – Wraps the underlying JSON Schema library and converts its diagnostics into human friendly error messages, ensuring both API responses and command logs contain actionable feedback.
+
+### Mapping layer
+
 * **Asset domain model** – Represents an asset with core fields and a collection of typed attributes, exposing helper methods for safe updates.
-* **AssetMapper** and **AttributeMapper** – Convert between domain objects and JPA entities while handling the soft delete flag and attribute typing.
+* **AssetMapper**, **AssetCommandMapper**, and **AttributeMapper** – Convert between domain objects, command DTOs, and JPA entities while handling soft delete flags, attribute typing, and history snapshots so persistence concerns stay out of the domain services.
+
 
 ## Functional capabilities
 
